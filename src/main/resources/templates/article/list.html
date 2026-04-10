@@ -8,12 +8,184 @@
 </head>
 <body>
 <div class="page-shell">
-    <main class="app-frame sub-frame">
-        <section class="subpage-section">
-            <h1 class="subpage-title">기사</h1>
-            <p class="subpage-desc">기사 페이지가 연결된 상태입니다.</p>
-            <div class="placeholder large">추가 예정</div>
+    <main class="app-frame sub-frame article-page">
+        <section class="article-hero">
+            <div>
+                <h1 class="subpage-title">기사</h1>
+                <p class="subpage-desc">
+                    취업, IT 트렌드, 학교 소식과 기술개발 지원 정보를 한 곳에서 확인해보세요.
+                </p>
+            </div>
         </section>
+
+        <section class="article-tab-section">
+            <div class="article-tab-list" role="tablist" aria-label="기사 카테고리">
+                <button class="article-tab-button active" type="button" data-category="all">전체</button>
+                <button class="article-tab-button" type="button" data-category="news">뉴스</button>
+                <button class="article-tab-button" type="button" data-category="it">재미있는 최신 IT정보</button>
+                <button class="article-tab-button" type="button" data-category="career">취창업 관련 정보</button>
+                <button class="article-tab-button" type="button" data-category="support">기술개발 지원 관련 정보</button>
+                <button class="article-tab-button" type="button" data-category="school">학교 소식</button>
+            </div>
+        </section>
+
+        <section class="article-feed-section">
+            <div class="article-feed-head">
+                <div>
+                    <h2 class="section-title">추천 기사</h2>
+                    <p class="card-subtext">
+                        마우스를 올리면 간단한 미리보기를 보고, 클릭하면 원문으로 이동할 수 있어요.
+                    </p>
+                </div>
+                <button class="article-more-button" type="button" id="loadMoreButton">더 보기</button>
+            </div>
+
+            <!-- TODO: 외부 사이트 크롤링 결과(title, url, thumbnail, summary)로 교체 예정 -->
+            <!-- TODO: 한국대학신문, 요즘IT, Bloter, Brunch 및 추가 소스 어댑터 기반으로 수집 예정 -->
+            <div class="article-grid" id="articleGrid">
+                <a class="article-card is-visible" data-category="news" href="https://news.unn.net/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-news-1">
+                        <span class="article-badge">뉴스</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">한국대학신문</p>
+                        <h3 class="article-title">단국대학교 관련 대학 현장 이슈를 빠르게 확인해보세요</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>단국대학교 관련 대학 현장 이슈를 빠르게 확인해보세요</h4>
+                        <p>학교 소식, 대학 정책, 캠퍼스 관련 기사들을 빠르게 둘러볼 수 있도록 구성한 미리보기 카드입니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-visible" data-category="it" href="https://yozm.wishket.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-it-1">
+                        <span class="article-badge">IT</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">요즘IT</p>
+                        <h3 class="article-title">요즘 개발자들이 주목하는 최신 기술 트렌드 살펴보기</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>요즘 개발자들이 주목하는 최신 기술 트렌드 살펴보기</h4>
+                        <p>AI, 프론트엔드, 협업 방식, 실무 생산성 같은 흐름을 짧게 미리보고 원문으로 이동할 수 있습니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-visible" data-category="career" href="https://brunch.co.kr/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-career-1">
+                        <span class="article-badge">취창업</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">Brunch</p>
+                        <h3 class="article-title">학생 개발자를 위한 취업 준비 관점의 인사이트 모음</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>학생 개발자를 위한 취업 준비 관점의 인사이트 모음</h4>
+                        <p>이력서, 포트폴리오, 커리어 고민처럼 학생들이 자주 부딪히는 주제를 짧게 소개합니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-visible" data-category="support" href="https://www.k-startup.go.kr/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-support-1">
+                        <span class="article-badge">지원</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">K-Startup</p>
+                        <h3 class="article-title">기술개발·창업 지원사업 공고를 한눈에 확인하는 방법</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>기술개발·창업 지원사업 공고를 한눈에 확인하는 방법</h4>
+                        <p>정부 지원사업, 창업 지원, 기술개발 관련 공고를 모아보는 섹션 예시입니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-visible" data-category="school" href="https://news.unn.net/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-school-1">
+                        <span class="article-badge">학교</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">한국대학신문</p>
+                        <h3 class="article-title">교내 공지와 대학 관련 소식을 묶어서 보는 학교 소식 카드</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>교내 공지와 대학 관련 소식을 묶어서 보는 학교 소식 카드</h4>
+                        <p>장학, 비교과, 행사, 대외활동과 연결될 수 있는 학교 관련 기사를 묶어서 보여주는 방식입니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-visible" data-category="news" href="https://www.bloter.net/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-news-2">
+                        <span class="article-badge">뉴스</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">Bloter</p>
+                        <h3 class="article-title">국내 테크 산업 흐름과 이슈를 폭넓게 살펴보는 뉴스 카드</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>국내 테크 산업 흐름과 이슈를 폭넓게 살펴보는 뉴스 카드</h4>
+                        <p>단순 기술 정보뿐 아니라 산업, 서비스, 플랫폼 흐름까지 함께 볼 수 있는 예시 카드입니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-hidden-item" data-category="it" href="https://yozm.wishket.com/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-it-2">
+                        <span class="article-badge">IT</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">요즘IT</p>
+                        <h3 class="article-title">실무에서 자주 언급되는 협업 도구와 개발 문화 트렌드</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>실무에서 자주 언급되는 협업 도구와 개발 문화 트렌드</h4>
+                        <p>개발 문화, 협업 툴, 문서화 방식 등 학생 프로젝트에도 적용할 수 있는 흐름을 미리 보여줍니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-hidden-item" data-category="career" href="https://brunch.co.kr/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-career-2">
+                        <span class="article-badge">취창업</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">Brunch</p>
+                        <h3 class="article-title">신입 개발자 관점에서 포트폴리오를 정리하는 방법</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>신입 개발자 관점에서 포트폴리오를 정리하는 방법</h4>
+                        <p>프로젝트 설명을 어떻게 구조화할지, 무엇을 강조할지 같은 취업 준비 포인트를 담은 예시입니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-hidden-item" data-category="support" href="https://www.k-startup.go.kr/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-support-2">
+                        <span class="article-badge">지원</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">K-Startup</p>
+                        <h3 class="article-title">학생 팀 프로젝트와 연결할 수 있는 지원사업 탐색 예시</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>학생 팀 프로젝트와 연결할 수 있는 지원사업 탐색 예시</h4>
+                        <p>기술개발, 창업, 시제품 제작 같은 키워드로 확장 가능한 지원 정보 수집 구조를 보여줍니다.</p>
+                    </div>
+                </a>
+
+                <a class="article-card is-hidden-item" data-category="school" href="https://news.unn.net/" target="_blank" rel="noopener noreferrer">
+                    <div class="article-thumb article-thumb-school-2">
+                        <span class="article-badge">학교</span>
+                    </div>
+                    <div class="article-card-body">
+                        <p class="article-source">한국대학신문</p>
+                        <h3 class="article-title">대학 행사와 비교과 활동 소식을 묶어서 확인하는 카드</h3>
+                    </div>
+                    <div class="article-hover-panel">
+                        <h4>대학 행사와 비교과 활동 소식을 묶어서 확인하는 카드</h4>
+                        <p>학교 관련 이슈를 카드화해, 학생이 필요한 정보만 빠르게 훑어볼 수 있도록 구성했습니다.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <div class="article-page-dim" id="articleDim"></div>
 
         <nav class="bottom-nav">
             <a href="/" class="nav-item" th:classappend="${activeMenu == 'home'} ? ' active' : ''">메인</a>
@@ -23,5 +195,7 @@
         </nav>
     </main>
 </div>
+
+<script src="/js/article-tabs.js"></script>
 </body>
 </html>
