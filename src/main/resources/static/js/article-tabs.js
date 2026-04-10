@@ -6,32 +6,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const dimLayer = document.getElementById("articleDim");
 
     let currentCategory = "all";
-    let expanded = false;
-    const defaultVisibleCount = 6;
+    const allTabVisibleCount = 6;
+    const categoryInitialVisibleCount = 9;
+    const categoryLoadStep = 9;
+    let currentVisibleCount = allTabVisibleCount;
 
-    function applyFilter() {
-        const matched = cards.filter((card) => {
+    function matchedCards() {
+        return cards.filter((card) => {
             const category = card.dataset.category;
             return currentCategory === "all" || category === currentCategory;
         });
+    }
+
+    function resetVisibleCount() {
+        currentVisibleCount = currentCategory === "all"
+            ? allTabVisibleCount
+            : categoryInitialVisibleCount;
+    }
+
+    function applyFilter() {
+        const filtered = matchedCards();
 
         cards.forEach((card) => {
-            card.classList.remove("is-visible");
+            card.classList.remove("is-visible", "is-filtered-out");
             card.classList.add("is-filtered-out");
         });
 
-        matched.forEach((card, index) => {
+        filtered.forEach((card, index) => {
             card.classList.remove("is-filtered-out");
-            const shouldShow = expanded || index < defaultVisibleCount;
-            if (shouldShow) {
+            if (index < currentVisibleCount) {
                 card.classList.add("is-visible");
-            } else {
-                card.classList.remove("is-visible");
             }
         });
 
         if (loadMoreButton) {
-            loadMoreButton.style.display = matched.length > defaultVisibleCount && !expanded ? "inline-flex" : "none";
+            const shouldShowMore = currentCategory !== "all" && filtered.length > currentVisibleCount;
+            loadMoreButton.style.display = shouldShowMore ? "inline-flex" : "none";
+            loadMoreButton.disabled = !shouldShowMore;
         }
     }
 
@@ -40,14 +51,18 @@ document.addEventListener("DOMContentLoaded", () => {
             tabButtons.forEach((btn) => btn.classList.remove("active"));
             button.classList.add("active");
             currentCategory = button.dataset.category;
-            expanded = false;
+            resetVisibleCount();
             applyFilter();
         });
     });
 
     if (loadMoreButton) {
         loadMoreButton.addEventListener("click", () => {
-            expanded = true;
+            if (currentCategory === "all") {
+                return;
+            }
+            const filtered = matchedCards();
+            currentVisibleCount = Math.min(currentVisibleCount + categoryLoadStep, filtered.length);
             applyFilter();
         });
     }
@@ -79,5 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    resetVisibleCount();
     applyFilter();
 });

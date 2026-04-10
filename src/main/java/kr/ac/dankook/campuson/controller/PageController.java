@@ -13,12 +13,6 @@ public class PageController {
         return "chat/index";
     }
 
-    @GetMapping("/articles")
-    public String articles(Model model) {
-        model.addAttribute("activeMenu", "articles");
-        return "article/list";
-    }
-
     @GetMapping("/mypage")
     public String mypage(Model model) {
         model.addAttribute("activeMenu", "mypage");
