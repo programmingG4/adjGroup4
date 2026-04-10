@@ -9,7 +9,8 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Model model) {
-        // TODO: 배너 및 기사 데이터는 크롤링 기반으로 추후 구현 예정
+        // TODO: 개인정보는 추후 로그인 사용자 기준으로 연동 예정
+        // TODO: 최근 채팅방 및 기사 데이터는 추후 DB/크롤링 기반으로 대체 예정
         model.addAttribute("activeMenu", "home");
         return "home/index";
     }

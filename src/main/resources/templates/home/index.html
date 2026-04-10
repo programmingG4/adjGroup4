@@ -16,19 +16,75 @@
             </div>
         </section>
 
-        <section class="banner-section">
-            <!-- TODO: 크롤링 기반 배너 시스템으로 교체 예정 -->
-            <div class="placeholder">
-                추가 예정
-            </div>
-        </section>
+        <section class="dashboard-grid">
+            <article class="info-card profile-card">
+                <div class="card-head">
+                    <h2 class="section-title">내 정보</h2>
+                    <a href="/mypage" class="card-link">MY 보기</a>
+                </div>
+                <p class="card-subtext">마이페이지에서 더 자세한 정보를 확인할 수 있어요.</p>
 
-        <section class="article-section">
-            <h2 class="section-title">기사</h2>
-            <!-- TODO: 외부 사이트 크롤링 기사 리스트로 교체 예정 -->
-            <div class="placeholder large">
-                추가 예정
-            </div>
+                <!-- TODO: 로그인 사용자 정보 연동 예정 -->
+                <div class="profile-summary">
+                    <div class="profile-row">
+                        <span class="profile-label">이름</span>
+                        <span class="profile-value">홍길동</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="profile-label">학과</span>
+                        <span class="profile-value">소프트웨어학과</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="profile-label">학번</span>
+                        <span class="profile-value">20231234</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="info-card feed-card">
+                <div class="card-head">
+                    <h2 class="section-title">채팅방 최신 소식</h2>
+                    <a href="/chat" class="card-link">채팅 보기</a>
+                </div>
+                <p class="card-subtext">최근 활동이 있었던 그룹이에요</p>
+
+                <!-- TODO: 최근 채팅방 활동 데이터 연동 예정 -->
+                <div class="simple-feed">
+                    <div class="feed-line">
+                        <span class="feed-title">웹프로그래밍 팀 프로젝트</span>
+                        <span class="feed-meta">오후 3:12</span>
+                    </div>
+                    <div class="feed-line">
+                        <span class="feed-title">운영체제 스터디 3팀</span>
+                        <span class="feed-meta">오후 2:48</span>
+                    </div>
+                    <div class="feed-line">
+                        <span class="feed-title">소프트웨어학과 공지 공유방</span>
+                        <span class="feed-meta">오전 11:05</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="info-card feed-card">
+                <div class="card-head">
+                    <h2 class="section-title">기사 소식</h2>
+                    <a href="/articles" class="card-link">기사 보기</a>
+                </div>
+                <p class="card-subtext">이런 소식은 어때요?</p>
+
+                <!-- TODO: 외부 사이트 크롤링 기사 제목 데이터로 교체 예정 -->
+                <div class="simple-feed">
+                    <div class="feed-line">
+                        <span class="feed-title">AI 분야 채용 트렌드, 신입에게 중요한 역량은?</span>
+                    </div>
+                    <div class="feed-line">
+                        <span class="feed-title">학생 개발자가 알아두면 좋은 협업 도구 정리</span>
+                    </div>
+                    <div class="feed-line">
+                        <span class="feed-title">교내 비교과 프로그램 신청 일정 한눈에 보기</span>
+                    </div>
+                </div>
+            </article>
         </section>
 
         <nav class="bottom-nav">
