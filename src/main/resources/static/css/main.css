@@ -1,0 +1,413 @@
+/* =========================
+   GLOBAL RESET
+========================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* =========================
+   COLOR VARIABLES
+========================= */
+:root {
+    --bg: #f7f2ea;
+    --surface: #fffaf4;
+    --surface-strong: #f6eadb;
+    --text: #5d4633;
+    --text-soft: #9f8773;
+    --point: #cf895f;
+    --point-deep: #b26f49;
+    --border: #eadbc9;
+    --shadow: 0 18px 40px rgba(93, 70, 51, 0.08);
+}
+
+/* =========================
+   BODY / BACKGROUND
+========================= */
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #f8f3ec 0%, #f4ede4 100%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* =========================
+   PAGE SHELL (전체 래퍼)
+========================= */
+.page-shell {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px 16px;
+}
+
+/* =========================
+   APP FRAME (메인 카드 프레임)
+========================= */
+.app-frame {
+    width: 100%;
+    max-width: 480px;
+    background: rgba(255, 250, 244, 0.82);
+    border: 1px solid rgba(234, 219, 201, 0.95);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    min-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* =========================
+   SUB FRAME (서브 페이지용)
+========================= */
+.sub-frame {
+    padding-bottom: 72px; /* bottom-nav 높이 확보 */
+}
+
+/* =========================
+   SUBPAGE SECTION
+========================= */
+.subpage-section {
+    flex: 1;
+    padding: 32px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.subpage-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.subpage-desc {
+    font-size: 14px;
+    color: var(--text-soft);
+}
+
+/* =========================
+   PLACEHOLDER
+========================= */
+.placeholder {
+    background: var(--surface-strong);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-soft);
+    font-size: 13px;
+    padding: 20px;
+}
+
+.placeholder.large {
+    height: 200px;
+}
+
+/* =========================
+   BOTTOM NAV
+========================= */
+.bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 24px 24px;
+    overflow: hidden;
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #947860;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-item:hover {
+    background: #f2e2d0;
+    color: var(--point-deep);
+}
+
+.nav-item.active {
+    background: linear-gradient(180deg, #d99a70, #cb8458);
+    color: #fffaf4;
+}
+
+/* =========================
+   SPLASH (index)
+========================= */
+.splash-frame {
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    padding: 48px 32px;
+    min-height: calc(100vh - 48px);
+}
+
+.hero-logo {
+    font-size: 42px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: -1px;
+}
+
+.hero-subtext {
+    font-size: 15px;
+    color: var(--text-soft);
+    margin-bottom: 16px;
+}
+
+.splash-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* =========================
+   AUTH FRAME (로그인/회원가입)
+========================= */
+.auth-frame {
+    justify-content: center;
+    padding: 48px 32px;
+}
+
+.auth-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.auth-desc {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-bottom: 20px;
+}
+
+/* =========================
+   FORM
+========================= */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    color: var(--text-soft);
+}
+
+input:focus {
+    border-color: var(--point);
+    background: #fff;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(180deg, #d99a70, #cb8458);
+    color: #fffaf4;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(179, 111, 73, 0.28);
+    transition: opacity 0.2s;
+    margin-top: 8px;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: transparent;
+    color: var(--point-deep);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.btn-secondary:hover {
+    background: var(--surface-strong);
+}
+
+/* =========================
+   ERROR / SERVER MESSAGE
+========================= */
+.error-msg {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.image-error-msg {
+    color: #dc2626;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 6px;
+    display: none;
+}
+
+/* =========================
+   AUTH LINK (하단 페이지 이동)
+========================= */
+.auth-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-soft);
+}
+
+.auth-link a {
+    color: var(--point-deep);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* =========================
+   UPLOAD BOX
+========================= */
+.upload-box {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: border-color 0.15s;
+}
+
+.upload-box:hover {
+    border-color: var(--point);
+}
+
+.upload-box input {
+    display: none;
+}
+
+.upload-label {
+    font-size: 13px;
+    color: var(--point-deep);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* =========================
+   HOME — INFO CARD
+========================= */
+.home-section {
+    flex: 1;
+    padding: 32px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-card {
+    background: linear-gradient(180deg, rgba(255,253,249,0.96), rgba(247,236,224,0.92));
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+}
+
+.profile-row {
+    background: rgba(255, 248, 239, 0.92);
+    border: 1px solid #efdfcf;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-label {
+    font-size: 13px;
+    color: #8d735f;
+    font-weight: 600;
+}
+
+.profile-value {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 700;
+}
+
+.logout-btn {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 12px 20px;
+    background: var(--surface-strong);
+    color: var(--text-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.logout-btn:hover {
+    background: #eeddd0;
+}

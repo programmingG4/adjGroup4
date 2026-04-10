@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회원가입</title>
+    <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body>
+<div class="page-shell">
+    <main class="app-frame auth-frame">
+        <section class="auth-section">
+            <h1 class="auth-title">회원가입</h1>
+            <p class="auth-desc">단국대학교 학과 학생만 가입할 수 있어요.</p>
+
+            <div th:if="${error}" class="error-msg" th:text="${error}"></div>
+
+            <form th:action="@{/register}" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="text" name="name" placeholder="이름" required />
+                    <input type="text" name="studentId" placeholder="학번" required />
+                    <input type="password" name="password" placeholder="비밀번호" required />
+                </div>
+
+                <div class="upload-box" onclick="document.getElementById('imageInput').click()">
+                    <p>단국대 앱 캡쳐 이미지를 업로드해주세요</p>
+                    <label class="upload-label">+ 이미지 선택</label>
+                    <input type="file" id="imageInput" name="image" accept="image/*"
+                           onchange="document.getElementById('fileName').textContent = this.files[0].name" />
+                    <p id="fileName" style="margin-top:8px; color: var(--point-deep); font-size:12px;"></p>
+                </div>
+
+                <p id="imageError" class="image-error-msg">단국대 앱 캡쳐 이미지를 업로드해주세요.</p>
+
+                <button type="submit" class="btn-primary" onclick="return checkImage()">가입하기</button>
+            </form>
+
+            <div class="auth-link">
+                이미 계정이 있으신가요? <a th:href="@{/login}">로그인</a>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    function checkImage() {
+        const image = document.getElementById('imageInput');
+        const error = document.getElementById('imageError');
+        if (!image.files || image.files.length === 0) {
+            error.style.display = 'block';
+            return false;
+        }
+        error.style.display = 'none';
+        return true;
+    }
+</script>
+</body>
+</html>
