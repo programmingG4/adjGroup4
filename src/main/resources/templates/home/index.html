@@ -1,38 +1,43 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusON</title>
     <link rel="stylesheet" href="/css/main.css">
 </head>
-
 <body>
+<div class="page-shell">
+    <main class="app-frame home-frame">
+        <section class="hero-section">
+            <div class="hero-center">
+                <h1 class="hero-logo">캠퍼스온</h1>
+                <p class="hero-subtext">학생을 위한 소통과 정보의 시작점</p>
+            </div>
+        </section>
 
-<header class="header">
-    <div class="logo">CampusON</div>
-</header>
+        <section class="banner-section">
+            <!-- TODO: 크롤링 기반 배너 시스템으로 교체 예정 -->
+            <div class="placeholder">
+                추가 예정
+            </div>
+        </section>
 
-<nav class="main-nav">
-    <a href="/">메인</a>
-    <a href="/chat">채팅</a>
-    <a href="/articles">기사</a>
-    <a href="/mypage">MY</a>
-</nav>
+        <section class="article-section">
+            <h2 class="section-title">기사</h2>
+            <!-- TODO: 외부 사이트 크롤링 기사 리스트로 교체 예정 -->
+            <div class="placeholder large">
+                추가 예정
+            </div>
+        </section>
 
-<section class="banner-section">
-    <!-- TODO: 크롤링 기반 배너 시스템으로 교체 예정 -->
-    <div class="placeholder">
-        추가 예정
-    </div>
-</section>
-
-<section class="article-section">
-    <h2>기사</h2>
-    <!-- TODO: 외부 사이트 크롤링 기사 리스트로 교체 예정 -->
-    <div class="placeholder large">
-        추가 예정
-    </div>
-</section>
-
+        <nav class="bottom-nav">
+            <a href="/" class="nav-item" th:classappend="${activeMenu == 'home'} ? ' active' : ''">메인</a>
+            <a href="/chat" class="nav-item" th:classappend="${activeMenu == 'chat'} ? ' active' : ''">채팅</a>
+            <a href="/articles" class="nav-item" th:classappend="${activeMenu == 'articles'} ? ' active' : ''">기사</a>
+            <a href="/mypage" class="nav-item" th:classappend="${activeMenu == 'mypage'} ? ' active' : ''">MY</a>
+        </nav>
+    </main>
+</div>
 </body>
 </html>
