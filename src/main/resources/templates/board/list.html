@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>2026-1 DKU 컴퓨터공학과 게시판</title>
+    <style>
+        :root {
+            --bg: #f7f2ea;
+            --surface: #fffaf4;
+            --text: #5d4633;
+            --text-soft: #9f8773;
+            --point-deep: #b26f49;
+            --border: #eadbc9;
+            --shadow: 0 18px 40px rgba(93, 70, 51, 0.08);
+        }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', sans-serif;
+            background: linear-gradient(180deg, #f8f3ec 0%, #f4ede4 100%);
+            margin: 0;
+            padding: 40px 0;
+            color: var(--text);
+        }
+
+        .board-container {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding-bottom: 80px; /* 플러스 버튼 공간 확보 */
+        }
+
+        .plus-write-btn {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            width: 56px;
+            height: 56px;
+            background-color: #333;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 32px;
+            font-weight: 300;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, background-color 0.2s;
+            z-index: 10;
+        }
+
+        .plus-write-btn:hover {
+            transform: scale(1.05);
+            background-color: #000;
+        }
+
+        .chatroom-header {
+            padding: 20px 25px;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .chatroom-logo {
+            height: 40px;
+            margin-right: 15px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background: #f6eadb;
+        }
+
+        .nav-tabs li {
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-tabs a {
+            display: block;
+            padding: 18px 0;
+            text-decoration: none;
+            color: var(--text-soft);
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .nav-tabs li.active {
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+        }
+
+        .nav-tabs li.active a {
+            color: white;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 20px 30px; /* 위아래 패딩 줄임 */
+        }
+
+        .post-item {
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="board-container">
+
+        <div class="chatroom-header">
+            <img th:src="@{/images/dku_cse_logo.jpg}" alt="단국대 컴공 로고" class="chatroom-logo">
+            <div class="chatroom-title" th:text="${chatRoomName}">채팅방 이름</div>
+        </div>
+
+        <ul class="nav-tabs">
+            <li th:each="cat : ${categories}" th:classappend="${cat == selectedCategory} ? 'active'">
+                <a th:href="@{/board(category=${cat})}" th:text="${cat}">카테고리</a>
+            </li>
+        </ul>
+
+        <div class="content">
+
+            <!-- 게시글 없을 때 -->
+            <div th:if="${#lists.isEmpty(posts)}" class="post-item"
+                style="text-align: center; color: var(--text-soft); padding: 80px 0; width: 100%; box-sizing: border-box;">
+                아직 등록된 게시글이 없습니다.
+            </div>
+
+            <!-- 게시글 목록 -->
+            <a th:href="@{/board/{id}(id=${post.id})}" th:each="post : ${posts}" class="post-item"
+                style="display:flex; justify-content:space-between; align-items:center; text-decoration:none; color:inherit;">
+            
+                <!-- 왼쪽: 텍스트 -->
+                <div style="flex:1;">
+                    <div style="margin-bottom: 8px;">
+                        <span style="color: var(--point-deep); font-weight: bold;" th:text="'[' + ${post.category} + '] '"></span>
+                        <strong style="font-size: 17px; color: var(--text);" th:text="${post.title}">제목</strong>
+                    </div>
+                    <p style="white-space: pre-wrap; word-break: break-all; color: var(--text); 
+                              line-height: 1.6; margin: 10px 0;
+                              display: -webkit-box; -webkit-line-clamp: 2; 
+                              -webkit-box-orient: vertical; overflow: hidden;" th:text="${post.content}">내용</p>
+                    <div style="font-size: 12px; color: var(--text-soft); border-top: 1px solid #f0f0f0; 
+                                padding-top: 10px; margin-top: 10px;">
+                        <span th:text="${post.author}">작성자</span> |
+                        <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                    </div>
+                </div>
+            
+                <!-- 오른쪽: 썸네일 이미지 -->
+                <img th:if="${post.imagePath != null}" th:src="${post.imagePath}" style="width:80px; height:80px; object-fit:cover; 
+                            border-radius:10px; margin-left:15px; 
+                            border:1px solid var(--border);" alt="썸네일">
+            </a>
+        </div>
+
+        <!-- 플러스 버튼 하나만 -->
+        <a th:href="@{/board/write}" class="plus-write-btn">+</a>
+
+    </div>
+
+</body>
+
+</html>

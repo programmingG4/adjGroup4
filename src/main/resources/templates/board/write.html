@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CampusOn | 글쓰기</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #f8f3ec 0%, #f4ede4 100%);
+            color: #5d4633;
+            font-family: 'Apple SD Gothic Neo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .write-container {
+            box-sizing: border-box;
+            width: 90%;
+            max-width: 500px;
+            background: linear-gradient(180deg, rgba(255,253,249,0.96), rgba(247,236,224,0.92));
+            border: 1px solid #eadbc9;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 18px 40px rgba(93,70,51,0.08);
+        }
+        .write-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            text-align: center;
+            color: #b26f49;
+        }
+        .form-group { margin-bottom: 20px; }
+        label {
+            font-size: 14px;
+            color: #9f8773;
+            display: block;
+            margin-bottom: 8px;
+        }
+        select, input[type="text"], textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 15px;
+            border: 1px solid #eadbc9;
+            border-radius: 12px;
+            background: #fffaf4;
+            color: #5d4633;
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+        }
+        textarea { resize: none; line-height: 1.6; }
+
+        /* 익명/실명 토글 */
+        .author-toggle {
+            display: flex;
+            gap: 10px;
+        }
+        .author-toggle label {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border: 1px solid #eadbc9;
+            border-radius: 12px;
+            background: #fffaf4;
+            cursor: pointer;
+            font-size: 14px;
+            color: #9f8773;
+            transition: 0.2s;
+            margin: 0;
+        }
+        .author-toggle input[type="radio"] { display: none; }
+        .author-toggle input[type="radio"]:checked + label {
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            color: white;
+            border-color: #cb8458;
+        }
+
+        /* 투표 항목 */
+        #vote-section { display: none; }
+        .vote-item-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .vote-item-row input {
+            flex: 1;
+            padding: 12px 15px;
+        }
+        .remove-vote-btn {
+            background: none;
+            border: 1px solid #eadbc9;
+            border-radius: 8px;
+            color: #9f8773;
+            cursor: pointer;
+            padding: 8px 12px;
+            font-size: 16px;
+            width: auto;
+            margin: 0;
+        }
+        .add-vote-btn {
+            width: 100%;
+            padding: 12px;
+            background: #f6eadb;
+            border: 1px dashed #eadbc9;
+            border-radius: 12px;
+            color: #9f8773;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* 이미지 첨부 */
+        .image-upload-label {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            border: 1px dashed #eadbc9;
+            border-radius: 12px;
+            background: #fffaf4;
+            color: #9f8773;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        input[type="file"] { display: none; }
+        #image-preview {
+            margin-top: 10px;
+            display: none;
+        }
+        #image-preview img {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid #eadbc9;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button[type="submit"]:hover { background: #b26f49; }
+    </style>
+</head>
+<body>
+    <div class="write-container">
+        <div class="write-header">새 게시글 작성</div>
+        <form th:action="@{/board/save}" method="post" enctype="multipart/form-data">
+
+            <!-- 카테고리 -->
+            <div class="form-group">
+                <label>카테고리</label>
+                <select name="category" id="category-select" onchange="toggleVote(this.value)" required>
+                    <option value="공지">📢 공지</option>
+                    <option value="투표">📊 투표</option>
+                    <option value="스터디 모집">📖 스터디 모집</option>
+                    <option value="중고거래">🤝 중고거래</option>
+                </select>
+            </div>
+
+            <!-- 작성자 설정 -->
+            <div class="form-group">
+                <label>작성자 설정</label>
+                <div class="author-toggle">
+                    <input type="radio" name="authorType" id="anon" value="anon" checked onchange="toggleAuthor(this.value)">
+                    <label for="anon">🙈 익명으로 작성</label>
+                    <input type="radio" name="authorType" id="named" value="named" onchange="toggleAuthor(this.value)">
+                    <label for="named">👤 이름 직접 입력</label>
+                </div>
+            </div>
+            <div class="form-group" id="author-input" style="display:none;">
+                <input type="text" name="author" placeholder="이름을 입력하세요">
+            </div>
+
+            <!-- 제목 -->
+            <div class="form-group">
+                <input type="text" name="title" placeholder="제목을 입력하세요" required>
+            </div>
+
+            <!-- 본문 -->
+            <div class="form-group">
+                <textarea name="content" rows="6" placeholder="학우들과 나누고 싶은 내용을 적어주세요" required></textarea>
+            </div>
+
+            <!-- 투표 항목 (투표 카테고리일 때만 표시) -->
+            <div class="form-group" id="vote-section">
+                <label>📊 투표 항목</label>
+                <div id="vote-items">
+                    <div class="vote-item-row">
+                        <input type="text" name="voteOption" placeholder="항목 1">
+                        <button type="button" class="remove-vote-btn" onclick="removeVote(this)">✕</button>
+                    </div>
+                    <div class="vote-item-row">
+                        <input type="text" name="voteOption" placeholder="항목 2">
+                        <button type="button" class="remove-vote-btn" onclick="removeVote(this)">✕</button>
+                    </div>
+                </div>
+                <button type="button" class="add-vote-btn" onclick="addVoteItem()">+ 항목 추가</button>
+            </div>
+
+            <!-- 사진 첨부 -->
+            <div class="form-group">
+                <label>사진 첨부</label>
+                <label class="image-upload-label" for="image-input">📷 사진을 선택하세요</label>
+                <input type="file" id="image-input" name="image" accept="image/*" onchange="previewImage(this)">
+                <div id="image-preview">
+                    <img id="preview-img" src="" alt="미리보기">
+                </div>
+            </div>
+
+            <button type="submit">작성 완료</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleVote(val) {
+            document.getElementById('vote-section').style.display = val === '투표' ? 'block' : 'none';
+        }
+        function toggleAuthor(val) {
+            document.getElementById('author-input').style.display = val === 'named' ? 'block' : 'none';
+        }
+        function addVoteItem() {
+            const container = document.getElementById('vote-items');
+            const count = container.children.length + 1;
+            const row = document.createElement('div');
+            row.className = 'vote-item-row';
+            row.innerHTML = `<input type="text" name="voteOption" placeholder="항목 ${count}">
+                            <button type="button" class="remove-vote-btn" onclick="removeVote(this)">✕</button>`;
+            container.appendChild(row);
+        }
+        function removeVote(btn) {
+            const rows = document.querySelectorAll('.vote-item-row');
+            if (rows.length > 2) btn.parentElement.remove();
+        }
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('image-preview').style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+</body>
+</html>
