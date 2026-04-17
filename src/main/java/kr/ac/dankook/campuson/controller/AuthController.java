@@ -1,7 +1,9 @@
 package kr.ac.dankook.campuson.controller;
 
+import kr.ac.dankook.campuson.domain.Member;
+import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.MemberService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,9 +15,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class AuthController {
 
     private final MemberService memberService;
+    private final MemberRepository memberRepository;
 
-    public AuthController(MemberService memberService) {
+    public AuthController(MemberService memberService, MemberRepository memberRepository) {
         this.memberService = memberService;
+        this.memberRepository = memberRepository;
     }
 
     @GetMapping("/")
@@ -58,5 +62,13 @@ public class AuthController {
     @GetMapping("/home")
     public String home() {
         return "home";
+    }
+
+    @GetMapping("/mypage")
+    public String profile(Model model, Authentication authentication) {
+        String studentId = authentication.getName();
+        Member member = memberRepository.findByStudentId(studentId);
+        model.addAttribute("member", member);
+        return "mypage";
     }
 }

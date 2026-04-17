@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>마이페이지</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <style>
+    .mypage-section {
+      flex: 1;
+      padding: 32px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .avatar-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(255,253,249,0.96), rgba(247,236,224,0.92));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .avatar-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #d99a70, #cb8458);
+      color: #fffaf4;
+      font-size: 22px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .avatar-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .info-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-soft);
+      padding: 0 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="page-shell">
+  <main class="app-frame sub-frame">
+    <section class="mypage-section">
+      <h1 class="subpage-title">마이페이지</h1>
+
+      <div class="avatar-row">
+        <div class="avatar-circle" th:text="${#strings.substring(member.name, 0, 1)}"></div>
+        <div class="avatar-name" th:text="${member.name}"></div>
+      </div>
+
+      <div class="info-section-title">내 정보</div>
+
+      <div class="info-card">
+        <div class="profile-row">
+          <span class="profile-label">이름</span>
+          <span class="profile-value" th:text="${member.name}"></span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="profile-row">
+          <span class="profile-label">학번</span>
+          <span class="profile-value" th:text="${member.studentId}"></span>
+        </div>
+      </div>
+
+      <form th:action="@{/logout}" method="post" style="margin-top: auto;">
+        <button type="submit" class="logout-btn" style="width: 100%;">로그아웃</button>
+      </form>
+    </section>
+
+    <nav class="bottom-nav">
+      <a href="/" class="nav-item">메인</a>
+      <a href="/chat" class="nav-item">채팅</a>
+      <a href="/articles" class="nav-item">기사</a>
+      <a href="/mypage" class="nav-item active">MY</a>
+    </nav>
+  </main>
+</div>
+</body>
+</html>
