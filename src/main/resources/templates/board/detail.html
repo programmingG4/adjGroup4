@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 상세</title>
+    <style>
+        :root {
+            --surface: #fffaf4;
+            --text: #5d4633;
+            --text-soft: #9f8773;
+            --point-deep: #b26f49;
+            --border: #eadbc9;
+            --shadow: 0 18px 40px rgba(93, 70, 51, 0.08);
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 0;
+            background: linear-gradient(180deg, #f8f3ec 0%, #f4ede4 100%);
+            font-family: 'Apple SD Gothic Neo', sans-serif;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: var(--text-soft);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .post-category {
+            color: var(--point-deep);
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .post-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .post-meta {
+            font-size: 12px;
+            color: var(--text-soft);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .post-content {
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .post-image {
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* 투표 */
+        .vote-section {
+            margin-top: 25px;
+        }
+
+        .vote-item {
+            margin-bottom: 10px;
+        }
+
+        .vote-bar-wrap {
+            background: #f6eadb;
+            border-radius: 8px;
+            height: 36px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .vote-bar {
+            height: 100%;
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            border-radius: 8px;
+            transition: width 0.4s;
+        }
+
+        .vote-label {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: var(--text);
+            font-weight: bold;
+        }
+
+        .vote-count {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            font-size: 13px;
+            color: var(--text-soft);
+        }
+
+        /* 댓글 */
+        .comment-item {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comment-author {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .comment-content {
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .comment-date {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 4px;
+        }
+
+        .comment-form {
+            margin-top: 20px;
+        }
+
+        /* 작성자 토글 (댓글용) */
+        .author-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .author-toggle label {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fffaf4;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-soft);
+            transition: 0.2s;
+        }
+
+        .author-toggle input[type="radio"] {
+            display: none;
+        }
+
+        .author-toggle input[type="radio"]:checked+label {
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            color: white;
+            border-color: #cb8458;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 15px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fffaf4;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            resize: none;
+            line-height: 1.6;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="/board" class="back-btn">← 목록으로</a>
+
+        <!-- 게시글 본문 -->
+        <div class="card">
+            <div class="post-category" th:text="'[' + ${post.category} + ']'"></div>
+            <div class="post-title" th:text="${post.title}"></div>
+            <div class="post-meta">
+                <span th:text="${post.author}"></span> |
+                <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}"></span>
+            </div>
+            <div class="post-content" th:text="${post.content}"></div>
+            <img th:if="${post.imagePath != null}" th:src="${post.imagePath}" class="post-image" alt="첨부 이미지">
+
+            <!-- 투표 섹션 -->
+            <div class="vote-section" th:if="${post.category == '투표' and not #lists.isEmpty(post.voteItems)}">
+                <div th:each="item : ${post.voteItems}" class="vote-item">
+                    <form th:action="@{/vote/{id}(id=${item.id})}" method="post">
+                        <input type="hidden" name="boardId" th:value="${post.id}">
+                        <button type="submit"
+                            style="width:100%; background:none; border:none; padding:0; cursor:pointer;">
+                            <div class="vote-bar-wrap">
+                                <div class="vote-bar"
+                                    th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
+                                </div>
+                                <span class="vote-label" th:text="${item.itemText}"></span>
+                                <span class="vote-count" th:text="${item.voteCount} + '표'"></span>
+                            </div>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 댓글 -->
+        <div class="card">
+            <strong style="font-size:16px;">댓글 <span th:text="${#lists.size(post.comments)}"></span>개</strong>
+
+            <div th:each="c : ${post.comments}" class="comment-item">
+                <div class="comment-author" th:text="${c.author}"></div>
+                <div class="comment-content" th:text="${c.content}"></div>
+                <div class="comment-date" th:text="${#temporals.format(c.regDate, 'MM/dd HH:mm')}"></div>
+            </div>
+
+            <!-- 댓글 작성 폼 -->
+            <form th:action="@{/board/{id}/comment(id=${post.id})}" method="post" class="comment-form">
+                <div class="author-toggle">
+                    <input type="radio" name="authorType" id="c-anon" value="anon" checked
+                        onchange="toggleCommentAuthor(this.value)">
+                    <label for="c-anon">🙈 익명</label>
+                    <input type="radio" name="authorType" id="c-named" value="named"
+                        onchange="toggleCommentAuthor(this.value)">
+                    <label for="c-named">👤 이름 입력</label>
+                </div>
+                <input type="text" name="author" id="comment-author-input" value="익명" style="display:none;">
+                <textarea name="content" rows="3" placeholder="댓글을 입력하세요" required></textarea>
+                <button type="submit">댓글 등록</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleCommentAuthor(val) {
+            const input = document.getElementById('comment-author-input');
+            if (val === 'named') {
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = '이름을 입력하세요';
+            } else {
+                input.style.display = 'none';
+                input.value = '익명';
+            }
+        }
+    </script>
+</body>
+
+</html>

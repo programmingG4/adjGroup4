@@ -3,64 +3,82 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>2026-1 단국대 컴퓨터공학과 게시판</title>
+    <title>2026-1 DKU 컴퓨터공학과 게시판</title>
     <style>
-        /* 1. 웹 전용 디자인 설정 */
+        :root {
+            --bg: #f7f2ea;
+            --surface: #fffaf4;
+            --text: #5d4633;
+            --text-soft: #9f8773;
+            --point-deep: #b26f49;
+            --border: #eadbc9;
+            --shadow: 0 18px 40px rgba(93, 70, 51, 0.08);
+        }
+
         body {
-            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-            background-color: #f4f6f9;
-            /* 웹사이트 배경색 */
+            font-family: 'Apple SD Gothic Neo', sans-serif;
+            background: linear-gradient(180deg, #f8f3ec 0%, #f4ede4 100%);
             margin: 0;
             padding: 40px 0;
-            /* 상하 여백 */
+            color: var(--text);
         }
 
-        /* 2. 게시판 중앙 컨테이너 (웹 크기) */
         .board-container {
+            position: relative;
             max-width: 900px;
-            /* 웹사이트에 맞는 넓은 너비 */
             margin: 0 auto;
-            /* 중앙 정렬 */
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            /* 조금 더 고급스러운 그림자 */
-            overflow: hidden;
-            /* 테두리 둥글게 유지 */
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding-bottom: 80px; /* 플러스 버튼 공간 확보 */
         }
 
-        /* [추가] 3. 상단 채팅방 이름 영역 */
+        .plus-write-btn {
+            position: absolute;
+            bottom: 25px;
+            right: 25px;
+            width: 56px;
+            height: 56px;
+            background-color: #333;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 32px;
+            font-weight: 300;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, background-color 0.2s;
+            z-index: 10;
+        }
+
+        .plus-write-btn:hover {
+            transform: scale(1.05);
+            background-color: #000;
+        }
+
         .chatroom-header {
             padding: 20px 25px;
             background-color: white;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            background-color: white;
+            border-radius: 20px 20px 0 0;
         }
 
-        /* [추가] 3-1. 채팅방 로고 이미지 스타일 */
         .chatroom-logo {
-            width: auto; /* 이미지 고유 비율 유지 */
-            height: 40px; /* 헤더 높이에 맞게 조절 */
-            margin-right: 15px; /* 글자와의 간격 */
-            display: block; /* 여백 문제 방지 */
+            height: 40px;
+            margin-right: 15px;
         }
 
-        .chatroom-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        /* 4. 카테고리 탭 디자인 (웹 크기에 맞춤) */
         .nav-tabs {
             display: flex;
             list-style: none;
             padding: 0;
             margin: 0;
-            border-bottom: 1px solid #eee;
-            background: white;
+            background: #f6eadb;
         }
 
         .nav-tabs li {
@@ -72,42 +90,30 @@
             display: block;
             padding: 18px 0;
             text-decoration: none;
-            color: #666;
+            color: var(--text-soft);
             font-size: 15px;
+            transition: 0.3s;
         }
 
-        /* 활성화된 탭 밑줄 */
         .nav-tabs li.active {
-            border-bottom: 3px solid #333;
+            background: linear-gradient(180deg, #d99a70, #cb8458);
         }
 
         .nav-tabs li.active a {
-            color: #333;
+            color: white;
             font-weight: bold;
         }
 
-        /* 5. 콘텐츠 영역 */
         .content {
-            padding: 30px;
+            padding: 20px 30px; /* 위아래 패딩 줄임 */
         }
 
-        /* 제목 스타일 */
-        .content h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-top: 0;
-            margin-bottom: 25px;
-            border-left: 5px solid #5c7cfa;
-            padding-left: 10px;
-        }
-
-        /* 게시글 임시 아이템 스타일 */
         .post-item {
             padding: 20px;
-            border: 1px solid #f0f0f0;
-            border-radius: 8px;
-            background-color: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            margin-bottom: 15px;
         }
     </style>
 </head>
@@ -128,12 +134,44 @@
         </ul>
 
         <div class="content">
-            <h3 th:text="${selectedCategory} + ' 게시판'"></h3>
-            <div class="post-item">
-                <strong>[공지] 시스템 점검 안내</strong><br>
-                <span th:text="${selectedCategory} + ' 카테고리의 실제 게시글 목록은 다음 단계에서 구현합니다.'"></span>
+
+            <!-- 게시글 없을 때 -->
+            <div th:if="${#lists.isEmpty(posts)}" class="post-item"
+                style="text-align: center; color: var(--text-soft); padding: 80px 0; width: 100%; box-sizing: border-box;">
+                아직 등록된 게시글이 없습니다.
             </div>
+
+            <!-- 게시글 목록 -->
+            <a th:href="@{/board/{id}(id=${post.id})}" th:each="post : ${posts}" class="post-item"
+                style="display:flex; justify-content:space-between; align-items:center; text-decoration:none; color:inherit;">
+            
+                <!-- 왼쪽: 텍스트 -->
+                <div style="flex:1;">
+                    <div style="margin-bottom: 8px;">
+                        <span style="color: var(--point-deep); font-weight: bold;" th:text="'[' + ${post.category} + '] '"></span>
+                        <strong style="font-size: 17px; color: var(--text);" th:text="${post.title}">제목</strong>
+                    </div>
+                    <p style="white-space: pre-wrap; word-break: break-all; color: var(--text); 
+                              line-height: 1.6; margin: 10px 0;
+                              display: -webkit-box; -webkit-line-clamp: 2; 
+                              -webkit-box-orient: vertical; overflow: hidden;" th:text="${post.content}">내용</p>
+                    <div style="font-size: 12px; color: var(--text-soft); border-top: 1px solid #f0f0f0; 
+                                padding-top: 10px; margin-top: 10px;">
+                        <span th:text="${post.author}">작성자</span> |
+                        <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}">날짜</span>
+                    </div>
+                </div>
+            
+                <!-- 오른쪽: 썸네일 이미지 -->
+                <img th:if="${post.imagePath != null}" th:src="${post.imagePath}" style="width:80px; height:80px; object-fit:cover; 
+                            border-radius:10px; margin-left:15px; 
+                            border:1px solid var(--border);" alt="썸네일">
+            </a>
         </div>
+
+        <!-- 플러스 버튼 하나만 -->
+        <a th:href="@{/board/write}" class="plus-write-btn">+</a>
+
     </div>
 
 </body>
