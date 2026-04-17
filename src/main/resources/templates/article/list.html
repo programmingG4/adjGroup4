@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기사</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="page-shell">
+    <main class="app-frame sub-frame article-page">
+        <section class="article-hero">
+            <div>
+                <h1 class="subpage-title">기사</h1>
+                <p class="subpage-desc">
+                    취업, IT 트렌드, 학교 소식과 기술개발 지원 정보를 원문 기사 기준으로 모아봤어요.
+                </p>
+            </div>
+        </section>
+
+        <div class="article-alert" th:if="${fetchFailed}">
+            <strong>불러오기 안내</strong>
+            <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
+        </div>
+
+        <section class="article-tab-section">
+            <div class="article-tab-list" role="tablist" aria-label="기사 카테고리">
+                <button class="article-tab-button active" type="button" data-category="all">전체</button>
+                <button class="article-tab-button" type="button" data-category="news">뉴스</button>
+                <button class="article-tab-button" type="button" data-category="it">최신 IT정보</button>
+                <button class="article-tab-button" type="button" data-category="career">취창업</button>
+                <button class="article-tab-button" type="button" data-category="support">기술개발 지원</button>
+                <button class="article-tab-button" type="button" data-category="school">학교 소식</button>
+            </div>
+        </section>
+
+        <section class="article-feed-section">
+            <div class="article-feed-head">
+                <div>
+                    <h2 class="section-title">기사 목록</h2>
+                    <p class="card-subtext">
+                        전체 탭은 6개까지만 표시하고, 세부 탭에서는 더보기 버튼으로 기사를 계속 불러올 수 있어요.
+                    </p>
+                </div>
+                <button class="article-more-button" type="button" id="loadMoreButton">더 보기</button>
+            </div>
+
+            <div class="article-grid" id="articleGrid">
+                <a class="article-card"
+                   th:each="article : ${articles}"
+                   th:attr="data-category=${article.categoryKey()}"
+                   th:href="${article.articleUrl()}"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    <div class="article-thumb">
+                        <img class="article-thumb-img"
+                             th:src="@{/articles/image(url=${article.thumbnailUrl()})}"
+                             th:alt="${article.title()}">
+                        <span class="article-badge" th:text="${article.categoryLabel()}">카테고리</span>
+                    </div>
+
+                    <div class="article-card-body">
+                        <div class="article-card-meta">
+                            <p class="article-source" th:text="${article.sourceName()}">출처</p>
+                            <p class="article-published" th:text="${article.publishedAt()}">날짜</p>
+                        </div>
+                        <h3 class="article-title" th:text="${article.title()}">기사 제목</h3>
+                    </div>
+
+                    <div class="article-hover-panel">
+                        <h4 th:text="${article.title()}">기사 제목</h4>
+                        <p th:text="${article.summary()}">기사 요약</p>
+                        <span class="article-hover-link">원문 보기</span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <div class="article-page-dim" id="articleDim"></div>
+
+        <nav class="bottom-nav">
+            <a href="/" class="nav-item" th:classappend="${activeMenu == 'home'} ? ' active' : ''">메인</a>
+            <a href="/chat" class="nav-item" th:classappend="${activeMenu == 'chat'} ? ' active' : ''">채팅</a>
+            <a href="/articles" class="nav-item" th:classappend="${activeMenu == 'articles'} ? ' active' : ''">기사</a>
+            <a href="/mypage" class="nav-item" th:classappend="${activeMenu == 'mypage'} ? ' active' : ''">MY</a>
+        </nav>
+    </main>
+</div>
+
+<script src="/js/article-tabs.js"></script>
+</body>
+</html>
