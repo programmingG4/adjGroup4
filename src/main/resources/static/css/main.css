@@ -665,3 +665,292 @@ a {
         display: none;
     }
 }
+
+/* =========================
+   SPLASH (첫 화면 / index)
+========================= */
+.splash-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    padding: 48px 32px;
+    min-height: calc(100vh - 48px);
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.splash-frame .hero-logo {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.splash-frame .hero-subtext {
+    font-size: 15px;
+    margin-bottom: 16px;
+}
+
+.splash-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* =========================
+   AUTH (로그인 / 회원가입)
+========================= */
+.auth-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px 32px;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: calc(100vh - 48px);
+}
+
+.auth-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.auth-desc {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-bottom: 20px;
+}
+
+/* =========================
+   FORM
+========================= */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    color: var(--text-soft);
+}
+
+input:focus {
+    border-color: var(--point);
+    background: #fff;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(180deg, #d99a70, #cb8458);
+    color: #fffaf4;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(179, 111, 73, 0.28);
+    transition: opacity 0.2s;
+    margin-top: 8px;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: transparent;
+    color: var(--point-deep);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+
+.btn-secondary:hover {
+    background: var(--surface-strong);
+}
+
+/* =========================
+   ERROR MESSAGE
+========================= */
+.error-msg {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.image-error-msg {
+    color: #dc2626;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 6px;
+    display: none;
+}
+
+/* =========================
+   AUTH LINK
+========================= */
+.auth-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-soft);
+}
+
+.auth-link a {
+    color: var(--point-deep);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* =========================
+   UPLOAD BOX
+========================= */
+.upload-box {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 13px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: border-color 0.15s;
+}
+
+.upload-box:hover {
+    border-color: var(--point);
+}
+
+.upload-box input {
+    display: none;
+}
+
+.upload-label {
+    font-size: 13px;
+    color: var(--point-deep);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* =========================
+   LOGOUT BUTTON
+========================= */
+.logout-btn {
+    display: inline-block;
+    padding: 12px 20px;
+    background: var(--surface-strong);
+    color: var(--text-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: inherit;
+}
+
+.logout-btn:hover {
+    background: #eeddd0;
+}
+
+/* =========================
+   MYPAGE (sub-frame)
+========================= */
+.sub-frame {
+    padding-bottom: 100px;
+}
+
+.mypage-section {
+    flex: 1;
+    padding: 32px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(255,253,249,0.96), rgba(247,236,224,0.92));
+    border: 1px solid var(--border);
+    border-radius: 18px;
+}
+
+.avatar-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #d99a70, #cb8458);
+    color: #fffaf4;
+    font-size: 22px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.avatar-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.info-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-soft);
+    padding: 0 4px;
+}
