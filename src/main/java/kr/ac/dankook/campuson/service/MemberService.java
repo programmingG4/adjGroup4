@@ -102,6 +102,20 @@ public class MemberService {
         return textAnnotations.path(0).path("description").asText();
     }
 
+    public void changePassword(String studentId, String currentPassword, String newPassword) {
+        Member member = memberRepository.findByStudentId(studentId);
+        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+        member.setPassword(passwordEncoder.encode(newPassword));
+        memberRepository.save(member);
+    }
+
+    public void deleteAccount(String studentId) {
+        Member member = memberRepository.findByStudentId(studentId);
+        memberRepository.delete(member);
+    }
+
     private String saveImage(MultipartFile image) throws IOException {
         String uploadDir = System.getProperty("user.home") + "/uploads/";
         File dir = new File(uploadDir);
