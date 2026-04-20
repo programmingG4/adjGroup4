@@ -1,17 +1,21 @@
 package kr.ac.dankook.campuson.service;
 
-import net.sourceforge.tess4j.Tesseract;
-import net.sourceforge.tess4j.TesseractException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.repository.MemberRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Base64;
 import java.util.UUID;
 
 @Service
@@ -19,6 +23,9 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${google.vision.api-key}")
+    private String googleApiKey;
 
     public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
         this.memberRepository = memberRepository;
@@ -31,7 +38,6 @@ public class MemberService {
             throw new IllegalArgumentException("이미 가입된 학번입니다.");
         }
 
-        // OCR로 이름 + 학과 인증
         String detectedText = extractText(image);
         System.out.println("OCR 인식 텍스트: " + detectedText);
 
@@ -43,10 +49,8 @@ public class MemberService {
             throw new IllegalArgumentException("이름이 단국대 앱 캡쳐와 일치하지 않습니다.");
         }
 
-        // 이미지 저장
         String imagePath = saveImage(image);
 
-        // 회원 저장
         Member member = new Member();
         member.setName(name);
         member.setStudentId(studentId);
@@ -58,20 +62,44 @@ public class MemberService {
     }
 
     private String extractText(MultipartFile image) throws IOException {
-        System.setProperty("jna.library.path", "/opt/homebrew/lib");
+        String base64Image = Base64.getEncoder().encodeToString(image.getBytes());
 
-        BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+        String requestBody = String.format("""
+            {
+              "requests": [
+                {
+                  "image": { "content": "%s" },
+                  "features": [{ "type": "TEXT_DETECTION" }]
+                }
+              ]
+            }
+            """, base64Image);
 
-        Tesseract tesseract = new Tesseract();
-        tesseract.setDatapath("/opt/homebrew/share/tessdata");
-        tesseract.setLanguage("kor");
+        String url = "https://vision.googleapis.com/v1/images:annotate?key=" + googleApiKey;
 
         try {
-            return tesseract.doOCR(bufferedImage);
-        } catch (TesseractException e) {
-            e.printStackTrace();
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("Google Vision 응답: " + response.body());
+            return parseOcrText(response.body());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             return "";
         }
+    }
+
+    private String parseOcrText(String responseBody) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(responseBody);
+        JsonNode textAnnotations = root.path("responses").path(0).path("textAnnotations");
+        if (textAnnotations.isEmpty()) return "";
+        return textAnnotations.path(0).path("description").asText();
     }
 
     private String saveImage(MultipartFile image) throws IOException {
