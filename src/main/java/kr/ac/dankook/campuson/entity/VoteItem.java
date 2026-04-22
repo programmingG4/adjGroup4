@@ -1,7 +1,7 @@
 package kr.ac.dankook.campuson.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+//import java.util.ArrayList;
+//import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.Getter;

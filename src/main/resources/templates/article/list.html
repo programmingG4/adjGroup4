@@ -3,87 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>기사</title>
+    <title>CampusON 기사</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/article-page.css">
 </head>
 <body>
-<div class="page-shell">
-    <main class="app-frame sub-frame article-page">
-        <section class="article-hero">
-            <div>
-                <h1 class="subpage-title">기사</h1>
-                <p class="subpage-desc">
-                    취업, IT 트렌드, 학교 소식과 기술개발 지원 정보를 원문 기사 기준으로 모아봤어요.
-                </p>
-            </div>
-        </section>
+<div class="page-shell article-shell-page">
+    <main class="article-hub">
+        <header class="article-hub-header hero-center hero-center-lined">
+            <h1 class="hero-logo">CAMPUSON</h1>
+            <p class="hero-subtext">학생을 위한 소통과 정보의 시작점</p>
+            <div class="hero-divider" aria-hidden="true"></div>
+        </header>
 
-        <div class="article-alert" th:if="${fetchFailed}">
-            <strong>불러오기 안내</strong>
-            <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
-        </div>
-
-        <section class="article-tab-section">
-            <div class="article-tab-list" role="tablist" aria-label="기사 카테고리">
-                <button class="article-tab-button active" type="button" data-category="all">전체</button>
-                <button class="article-tab-button" type="button" data-category="news">뉴스</button>
-                <button class="article-tab-button" type="button" data-category="it">최신 IT정보</button>
-                <button class="article-tab-button" type="button" data-category="career">취창업</button>
-                <button class="article-tab-button" type="button" data-category="support">기술개발 지원</button>
-                <button class="article-tab-button" type="button" data-category="school">학교 소식</button>
-            </div>
-        </section>
-
-        <section class="article-feed-section">
-            <div class="article-feed-head">
-                <div>
-                    <h2 class="section-title">기사 목록</h2>
-                    <p class="card-subtext">
-                        전체 탭은 6개까지만 표시하고, 세부 탭에서는 더보기 버튼으로 기사를 계속 불러올 수 있어요.
-                    </p>
+        <div class="article-hub-layout">
+            <aside class="article-shared-side-panel">
+                <div class="home-profile-brief article-profile-brief">
+                    <p class="home-side-label">MY PAGE</p>
+                    <h2 class="home-side-name">홍길동 님</h2>
+                    <p class="home-side-meta">소프트웨어학과 · 20231234</p>
+                    <a href="/mypage" class="home-side-link">마이페이지 바로가기</a>
                 </div>
-                <button class="article-more-button" type="button" id="loadMoreButton">더 보기</button>
-            </div>
 
-            <div class="article-grid" id="articleGrid">
-                <a class="article-card"
-                   th:each="article : ${articles}"
-                   th:attr="data-category=${article.categoryKey()}"
-                   th:href="${article.articleUrl()}"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    <div class="article-thumb">
-                        <img class="article-thumb-img"
-                             th:src="@{/articles/image(url=${article.thumbnailUrl()})}"
-                             th:alt="${article.title()}">
-                        <span class="article-badge" th:text="${article.categoryLabel()}">카테고리</span>
+                <nav class="home-shortcut-list article-shortcut-list" aria-label="바로가기">
+                    <a href="/chat" class="home-shortcut-item article-shortcut-item">
+                        <span class="home-shortcut-icon">💬</span>
+                        <span class="home-shortcut-copy">
+                            <strong>채팅</strong>
+                            <small>대화와 팀 소통 확인</small>
+                        </span>
+                    </a>
+                    <a href="/articles" class="home-shortcut-item article-shortcut-item is-active" aria-current="page">
+                        <span class="home-shortcut-icon">📰</span>
+                        <span class="home-shortcut-copy">
+                            <strong>기사</strong>
+                            <small>최신 기사와 헤드라인</small>
+                        </span>
+                    </a>
+                    <a href="/board" class="home-shortcut-item article-shortcut-item">
+                        <span class="home-shortcut-icon">📌</span>
+                        <span class="home-shortcut-copy">
+                            <strong>게시판</strong>
+                            <small>공지와 자유 게시글 확인</small>
+                        </span>
+                    </a>
+                    <a href="/mypage" class="home-shortcut-item article-shortcut-item">
+                        <span class="home-shortcut-icon">👤</span>
+                        <span class="home-shortcut-copy">
+                            <strong>MY</strong>
+                            <small>내 정보와 활동 관리</small>
+                        </span>
+                    </a>
+                </nav>
+            </aside>
+
+            <section class="article-hub-main">
+                <section class="article-hub-intro">
+                    <div>
+                        <p class="article-kicker">ARTICLE</p>
+                        <h1 class="article-main-title">우리 대학교 소식</h1>
+                        <p class="article-main-desc">학교, IT, 취창업, 기술개발 지원 소식을 한 번에 모아보세요. 메인 화면과 같은 톤으로 기사 대표 사진과 미리보기 목록을 이어서 볼 수 있습니다.</p>
                     </div>
+                    <a class="article-main-link" href="/home">메인으로 돌아가기</a>
+                </section>
 
-                    <div class="article-card-body">
-                        <div class="article-card-meta">
-                            <p class="article-source" th:text="${article.sourceName()}">출처</p>
-                            <p class="article-published" th:text="${article.publishedAt()}">날짜</p>
+                <div class="article-alert" th:if="${fetchFailed}">
+                    <strong>불러오기 안내</strong>
+                    <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
+                </div>
+
+                <section class="article-category-strip" aria-label="기사 카테고리">
+                    <button class="article-category-chip active" type="button" data-category="all">전체</button>
+                    <button class="article-category-chip" type="button" data-category="news">뉴스</button>
+                    <button class="article-category-chip" type="button" data-category="it">최신 IT정보</button>
+                    <button class="article-category-chip" type="button" data-category="career">취창업</button>
+                    <button class="article-category-chip" type="button" data-category="support">기술개발 지원</button>
+                    <button class="article-category-chip" type="button" data-category="school">학교 소식</button>
+                </section>
+
+                <section class="article-feature-layout" id="articleFeatureLayout">
+                    <a class="article-feature-main article-feature-card" id="featureMain" href="#" target="_blank" rel="noopener noreferrer">
+                        <img id="featureMainImage" src="/images/article-placeholder.svg" alt="대표 기사 이미지">
+                        <div class="article-feature-overlay">
+                            <span class="article-feature-label" id="featureMainCategory">주요 기사</span>
+                            <h2 id="featureMainTitle">표시할 기사가 없습니다.</h2>
+                            <p id="featureMainSummary">카테고리를 바꾸면 관련 기사가 이 영역에 표시됩니다.</p>
                         </div>
-                        <h3 class="article-title" th:text="${article.title()}">기사 제목</h3>
+                    </a>
+
+                    <div class="article-feature-side">
+                        <a class="article-feature-card article-feature-mini" id="featureSub1" href="#" target="_blank" rel="noopener noreferrer">
+                            <img id="featureSub1Image" src="/images/article-placeholder.svg" alt="보조 기사 이미지 1">
+                            <div class="article-feature-overlay compact">
+                                <span class="article-feature-label" id="featureSub1Category">추천 기사</span>
+                                <h3 id="featureSub1Title">기사를 불러오는 중입니다.</h3>
+                            </div>
+                        </a>
+                        <a class="article-feature-card article-feature-mini" id="featureSub2" href="#" target="_blank" rel="noopener noreferrer">
+                            <img id="featureSub2Image" src="/images/article-placeholder.svg" alt="보조 기사 이미지 2">
+                            <div class="article-feature-overlay compact">
+                                <span class="article-feature-label" id="featureSub2Category">추천 기사</span>
+                                <h3 id="featureSub2Title">기사를 불러오는 중입니다.</h3>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+
+                <section class="article-list-shell">
+                    <div class="article-list-head">
+                        <div>
+                            <h2 class="article-list-title">기사 미리보기</h2>
+                            <p class="article-list-subtitle">한 페이지에 5개씩 보여주고, 페이지를 넘기면 새로운 기사 묶음을 확인할 수 있어요.</p>
+                        </div>
+                        <p class="article-list-page-status" id="articlePageStatus">1 / 1</p>
                     </div>
 
-                    <div class="article-hover-panel">
-                        <h4 th:text="${article.title()}">기사 제목</h4>
-                        <p th:text="${article.summary()}">기사 요약</p>
-                        <span class="article-hover-link">원문 보기</span>
+                    <div class="article-list-rows" id="articleListRows">
+                        <a class="article-row"
+                           th:each="article : ${articles}"
+                           th:attr="data-category=${article.categoryKey()},
+                                    data-category-label=${article.categoryLabel()},
+                                    data-source=${article.sourceName()},
+                                    data-title=${article.title()},
+                                    data-summary=${article.summary()},
+                                    data-image=@{/articles/image(url=${article.thumbnailUrl()})},
+                                    data-published=${article.publishedAt()}"
+                           th:href="${article.articleUrl()}"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            <div class="article-row-thumb-wrap">
+                                <img class="article-row-thumb"
+                                     th:src="@{/articles/image(url=${article.thumbnailUrl()})}"
+                                     th:alt="${article.title()}">
+                            </div>
+                            <div class="article-row-content">
+                                <div class="article-row-meta">
+                                    <span class="article-row-badge" th:text="${article.categoryLabel()}">카테고리</span>
+                                    <span class="article-row-source" th:text="${article.sourceName()}">출처</span>
+                                    <span class="article-row-date" th:text="${article.publishedAt()}">날짜</span>
+                                </div>
+                                <h3 class="article-row-title" th:text="${article.title()}">기사 제목</h3>
+                                <p class="article-row-summary" th:text="${article.summary()}">기사 요약</p>
+                            </div>
+                            <span class="article-row-arrow">→</span>
+                        </a>
                     </div>
-                </a>
-            </div>
-        </section>
 
-        <div class="article-page-dim" id="articleDim"></div>
-
-        <nav class="bottom-nav">
-            <a href="/home" class="nav-item" th:classappend="${activeMenu == 'home'} ? ' active' : ''">메인</a>
-            <a href="/chat" class="nav-item" th:classappend="${activeMenu == 'chat'} ? ' active' : ''">채팅</a>
-            <a href="/articles" class="nav-item" th:classappend="${activeMenu == 'articles'} ? ' active' : ''">기사</a>
-            <a href="/mypage" class="nav-item" th:classappend="${activeMenu == 'mypage'} ? ' active' : ''">MY</a>
-        </nav>
+                    <nav class="article-pagination" aria-label="기사 페이지 이동">
+                        <button class="article-page-button" id="pagePrev" type="button">이전</button>
+                        <div class="article-page-numbers" id="pageNumbers"></div>
+                        <button class="article-page-button" id="pageNext" type="button">다음</button>
+                    </nav>
+                </section>
+            </section>
+        </div>
     </main>
 </div>
 
