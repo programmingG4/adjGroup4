@@ -5,86 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusOn | 글쓰기</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
 </head>
 <body>
-<div class="page-shell board-shell">
-    <main class="app-frame sub-frame board-write-frame">
-        <section class="board-page-head board-write-head">
-            <div>
-                <p class="board-eyebrow">WRITE POST</p>
-                <h1 class="subpage-title">새 게시글 작성</h1>
-                <p class="subpage-desc">간결한 PC 레이아웃으로 작성하고, 이후 모바일 대응도 쉽게 이어갈 수 있도록 정리했습니다.</p>
-            </div>
-            <a href="/board" class="btn-secondary board-write-back">목록으로</a>
-        </section>
+<div class="subtab-shell">
+    <div class="subtab-wrap">
+        <header class="subtab-header">
+            <h1 class="subtab-logo">CAMPUSON</h1>
+            <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+            <div class="subtab-divider"></div>
+        </header>
 
-        <section class="board-write-card">
-            <form th:action="@{/board/save}" method="post" enctype="multipart/form-data" class="board-write-form">
-                <div class="board-form-grid">
-                    <div class="board-form-group">
-                        <label class="board-label">카테고리</label>
-                        <select name="category" id="category-select" class="board-select" onchange="toggleVote(this.value)" required>
-                            <option value="공지">📢 공지</option>
-                            <option value="투표">📊 투표</option>
-                            <option value="스터디 모집">📖 스터디 모집</option>
-                            <option value="중고거래">🤝 중고거래</option>
-                        </select>
-                    </div>
+        <div class="subtab-layout">
+            <aside class="subtab-sidebar">
+                <section class="subtab-panel">
+                    <p class="subtab-panel-eyebrow">WRITE POST</p>
+                    <h2 class="subtab-profile-name">새 게시글 작성</h2>
+                    <p class="subtab-profile-meta">게시판 작성 화면도 같은 톤으로 맞추되, 기존 입력/투표/이미지 업로드 로직은 그대로 유지했습니다.</p>
+                    <a href="/board" class="subtab-profile-link">목록으로 돌아가기</a>
+                </section>
 
-                    <div class="board-form-group">
-                        <label class="board-label">작성자 설정</label>
-                        <div class="board-author-toggle">
-                            <input type="radio" name="authorType" id="anon" value="anon" checked onchange="toggleAuthor(this.value)">
-                            <label for="anon">🙈 익명으로 작성</label>
-                            <input type="radio" name="authorType" id="named" value="named" onchange="toggleAuthor(this.value)">
-                            <label for="named">👤 이름 직접 입력</label>
+                <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+                    <a href="/home" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">⌂</span>
+                        <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+                    </a>
+                    <a href="/chat" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">💬</span>
+                        <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
+                    </a>
+                    <a href="/board" class="subtab-shortcut active">
+                        <span class="subtab-shortcut-icon">📌</span>
+                        <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
+                    </a>
+                    <a href="/mypage" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">👤</span>
+                        <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span>
+                    </a>
+                </nav>
+            </aside>
+
+            <section class="subtab-content board-theme-list">
+                <section class="subtab-section">
+                    <section class="board-page-head board-write-head">
+                        <div>
+                            <p class="board-eyebrow">WRITE POST</p>
+                            <h1 class="subpage-title">새 게시글 작성</h1>
+                            <p class="subpage-desc">간결한 PC 레이아웃으로 작성하고, 이후 모바일 대응도 쉽게 이어갈 수 있도록 정리했습니다.</p>
                         </div>
-                    </div>
-                </div>
+                        <a href="/board" class="btn-secondary board-write-back">목록으로</a>
+                    </section>
+                </section>
 
-                <div class="board-form-group" id="author-input" style="display:none;">
-                    <label class="board-label">작성자 이름</label>
-                    <input type="text" name="author" class="board-input" placeholder="이름을 입력하세요">
-                </div>
+                <section class="subtab-section">
+                    <section class="board-write-card">
+                        <form th:action="@{/board/save}" method="post" enctype="multipart/form-data" class="board-write-form">
+                            <div class="board-form-grid">
+                                <div class="board-form-group">
+                                    <label class="board-label">카테고리</label>
+                                    <select name="category" id="category-select" class="board-select" onchange="toggleVote(this.value)" required>
+                                        <option value="공지">📢 공지</option>
+                                        <option value="투표">📊 투표</option>
+                                        <option value="스터디 모집">📖 스터디 모집</option>
+                                        <option value="중고거래">🤝 중고거래</option>
+                                    </select>
+                                </div>
 
-                <div class="board-form-group">
-                    <label class="board-label">제목</label>
-                    <input type="text" name="title" class="board-input" placeholder="제목을 입력하세요" required>
-                </div>
+                                <div class="board-form-group">
+                                    <label class="board-label">작성자 설정</label>
+                                    <div class="board-author-toggle">
+                                        <input type="radio" name="authorType" id="anon" value="anon" checked onchange="toggleAuthor(this.value)">
+                                        <label for="anon">🙈 익명으로 작성</label>
+                                        <input type="radio" name="authorType" id="named" value="named" onchange="toggleAuthor(this.value)">
+                                        <label for="named">👤 이름 직접 입력</label>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div class="board-form-group">
-                    <label class="board-label">본문</label>
-                    <textarea name="content" rows="8" class="board-textarea" placeholder="학우들과 나누고 싶은 내용을 적어주세요" required></textarea>
-                </div>
+                            <div class="board-form-group" id="author-input" style="display:none;">
+                                <label class="board-label">작성자 이름</label>
+                                <input type="text" name="author" class="board-input" placeholder="이름을 입력하세요">
+                            </div>
 
-                <div class="board-form-group" id="vote-section" style="display:none;">
-                    <label class="board-label">📊 투표 항목</label>
-                    <div id="vote-items" class="board-vote-editor">
-                        <div class="board-vote-edit-row">
-                            <input type="text" name="voteOption" class="board-input" placeholder="항목 1">
-                            <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>
-                        </div>
-                        <div class="board-vote-edit-row">
-                            <input type="text" name="voteOption" class="board-input" placeholder="항목 2">
-                            <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>
-                        </div>
-                    </div>
-                    <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목 추가</button>
-                </div>
+                            <div class="board-form-group">
+                                <label class="board-label">제목</label>
+                                <input type="text" name="title" class="board-input" placeholder="제목을 입력하세요" required>
+                            </div>
 
-                <div class="board-form-group">
-                    <label class="board-label">사진 첨부</label>
-                    <label class="board-upload-box" for="image-input">📷 사진을 선택하세요</label>
-                    <input type="file" id="image-input" name="image" accept="image/*" onchange="previewImage(this)" hidden>
-                    <div id="image-preview" class="board-image-preview" style="display:none;">
-                        <img id="preview-img" src="" alt="미리보기">
-                    </div>
-                </div>
+                            <div class="board-form-group">
+                                <label class="board-label">본문</label>
+                                <textarea name="content" rows="8" class="board-textarea" placeholder="학우들과 나누고 싶은 내용을 적어주세요" required></textarea>
+                            </div>
 
-                <button type="submit" class="btn-primary board-submit-button">작성 완료</button>
-            </form>
-        </section>
-    </main>
+                            <div class="board-form-group" id="vote-section" style="display:none;">
+                                <label class="board-label">📊 투표 항목</label>
+                                <div id="vote-items" class="board-vote-editor">
+                                    <div class="board-vote-edit-row">
+                                        <input type="text" name="voteOption" class="board-input" placeholder="항목 1">
+                                        <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>
+                                    </div>
+                                    <div class="board-vote-edit-row">
+                                        <input type="text" name="voteOption" class="board-input" placeholder="항목 2">
+                                        <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>
+                                    </div>
+                                </div>
+                                <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목 추가</button>
+                            </div>
+
+                            <div class="board-form-group">
+                                <label class="board-label">사진 첨부</label>
+                                <label class="board-upload-box" for="image-input">📷 사진을 선택하세요</label>
+                                <input type="file" id="image-input" name="image" accept="image/*" onchange="previewImage(this)" hidden>
+                                <div id="image-preview" class="board-image-preview" style="display:none;">
+                                    <img id="preview-img" src="" alt="미리보기">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-primary board-submit-button">작성 완료</button>
+                        </form>
+                    </section>
+                </section>
+            </section>
+        </div>
+    </div>
 </div>
 
 <script>

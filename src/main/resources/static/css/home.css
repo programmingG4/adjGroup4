@@ -1,0 +1,351 @@
+.pc-home-frame {
+    background: #ffffff;
+}
+
+.pc-home-header {
+    text-align: center;
+    padding: 8px 0 10px;
+}
+
+.pc-home-logo-wrap {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    line-height: 1;
+}
+
+.pc-home-logo-main,
+.pc-home-logo-sub {
+    font-weight: 900;
+    letter-spacing: -0.06em;
+    color: #3f2f23;
+}
+
+.pc-home-logo-main {
+    font-size: clamp(2.6rem, 4.8vw, 4.8rem);
+}
+
+.pc-home-logo-sub {
+    font-size: clamp(2.1rem, 4vw, 3.8rem);
+    color: #c98a59;
+}
+
+.pc-home-header-copy {
+    margin: 10px 0 0;
+    color: #9a806d;
+    font-size: 0.98rem;
+}
+
+.pc-home-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.pc-home-sidebar,
+.pc-home-content {
+    min-width: 0;
+}
+
+.pc-home-panel,
+.pc-home-strip {
+    border-radius: 28px;
+    border: 1px solid #e7d8c8;
+    background: #f8f1e6;
+}
+
+.pc-home-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 18px;
+}
+
+.pc-home-profile-panel,
+.pc-home-shortcuts {
+    padding: 22px 18px;
+}
+
+.pc-home-panel-title-row,
+.pc-home-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.pc-home-panel-title,
+.pc-home-section-title {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #4d3b2c;
+}
+
+.pc-home-inline-link {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #b67348;
+}
+
+.pc-home-user-card {
+    margin-top: 16px;
+    border-radius: 22px;
+    background: #ffffff;
+    border: 1px solid #eadccf;
+    padding: 18px 16px;
+}
+
+.pc-home-user-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: #f4e6d5;
+    color: #8d6b52;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.pc-home-user-name {
+    margin-top: 14px;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #3f2f23;
+}
+
+.pc-home-user-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f1e5d8;
+    color: #8c7561;
+    font-size: 0.95rem;
+}
+
+.pc-home-user-meta strong {
+    color: #4d3b2c;
+}
+
+.pc-home-shortcuts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pc-home-shortcut {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 54px;
+    padding: 0 14px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #eadccf;
+    transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.pc-home-shortcut:hover,
+.pc-home-shortcut.active {
+    transform: translateX(3px);
+    background: #f5e7d8;
+    border-color: #ddb892;
+}
+
+.pc-home-shortcut-icon {
+    width: 28px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.pc-home-shortcut-text {
+    font-size: 0.97rem;
+    font-weight: 800;
+    color: #4d3b2c;
+}
+
+.pc-home-content {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 18px;
+}
+
+.pc-home-strip {
+    padding: 22px;
+}
+
+.pc-home-chat-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pc-home-chat-item {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) 88px;
+    gap: 14px;
+    align-items: center;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #eadccf;
+    padding: 16px 18px;
+}
+
+.pc-home-chat-room {
+    font-weight: 800;
+    color: #4c3a2c;
+}
+
+.pc-home-chat-message {
+    min-width: 0;
+    color: #7d6451;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pc-home-chat-time {
+    text-align: right;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #a18470;
+}
+
+.pc-home-article-row {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.pc-home-article-pill {
+    display: flex;
+    align-items: center;
+    min-height: 92px;
+    padding: 16px;
+    border-radius: 20px;
+    background: #ffffff;
+    border: 1px solid #eadccf;
+    color: #4d3b2c;
+    font-weight: 800;
+    line-height: 1.45;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.pc-home-article-pill:hover {
+    transform: translateY(-2px);
+    border-color: #dcb08b;
+}
+
+.pc-home-slider-window {
+    margin-top: 16px;
+    overflow: hidden;
+    border-radius: 24px;
+    border: 1px solid #eadccf;
+    background: #ffffff;
+}
+
+.pc-home-slider-track {
+    display: flex;
+    width: 400%;
+    animation: pcHomeSlide 18s linear infinite;
+}
+
+.pc-home-slide {
+    width: 25%;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    min-height: 270px;
+}
+
+.pc-home-slide-image {
+    min-height: 270px;
+    background-size: cover;
+    background-position: center;
+}
+
+.pc-home-slide-image-1 {
+    background-image: linear-gradient(135deg, #d8b08a, #f6e5cf 55%, #b77a50);
+}
+
+.pc-home-slide-image-2 {
+    background-image: linear-gradient(135deg, #eed8c0, #f7f1e7 50%, #c5936a);
+}
+
+.pc-home-slide-image-3 {
+    background-image: linear-gradient(135deg, #bd8a61, #f4dfc7 50%, #8e5f3d);
+}
+
+.pc-home-slide-caption {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px 30px;
+    background: #fffdfa;
+}
+
+.pc-home-slide-caption strong {
+    font-size: 1.35rem;
+    color: #463427;
+}
+
+.pc-home-slide-caption span {
+    line-height: 1.7;
+    color: #816856;
+}
+
+@keyframes pcHomeSlide {
+    0% { transform: translateX(0); }
+    24% { transform: translateX(0); }
+    28% { transform: translateX(-25%); }
+    49% { transform: translateX(-25%); }
+    53% { transform: translateX(-50%); }
+    74% { transform: translateX(-50%); }
+    78% { transform: translateX(-75%); }
+    100% { transform: translateX(-75%); }
+}
+
+@media (max-width: 1024px) {
+    .pc-home-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .pc-home-chat-item {
+        grid-template-columns: 1fr;
+    }
+
+    .pc-home-chat-time {
+        text-align: left;
+    }
+
+    .pc-home-article-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pc-home-slide {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .pc-home-logo-wrap {
+        gap: 6px;
+    }
+
+    .pc-home-strip,
+    .pc-home-profile-panel,
+    .pc-home-shortcuts {
+        padding: 18px;
+    }
+
+    .pc-home-article-row {
+        grid-template-columns: 1fr;
+    }
+}

@@ -5,24 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>채팅</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
 </head>
 <body>
-<div class="page-shell">
-    <main class="app-frame sub-frame">
-        <section class="subpage-section">
-            <h1 class="subpage-title">채팅</h1>
-            <p class="subpage-desc">채팅 기능은 준비 중이에요. 지금은 게시판을 이용해보세요!</p>
-            <a href="/board" class="btn-primary" style="text-align:center;">게시판 바로가기</a>
-            <div class="placeholder large">채팅 기능 준비 중</div>
-        </section>
+<div class="subtab-shell">
+    <div class="subtab-wrap">
+        <header class="subtab-header">
+            <h1 class="subtab-logo">CAMPUSON</h1>
+            <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+            <div class="subtab-divider"></div>
+        </header>
 
-        <nav class="bottom-nav">
-            <a href="/home" class="nav-item" th:classappend="${activeMenu == 'home'} ? ' active' : ''">메인</a>
-            <a href="/chat" class="nav-item" th:classappend="${activeMenu == 'chat'} ? ' active' : ''">채팅</a>
-            <a href="/articles" class="nav-item" th:classappend="${activeMenu == 'articles'} ? ' active' : ''">기사</a>
-            <a href="/mypage" class="nav-item" th:classappend="${activeMenu == 'mypage'} ? ' active' : ''">MY</a>
-        </nav>
-    </main>
+        <div class="subtab-layout">
+            <aside class="subtab-sidebar">
+                <section class="subtab-panel">
+                    <p class="subtab-panel-eyebrow">CHAT TAB</p>
+                    <h2 class="subtab-profile-name">실시간 소통 공간</h2>
+                    <p class="subtab-profile-meta">팀 프로젝트, 스터디, 공지 공유까지 한 번에 이어지는 채팅 테마를 임시로 통합했습니다.</p>
+                    <a href="/chat" class="subtab-profile-link">채팅 홈 보기</a>
+                </section>
+
+                <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+                    <a href="/home" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">⌂</span>
+                        <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+                    </a>
+                    <a href="/chat" class="subtab-shortcut active">
+                        <span class="subtab-shortcut-icon">💬</span>
+                        <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
+                    </a>
+                    <a href="/board" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">📌</span>
+                        <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
+                    </a>
+                    <a href="/mypage" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">👤</span>
+                        <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span>
+                    </a>
+                </nav>
+            </aside>
+
+            <section class="subtab-content">
+                <section class="subtab-section">
+                    <div class="subtab-title-row">
+                        <div>
+                            <p class="subtab-eyebrow">CHAT</p>
+                            <h2 class="subtab-title">채팅방 소식을 한눈에</h2>
+                            <p class="subtab-desc">실제 기능 연결 전까지도 메인과 어울리는 테마를 유지하도록, 최근 대화 흐름과 바로가기 동선을 같은 결로 정리했습니다.</p>
+                        </div>
+                        <a href="/board" class="subtab-chip">게시판으로 이동</a>
+                    </div>
+
+                    <div class="chat-theme-card-list">
+                        <article class="chat-theme-card">
+                            <div>
+                                <div class="chat-theme-card-title">웹프로그래밍 팀 프로젝트</div>
+                                <div class="chat-theme-card-sub">발표 자료 수정, 역할 분담, 최종 제출 체크가 이어지는 공간입니다.</div>
+                            </div>
+                            <div class="chat-theme-card-badge">최근 대화 14건</div>
+                        </article>
+                        <article class="chat-theme-card">
+                            <div>
+                                <div class="chat-theme-card-title">운영체제 스터디 3팀</div>
+                                <div class="chat-theme-card-sub">시험 범위 정리, 문제 풀이 공유, 발표 일정 조율 내용을 확인할 수 있어요.</div>
+                            </div>
+                            <div class="chat-theme-card-badge">오늘 업데이트</div>
+                        </article>
+                        <article class="chat-theme-card">
+                            <div>
+                                <div class="chat-theme-card-title">소프트웨어학과 공지 공유방</div>
+                                <div class="chat-theme-card-sub">공식 공지 링크, 특강 일정, 공모전 안내를 빠르게 전달하는 용도입니다.</div>
+                            </div>
+                            <div class="chat-theme-card-badge">읽지 않음 3</div>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="subtab-section">
+                    <div class="subtab-grid-two">
+                        <article class="subtab-soft-card">
+                            <h3>준비 중인 기능</h3>
+                            <p>실시간 메시지, 읽음 처리, 채팅방 생성, 파일 첨부 기능을 차례로 연결할 수 있도록 구조를 비워 두었습니다.</p>
+                        </article>
+                        <article class="subtab-soft-card">
+                            <h3>지금 가능한 동선</h3>
+                            <ul>
+                                <li>게시판으로 이동해 공지와 모집 글 확인</li>
+                                <li>마이페이지에서 계정 정보 점검</li>
+                                <li>메인으로 돌아가 기사/채팅 요약 보기</li>
+                            </ul>
+                        </article>
+                    </div>
+                    <div class="subtab-cta-row">
+                        <a href="/board" class="subtab-button primary">게시판 열기</a>
+                        <a href="/home" class="subtab-button secondary">메인으로 이동</a>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
 </div>
 </body>
 </html>
