@@ -2,7 +2,7 @@ spring.application.name=campuson
 
 spring.datasource.url=jdbc:mysql://localhost:3306/campuson
 spring.datasource.username=root
-spring.datasource.password=sammymysql1326*
+spring.datasource.password=여기에_DB_비밀번호_입력
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 spring.jpa.hibernate.ddl-auto=update
@@ -13,4 +13,4 @@ spring.servlet.multipart.max-request-size=10MB
 
 spring.security.authentication.hide-user-not-found-exceptions=false
 
-jna.library.path=/opt/homebrew/lib
+google.vision.api-key=여기에_GOOGLE_API_KEY_입력
