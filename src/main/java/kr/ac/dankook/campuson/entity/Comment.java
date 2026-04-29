@@ -14,6 +14,7 @@ public class Comment {
     private Long id;
     private String content;
     private String author;
+    private Long memberId; // 로그인 연동용
     private LocalDateTime regDate = LocalDateTime.now();
 
     @ManyToOne

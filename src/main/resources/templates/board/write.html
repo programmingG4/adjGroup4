@@ -1,165 +1,314 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusOn | 글쓰기</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        /* 익명 토글 버튼 */
+        .anon-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: 1.5px solid #eadbc9;
+            border-radius: 20px;
+            background: #fffaf4;
+            color: #9f8773;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        .anon-toggle-btn.active {
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            color: white;
+            border-color: #cb8458;
+        }
+
+        .anon-toggle-btn input[type="checkbox"] {
+            display: none;
+        }
+
+        /* 하단 옵션 버튼들 */
+        .board-options-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .board-option-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: 1.5px solid #eadbc9;
+            border-radius: 20px;
+            background: #fffaf4;
+            color: #9f8773;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .board-option-btn.active {
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            color: white;
+            border-color: #cb8458;
+        }
+
+        /* 카테고리/작성자 한줄 정렬 */
+        .board-form-top-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .board-form-top-row .board-form-group {
+            margin-bottom: 0;
+        }
+
+        .board-form-top-row .category-group {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .board-form-top-row .author-group {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+    </style>
 </head>
+
 <body>
-<div class="subtab-shell">
-    <div class="subtab-wrap">
-        <header class="subtab-header">
-            <h1 class="subtab-logo">CAMPUSON</h1>
-            <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
-            <div class="subtab-divider"></div>
-        </header>
+    <div class="subtab-shell">
+        <div class="subtab-wrap">
+            <header class="subtab-header">
+                <h1 class="subtab-logo">CAMPUSON</h1>
+                <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+                <div class="subtab-divider"></div>
+            </header>
 
-        <div class="subtab-layout">
-            <aside class="subtab-sidebar">
-                <section class="subtab-panel">
-                    <p class="subtab-panel-eyebrow">WRITE POST</p>
-                    <h2 class="subtab-profile-name">새 게시글 작성</h2>
-                    <p class="subtab-profile-meta">게시판 작성 화면도 같은 톤으로 맞추되, 기존 입력/투표/이미지 업로드 로직은 그대로 유지했습니다.</p>
-                    <a href="/board" class="subtab-profile-link">목록으로 돌아가기</a>
-                </section>
+            <div class="subtab-layout">
+                <aside class="subtab-sidebar">
+                    <section class="subtab-panel">
+                        <p class="subtab-panel-eyebrow">WRITE POST</p>
+                        <h2 class="subtab-profile-name">새 게시글 작성</h2>
+                        <p class="subtab-profile-meta">게시판 작성 화면도 같은 톤으로 맞추되, 기존 입력/투표/이미지 업로드 로직은 그대로 유지했습니다.</p>
+                        <a href="/board" class="subtab-profile-link">목록으로 돌아가기</a>
+                    </section>
 
-                <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
-                    <a href="/home" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">⌂</span>
-                        <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
-                    </a>
-                    <a href="/chat" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">💬</span>
-                        <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
-                    </a>
-                    <a href="/board" class="subtab-shortcut active">
-                        <span class="subtab-shortcut-icon">📌</span>
-                        <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
-                    </a>
-                    <a href="/mypage" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">👤</span>
-                        <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span>
-                    </a>
-                </nav>
-            </aside>
+                    <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+                        <a href="/home" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">⌂</span>
+                            <span><strong class="subtab-shortcut-title">메인</strong><span
+                                    class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+                        </a>
+                        <a href="/chat" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">💬</span>
+                            <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀
+                                    소통과 알림 확인</span></span>
+                        </a>
+                        <a href="/board" class="subtab-shortcut active">
+                            <span class="subtab-shortcut-icon">📌</span>
+                            <span><strong class="subtab-shortcut-title">게시판</strong><span
+                                    class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
+                        </a>
+                        <a href="/mypage" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">👤</span>
+                            <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내
+                                    정보와 활동 관리</span></span>
+                        </a>
+                    </nav>
+                </aside>
 
-            <section class="subtab-content board-theme-list">
-                <section class="subtab-section">
-                    <section class="board-page-head board-write-head">
-                        <div>
-                            <p class="board-eyebrow">WRITE POST</p>
-                            <h1 class="subpage-title">새 게시글 작성</h1>
-                            <p class="subpage-desc">간결한 PC 레이아웃으로 작성하고, 이후 모바일 대응도 쉽게 이어갈 수 있도록 정리했습니다.</p>
-                        </div>
-                        <a href="/board" class="btn-secondary board-write-back">목록으로</a>
+                <section class="subtab-content board-theme-list">
+                    <section class="subtab-section">
+                        <section class="board-page-head board-write-head">
+                            <div>
+                                <p class="board-eyebrow">WRITE POST</p>
+                                <h1 class="subpage-title">새 게시글 작성</h1>
+                                <p class="subpage-desc">간결한 PC 레이아웃으로 작성하고, 이후 모바일 대응도 쉽게 이어갈 수 있도록 정리했습니다.</p>
+                            </div>
+                            <a href="/board" class="btn-secondary board-write-back">목록으로</a>
+                        </section>
+                    </section>
+
+                    <section class="subtab-section">
+                        <section class="board-write-card">
+                            <form th:action="@{/board/save}" method="post" enctype="multipart/form-data"
+                                class="board-write-form">
+
+                                <!-- 카테고리 + 익명 토글 한 줄 -->
+                                <div class="board-form-top-row">
+                                    <div class="board-form-group category-group">
+                                        <label class="board-label">카테고리</label>
+                                        <select name="category" id="category-select" class="board-select" required>
+                                            <option value="익명 게시판">🎭 익명 게시판</option>
+                                            <option value="중고거래">🤝 중고거래</option>
+                                            <option value="스터디 모집">📖 스터디 모집</option>
+                                        </select>
+                                    </div>
+                                    <div class="author-group">
+                                        <label class="board-label" style="margin-bottom:8px;">작성자</label>
+                                        <!-- 익명 토글 버튼 -->
+                                        <label class="anon-toggle-btn" id="anon-toggle-label">
+                                            <input type="checkbox" id="anon-check"
+                                                onchange="toggleAuthor(this.checked)">
+                                            <span id="anon-toggle-text">익명</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- 기명일 때 작성자 표시 -->
+                                <div class="board-form-group" id="author-display" style="display:block;">
+                                    <input type="text" name="author" id="author-input-field" class="board-input" th:value="${loginMemberName}"
+                                        th:attr="data-name=${loginMemberName}" readonly style="background:#f0f0f0; cursor:not-allowed;">
+                                </div>
+
+                                <!-- 제목 -->
+                                <div class="board-form-group">
+                                    <label class="board-label">제목</label>
+                                    <input type="text" name="title" class="board-input" placeholder="제목을 입력하세요"
+                                        required>
+                                </div>
+
+                                <!-- 본문 -->
+                                <div class="board-form-group">
+                                    <label class="board-label">본문</label>
+                                    <textarea name="content" rows="8" class="board-textarea"
+                                        placeholder="학우들과 나누고 싶은 내용을 적어주세요" required></textarea>
+                                </div>
+
+                                <!-- 하단 옵션 버튼들 -->
+                                <div class="board-options-bar">
+                                    <button type="button" class="board-option-btn" id="photo-btn"
+                                        onclick="togglePhotoSection()">
+                                        📷 사진 첨부
+                                    </button>
+                                    <button type="button" class="board-option-btn" id="vote-btn"
+                                        onclick="toggleVoteSection()">
+                                        📊 투표 만들기
+                                    </button>
+                                </div>
+
+                                <!-- 사진 첨부 섹션 -->
+                                <div class="board-form-group" id="photo-section" style="display:none;">
+                                    <label class="board-upload-box" for="image-input">📷 사진을 선택하세요</label>
+                                    <input type="file" id="image-input" name="images" accept="image/*"
+                                        onchange="previewImages(this)" hidden multiple>
+                                    <div id="image-preview" class="board-image-preview" style="display:none;"></div>
+                                </div>
+
+                                <!-- 투표 섹션 -->
+                                <div class="board-form-group" id="vote-section" style="display:none;">
+                                    <label class="board-label">투표 항목</label>
+                                    <div id="vote-items" class="board-vote-editor">
+                                        <div class="board-vote-edit-row">
+                                            <input type="text" name="voteOption" class="board-input" placeholder="항목 1">
+                                            <button type="button" class="board-mini-button"
+                                                onclick="removeVote(this)">✕</button>
+                                        </div>
+                                        <div class="board-vote-edit-row">
+                                            <input type="text" name="voteOption" class="board-input" placeholder="항목 2">
+                                            <button type="button" class="board-mini-button"
+                                                onclick="removeVote(this)">✕</button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목
+                                        추가</button>
+                                </div>
+
+                                <button type="submit" class="btn-primary board-submit-button">작성 완료</button>
+                            </form>
+                        </section>
                     </section>
                 </section>
-
-                <section class="subtab-section">
-                    <section class="board-write-card">
-                        <form th:action="@{/board/save}" method="post" enctype="multipart/form-data" class="board-write-form">
-                            <div class="board-form-grid">
-                                <div class="board-form-group">
-                                    <label class="board-label">카테고리</label>
-                                    <select name="category" id="category-select" class="board-select" onchange="toggleVote(this.value)" required>
-                                        <option value="공지">📢 공지</option>
-                                        <option value="투표">📊 투표</option>
-                                        <option value="스터디 모집">📖 스터디 모집</option>
-                                        <option value="중고거래">🤝 중고거래</option>
-                                    </select>
-                                </div>
-
-                                <div class="board-form-group">
-                                    <label class="board-label">작성자 설정</label>
-                                    <div class="board-author-toggle">
-                                        <input type="radio" name="authorType" id="anon" value="anon" checked onchange="toggleAuthor(this.value)">
-                                        <label for="anon">🙈 익명으로 작성</label>
-                                        <input type="radio" name="authorType" id="named" value="named" onchange="toggleAuthor(this.value)">
-                                        <label for="named">👤 이름 직접 입력</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="board-form-group" id="author-input" style="display:none;">
-                                <label class="board-label">작성자 이름</label>
-                                <input type="text" name="author" class="board-input" placeholder="이름을 입력하세요">
-                            </div>
-
-                            <div class="board-form-group">
-                                <label class="board-label">제목</label>
-                                <input type="text" name="title" class="board-input" placeholder="제목을 입력하세요" required>
-                            </div>
-
-                            <div class="board-form-group">
-                                <label class="board-label">본문</label>
-                                <textarea name="content" rows="8" class="board-textarea" placeholder="학우들과 나누고 싶은 내용을 적어주세요" required></textarea>
-                            </div>
-
-                            <div class="board-form-group" id="vote-section" style="display:none;">
-                                <label class="board-label">📊 투표 항목</label>
-                                <div id="vote-items" class="board-vote-editor">
-                                    <div class="board-vote-edit-row">
-                                        <input type="text" name="voteOption" class="board-input" placeholder="항목 1">
-                                        <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>
-                                    </div>
-                                    <div class="board-vote-edit-row">
-                                        <input type="text" name="voteOption" class="board-input" placeholder="항목 2">
-                                        <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>
-                                    </div>
-                                </div>
-                                <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목 추가</button>
-                            </div>
-
-                            <div class="board-form-group">
-                                <label class="board-label">사진 첨부</label>
-                                <label class="board-upload-box" for="image-input">📷 사진을 선택하세요</label>
-                                <input type="file" id="image-input" name="image" accept="image/*" onchange="previewImage(this)" hidden>
-                                <div id="image-preview" class="board-image-preview" style="display:none;">
-                                    <img id="preview-img" src="" alt="미리보기">
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn-primary board-submit-button">작성 완료</button>
-                        </form>
-                    </section>
-                </section>
-            </section>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    function toggleVote(val) {
-        document.getElementById('vote-section').style.display = val === '투표' ? 'block' : 'none';
-    }
-    function toggleAuthor(val) {
-        document.getElementById('author-input').style.display = val === 'named' ? 'block' : 'none';
-    }
-    function addVoteItem() {
-        const container = document.getElementById('vote-items');
-        const count = container.children.length + 1;
-        const row = document.createElement('div');
-        row.className = 'board-vote-edit-row';
-        row.innerHTML = `<input type="text" name="voteOption" class="board-input" placeholder="항목 ${count}">
-                         <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>`;
-        container.appendChild(row);
-    }
-    function removeVote(btn) {
-        const rows = document.querySelectorAll('.board-vote-edit-row');
-        if (rows.length > 2) btn.parentElement.remove();
-    }
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                document.getElementById('preview-img').src = e.target.result;
-                document.getElementById('image-preview').style.display = 'block';
-            };
-            reader.readAsDataURL(input.files[0]);
+    <script>
+        // 익명 토글
+        function toggleAuthor(checked) {
+            const authorDisplay = document.getElementById('author-display');
+            const authorInput = document.getElementById('author-input-field');
+            if (checked) {
+                authorDisplay.style.display = 'none';
+                authorInput.value = '';
+                authorInput.removeAttribute('name'); // 폼 전송에서 제외
+            } else {
+                authorDisplay.style.display = 'block';
+                authorInput.value = authorInput.getAttribute('data-name');
+                authorInput.setAttribute('name', 'author'); // 다시 포함
+            }
+            document.getElementById('anon-toggle-label').classList.toggle('active', checked);
         }
-    }
-</script>
+
+        // 사진 섹션 토글
+        function togglePhotoSection() {
+            const section = document.getElementById('photo-section');
+            const btn = document.getElementById('photo-btn');
+            const isOpen = section.style.display !== 'none';
+            section.style.display = isOpen ? 'none' : 'block';
+            btn.classList.toggle('active', !isOpen);
+        }
+
+        // 투표 섹션 토글
+        function toggleVoteSection() {
+            const section = document.getElementById('vote-section');
+            const btn = document.getElementById('vote-btn');
+            const isOpen = section.style.display !== 'none';
+            section.style.display = isOpen ? 'none' : 'block';
+            btn.classList.toggle('active', !isOpen);
+        }
+
+        // 투표 항목 추가
+        function addVoteItem() {
+            const container = document.getElementById('vote-items');
+            const count = container.children.length + 1;
+            const row = document.createElement('div');
+            row.className = 'board-vote-edit-row';
+            row.innerHTML = `<input type="text" name="voteOption" class="board-input" placeholder="항목 ${count}">
+                         <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>`;
+            container.appendChild(row);
+        }
+
+        // 투표 항목 삭제
+        function removeVote(btn) {
+            const rows = document.querySelectorAll('.board-vote-edit-row');
+            if (rows.length > 2) btn.parentElement.remove();
+        }
+
+        // 이미지 여러장 미리보기
+        function previewImages(input) {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
+            if (input.files && input.files.length > 0) {
+                preview.style.display = 'block';
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.cssText = 'width:100%; border-radius:8px; margin-bottom:8px;';
+                        preview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+    </script>
 </body>
+
 </html>

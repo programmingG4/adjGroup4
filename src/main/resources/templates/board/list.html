@@ -90,12 +90,12 @@
                                 </div>
                             </div>
 
-                            <img th:if="${post.imagePath != null}"
-                                 th:src="${post.imagePath}"
-                                 class="board-post-thumb"
-                                 alt="썸네일">
+                            <img th:if="${not #lists.isEmpty(post.imagePaths)}"
+                                th:src="${post.imagePaths[0]}"
+                                class="board-post-thumb"
+                                alt="썸네일">
                         </a>
-                    </section>
+                  </section>
                 </section>
             </section>
         </div>

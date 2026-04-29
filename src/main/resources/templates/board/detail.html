@@ -58,14 +58,36 @@
                             <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}">등록일</span>
                         </div>
                         <div class="board-detail-content" th:text="${post.content}"></div>
-                        <img th:if="${post.imagePath != null}" th:src="${post.imagePath}" class="board-detail-image" alt="첨부 이미지">
-
-                        <section class="board-vote-section" th:if="${post.category == '투표' and not #lists.isEmpty(post.voteItems)}">
+                        <div th:if="${not #lists.isEmpty(post.imagePaths)}" class="board-detail-images">
+                            <img th:each="img : ${post.imagePaths}"
+                                th:src="${img}"
+                                class="board-detail-image" alt="첨부 이미지">
+                        </div>
+                        <div th:if="${loginMemberId != null and loginMemberId == post.memberId}"
+                            style="display:flex; justify-content:flex-end; gap:8px; margin-top:15px;">
+                            <a th:href="@{/board/{id}/edit(id=${post.id})}" style="width:80px; text-align:center; background:#90caf9; color:white;
+                                      padding:8px 0; border-radius:8px; text-decoration:none; font-size:13px;">
+                                ✏️ 수정
+                            </a>
+                            <form th:action="@{/board/{id}/delete(id=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?')">
+                                <button type="submit" style="width:80px; background:#e57373; color:white;
+                                               padding:8px 0; border-radius:8px; border:none;
+                                               cursor:pointer; font-size:13px;">
+                                    🗑 삭제
+                                </button>
+                            </form>
+                        </div>
+                        <section class="board-vote-section" th:if="${not #lists.isEmpty(post.voteItems)}">
                             <h2 class="board-section-title">투표</h2>
+                            <!-- 이미 투표했을 때 메시지 -->
+                            <div th:if="${param.error == 'already_voted'}" style="background:#fff3cd; border:1px solid #ffc107; border-radius:10px;
+                                        padding:12px; margin-bottom:15px; color:#856404; font-size:14px;">
+                                ⚠️ 이미 투표하셨습니다.
+                            </div>
                             <div th:each="item : ${post.voteItems}" class="board-vote-item">
                                 <form th:action="@{/vote/{id}(id=${item.id})}" method="post">
                                     <input type="hidden" name="boardId" th:value="${post.id}">
-                                    <button type="submit" class="board-vote-button">
+                                    <button type="submit" class="board-vote-button" th:disabled="${alreadyVoted}">
                                         <div class="board-vote-track">
                                             <div class="board-vote-fill"
                                                  th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
@@ -88,19 +110,32 @@
                         </div>
 
                         <div th:each="c : ${post.comments}" class="board-comment-item">
-                            <div class="board-comment-author" th:text="${c.author}"></div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div class="board-comment-author" th:text="${c.author}"></div>
+                                <form th:if="${loginMemberId != null and loginMemberId == c.memberId}"
+                                    th:action="@{/comment/{id}/delete(id=${c.id})}" method="post" onsubmit="return confirm('댓글을 삭제하시겠습니까?')">
+                                    <input type="hidden" name="boardId" th:value="${post.id}">
+                                    <button type="submit" class="board-mini-button" style="font-size:11px; padding:3px 8px;">삭제</button>
+                                </form>
+                            </div>
                             <div class="board-comment-content" th:text="${c.content}"></div>
                             <div class="board-comment-date" th:text="${#temporals.format(c.regDate, 'MM/dd HH:mm')}"></div>
                         </div>
 
                         <form th:action="@{/board/{id}/comment(id=${post.id})}" method="post" class="board-comment-form">
-                            <div class="board-author-toggle">
-                                <input type="radio" name="authorType" id="c-anon" value="anon" checked onchange="toggleCommentAuthor(this.value)">
-                                <label for="c-anon">🙈 익명</label>
-                                <input type="radio" name="authorType" id="c-named" value="named" onchange="toggleCommentAuthor(this.value)">
-                                <label for="c-named">👤 이름 입력</label>
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                                <label class="anon-toggle-btn" id="comment-anon-label" style="
+                                    display:inline-flex; align-items:center; gap:6px;
+                                    padding:8px 16px; border:1.5px solid #eadbc9; border-radius:20px;
+                                    background:#fffaf4; color:#9f8773; font-size:14px; cursor:pointer; transition:0.2s;">
+                                    <input type="checkbox" id="comment-anon-check" onchange="toggleCommentAuthor(this.checked)"
+                                        style="display:none;">
+                                    익명
+                                </label>
+                                <input type="text" name="author" id="comment-author-input" th:value="${loginMemberName}"
+                                    th:data-name="${loginMemberName}" class="board-input" readonly
+                                    style="flex:1; background:#f0f0f0; cursor:not-allowed;">
                             </div>
-                            <input type="text" name="author" id="comment-author-input" value="익명" class="board-input" style="display:none;">
                             <textarea name="content" rows="4" class="board-textarea" placeholder="댓글을 입력하세요" required></textarea>
                             <button type="submit" class="btn-primary board-submit-button">댓글 등록</button>
                         </form>
@@ -111,17 +146,20 @@
     </div>
 </div>
 
-<script>
-    function toggleCommentAuthor(val) {
+<script th:inline="javascript">
+    const loginMemberName = /*[[${loginMemberName}]]*/ '익명';
+
+    function toggleCommentAuthor(checked) {
         const input = document.getElementById('comment-author-input');
-        if (val === 'named') {
-            input.style.display = 'block';
-            input.value = '';
-            input.placeholder = '이름을 입력하세요';
-        } else {
-            input.style.display = 'none';
+        const label = document.getElementById('comment-anon-label');
+        if (checked) {
             input.value = '익명';
+        } else {
+            input.value = input.dataset.name;
         }
+        label.style.background = checked ? 'linear-gradient(180deg, #d99a70, #cb8458)' : '#fffaf4';
+        label.style.color = checked ? 'white' : '#9f8773';
+        label.style.borderColor = checked ? '#cb8458' : '#eadbc9';
     }
 </script>
 </body>
