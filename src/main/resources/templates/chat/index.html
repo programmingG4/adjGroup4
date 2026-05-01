@@ -10,40 +10,10 @@
 <body>
 <div class="subtab-shell">
     <div class="subtab-wrap">
-        <header class="subtab-header">
-            <h1 class="subtab-logo">CAMPUSON</h1>
-            <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
-            <div class="subtab-divider"></div>
-        </header>
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
         <div class="subtab-layout">
-            <aside class="subtab-sidebar">
-                <section class="subtab-panel">
-                    <p class="subtab-panel-eyebrow">CHAT TAB</p>
-                    <h2 class="subtab-profile-name">실시간 소통 공간</h2>
-                    <p class="subtab-profile-meta">팀 프로젝트, 스터디, 공지 공유까지 한 번에 이어지는 채팅 테마를 임시로 통합했습니다.</p>
-                    <a href="/chat" class="subtab-profile-link">채팅 홈 보기</a>
-                </section>
-
-                <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
-                    <a href="/home" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">⌂</span>
-                        <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
-                    </a>
-                    <a href="/chat" class="subtab-shortcut active">
-                        <span class="subtab-shortcut-icon">💬</span>
-                        <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
-                    </a>
-                    <a href="/board" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">📌</span>
-                        <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
-                    </a>
-                    <a href="/mypage" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">👤</span>
-                        <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span>
-                    </a>
-                </nav>
-            </aside>
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('chat')}"></aside>
 
             <section class="subtab-content">
                 <section class="subtab-section">

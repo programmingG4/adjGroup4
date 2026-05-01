@@ -17,7 +17,11 @@ public class PageController {
     }
 
     @GetMapping("/chat")
-    public String chat(Model model) {
+    public String chat(Model model, Principal principal) {
+        if (principal != null) {
+            Member member = memberRepository.findByStudentId(principal.getName());
+            model.addAttribute("member", member);
+        }
         model.addAttribute("activeMenu", "chat");
         return "chat/index";
     }

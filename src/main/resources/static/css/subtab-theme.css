@@ -460,3 +460,36 @@ body {
     border-radius: 14px;
   }
 }
+
+/* Shared fragment link reset: CAMPUSON header navigates to home without changing the visual theme. */
+.subtab-logo-link {
+  display: inline-block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.subtab-logo-link:hover {
+  opacity: 0.92;
+}
+
+
+/* Shared sidebar normalization for home/article/sub pages */
+.home-flow-layout > .subtab-sidebar,
+.article-hub-layout > .subtab-sidebar {
+  width: 100%;
+}
+
+.home-flow-layout .subtab-panel,
+.article-hub-layout .subtab-panel {
+  background: rgba(255, 252, 247, 0.48);
+}
+
+.home-flow-layout .subtab-shortcut,
+.article-hub-layout .subtab-shortcut {
+  min-height: 72px;
+}
+
+.home-flow-layout .subtab-shortcut.active,
+.article-hub-layout .subtab-shortcut.active {
+  background: rgba(255, 247, 237, 0.94);
+}

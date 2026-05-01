@@ -16,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -41,8 +42,9 @@ public class MemberService {
         String detectedText = extractText(image);
         System.out.println("OCR 인식 텍스트: " + detectedText);
 
-        if (!detectedText.contains("컴퓨터공학과")) {
-            throw new IllegalArgumentException("컴퓨터공학과 학생만 가입할 수 있습니다.");
+        String department = detectDepartment(detectedText);
+        if (department == null) {
+            throw new IllegalArgumentException("단국대학교 소프트웨어/컴퓨터공학 관련 학과 학생만 가입할 수 있습니다.");
         }
 
         if (!detectedText.contains(name)) {
@@ -55,10 +57,33 @@ public class MemberService {
         member.setName(name);
         member.setStudentId(studentId);
         member.setPassword(passwordEncoder.encode(password));
+        member.setDepartment(department);
         member.setImagePath(imagePath);
         member.setStatus(Member.MemberStatus.APPROVED);
 
         memberRepository.save(member);
+    }
+
+    private String detectDepartment(String detectedText) {
+        if (detectedText == null || detectedText.isBlank()) {
+            return null;
+        }
+
+        List<String> allowedDepartments = List.of(
+                "소프트웨어학과",
+                "컴퓨터공학과",
+                "모바일시스템공학과",
+                "정보통계학과",
+                "산업보안학과"
+        );
+
+        for (String department : allowedDepartments) {
+            if (detectedText.contains(department)) {
+                return department;
+            }
+        }
+
+        return null;
     }
 
     private String extractText(MultipartFile image) throws IOException {

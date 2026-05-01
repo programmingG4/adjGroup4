@@ -1,8 +1,10 @@
 package kr.ac.dankook.campuson.controller;
 
+import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.entity.Board;
 import kr.ac.dankook.campuson.entity.VoteItem;
 import kr.ac.dankook.campuson.repository.BoardRepository;
+import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -20,10 +23,20 @@ public class BoardController {
 
     @Autowired
     private BoardRepository boardRepository;
+
+    @Autowired
+    private MemberRepository memberRepository;
     
     @Autowired
     private BoardService boardService;
     
+    private void addLoginMember(Model model, Principal principal) {
+        if (principal != null) {
+            Member member = memberRepository.findByStudentId(principal.getName());
+            model.addAttribute("member", member);
+        }
+    }
+
     private String getChatRoomName() {
         LocalDate now = LocalDate.now();
         String semester = (now.getMonthValue() >= 3 && now.getMonthValue() <= 8) ? "1학기" : "2학기";
@@ -31,7 +44,8 @@ public class BoardController {
     }
     
     @GetMapping("/board")
-    public String boardList(@RequestParam(value = "category", defaultValue = "전체") String category, Model model) {
+    public String boardList(@RequestParam(value = "category", defaultValue = "전체") String category, Model model, Principal principal) {
+        addLoginMember(model, principal);
         List<String> categories = List.of("전체", "공지", "투표", "스터디 모집", "중고거래"); // 카테고리 목록 정의
         List<Board> posts = boardService.getPostsByCategory(category);
 
@@ -52,7 +66,8 @@ public class BoardController {
     
     // 1. 게시글 작성 버튼 클릭 시 이동
     @GetMapping("/board/write")
-    public String writeForm(Model model) {
+    public String writeForm(Model model, Principal principal) {
+        addLoginMember(model, principal);
         model.addAttribute("categories", List.of("공지", "투표", "스터디 모집", "중고거래"));
         return "board/write";
     }
@@ -90,7 +105,8 @@ public class BoardController {
 
     // 게시글 상세
     @GetMapping("/board/{id}")
-    public String detail(@PathVariable Long id, Model model) {
+    public String detail(@PathVariable Long id, Model model, Principal principal) {
+        addLoginMember(model, principal);
         Board post = boardService.findById(id);
         int totalVotes = post.getVoteItems() == null ? 0 :
             post.getVoteItems().stream().mapToInt(VoteItem::getVoteCount).sum();
