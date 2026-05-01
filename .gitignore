@@ -36,3 +36,4 @@ application.properties
 ### macOS ###
 .DS_Store
 **/.DS_Store
+application.properties
