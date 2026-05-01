@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOn | 채팅게시판 상세</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        /* 익명 토글 */
+        .anon-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: 1.5px solid #eadbc9;
+            border-radius: 20px;
+            background: #fffaf4;
+            color: #9f8773;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        .anon-toggle-btn input[type="checkbox"] {
+            display: none;
+        }
+
+        /* 사진 그리드 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .image-grid img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid #eadbc9;
+            transition: opacity 0.2s;
+        }
+
+        .image-grid img:hover {
+            opacity: 0.85;
+        }
+
+        /* 단일 이미지 */
+        .image-single img {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid #eadbc9;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        /* 이미지 모달 */
+        .img-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .img-modal.open {
+            display: flex;
+        }
+
+        .img-modal img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 12px;
+        }
+
+        .img-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 28px;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+        }
+
+        /* 투표자 목록 */
+        .vote-voters {
+            font-size: 12px;
+            color: #9f8773;
+            margin-top: 6px;
+            padding-left: 4px;
+        }
+
+        .board-detail-card {
+            position: relative; /* 이 속성이 있어야 버튼 위치가 잡힙니다 */
+            padding: 30px;      /* 상단 여백을 충분히 주어 버튼과 제목이 겹치지 않게 합니다 */
+            /* 기존 스타일 유지 */
+        }
+
+        .dropdown-content a:hover {
+            background-color: #fffaf4;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f4f0 !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="subtab-shell">
+        <div class="subtab-wrap">
+            <header class="subtab-header">
+                <h1 class="subtab-logo">CAMPUSON</h1>
+                <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+                <div class="subtab-divider"></div>
+            </header>
+            <div class="subtab-layout">
+                <aside class="subtab-sidebar">
+                    <section class="subtab-panel">
+                        <p class="subtab-panel-eyebrow">TALK BOARD</p>
+                        <h2 class="subtab-profile-name">채팅게시판</h2>
+                        <a th:href="@{/talkboard(category=${fromCategory})}" class="subtab-profile-link">목록으로 돌아가기</a>
+                    </section>
+                    <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+                        <a href="/home" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">⌂</span>
+                            <span><strong class="subtab-shortcut-title">메인</strong><span
+                                    class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+                        </a>
+                        <a href="/chat" class="subtab-shortcut active">
+                            <span class="subtab-shortcut-icon">💬</span>
+                            <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀
+                                    소통과 알림 확인</span></span>
+                        </a>
+                        <a href="/board" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">📌</span>
+                            <span><strong class="subtab-shortcut-title">게시판</strong><span
+                                    class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
+                        </a>
+                        <a href="/mypage" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">👤</span>
+                            <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내
+                                    정보와 활동 관리</span></span>
+                        </a>
+                    </nav>
+                </aside>
+
+                <section class="subtab-content board-theme-list">
+                    <section class="subtab-section">
+                        <a th:href="@{/talkboard(category=${fromCategory})}" class="board-back-link">← 채팅게시판으로 돌아가기</a>
+                        <article class="board-detail-card">
+                            <div class="board-detail-category">[공지]</div>
+                            <h1 class="board-detail-title" th:text="${post.title}"></h1>
+                            <div class="board-detail-meta">
+                                <span th:text="${post.author}"></span>
+                                <span class="board-meta-divider">•</span>
+                                <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}"></span>
+                            </div>
+                            <div class="board-detail-content" th:text="${post.content}"></div>
+
+                            <!-- 이미지 -->
+                            <div th:if="${not #lists.isEmpty(post.imagePaths)}" style="margin-top:16px;">
+                                <!-- 1장: 크게 -->
+                                <div th:if="${#lists.size(post.imagePaths) == 1}" id="image-list">
+                                    <img th:src="${post.imagePaths[0]}" th:attr="data-index=0" onclick="openModal(0)" alt="첨부 이미지"
+                                        style="width:100%; border-radius:12px; border:1px solid #eadbc9; cursor:pointer; display:block;">
+                                </div>
+                                <!-- 2장 이상: 정방형 그리드 -->
+                                <div th:if="${#lists.size(post.imagePaths) > 1}" id="image-list"
+                                    style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px;">
+                                    <img th:each="img, stat : ${post.imagePaths}" th:src="${img}" th:attr="data-index=${stat.index}"
+                                        onclick="openModal(this.getAttribute('data-index'))" alt="첨부 이미지" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px;
+                                                border:1px solid #eadbc9; cursor:pointer; display:block;">
+                                </div>
+                            </div>
+
+                            <!-- 동영상 -->
+                            <div th:if="${not #lists.isEmpty(post.videoPaths)}" style="margin-top:16px;">
+                                <video th:each="vid : ${post.videoPaths}" th:src="${vid}" controls
+                                    style="width:100%; border-radius:12px; margin-bottom:8px; border:1px solid #eadbc9;">
+                                </video>
+                            </div>
+                            
+                            <!-- 파일 -->
+                            <div th:if="${not #lists.isEmpty(post.filePaths)}" style="margin-top:16px;">
+                                <div th:each="i : ${#numbers.sequence(0, #lists.size(post.filePaths) - 1)}" style="display:flex; align-items:center; gap:10px; padding:10px;
+                                            background:#f6eadb; border-radius:8px; margin-bottom:8px;">
+                                    <span>📎</span>
+                                    <a th:href="${post.filePaths[i]}" th:text="${post.fileNames[i]}" download
+                                        style="color:#b26f49; text-decoration:none; font-size:14px;"></a>
+                                </div>
+                            </div>
+
+                            <!-- 수정/삭제 버튼 (본인만) -->
+                            <div th:if="${loginMemberId != null and loginMemberId == post.memberId}"
+                                style="position: absolute; top: 20px; right: 20px;">
+                            
+                                <div class="dropdown-wrapper" style="position: relative; display: inline-block;">
+                                    <button type="button" onclick="toggleDropdown(event)"
+                                        style="background:none; border:none; font-size:20px; cursor:pointer; color:#9f8773; letter-spacing: 2px;">⋮</button>
+                            
+                                    <div id="postDropdown" class="dropdown-content" style="display:none; position:absolute; right:0; top:30px; background:white; 
+                                                min-width:120px; width:max-content; 
+                                                box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+                                                border-radius: 12px; /* 게시글 곡률에 맞춘 부드러운 모서리 */
+                                                z-index: 10; border: 1px solid #f0e4d7; overflow: hidden;">
+                                    
+                                        <a th:href="@{/talkboard/{id}/edit(id=${post.id})}" class="dropdown-item"
+                                            style="color:#555; text-decoration:none; border-bottom:1px solid #f8f0e6; white-space:nowrap;">
+                                            <span>✏️</span> 수정하기
+                                        </a>
+                                        
+                                        <form th:action="@{/talkboard/{id}/delete(id=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?')"
+                                            style="margin:0;">
+                                            <button type="submit" class="dropdown-item"
+                                                style="width:100%; background:none; border:none; color:#e57373; white-space:nowrap; text-align:left;">
+                                                <span>🗑️</span> 삭제하기
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 투표 섹션 -->
+                            <section class="board-vote-section" th:if="${not #lists.isEmpty(post.voteItems)}">
+                                <h2 class="board-section-title">투표</h2>
+                                <div th:each="item : ${post.voteItems}" class="board-vote-item">
+                                    <form th:action="@{/talkboard/vote/{id}(id=${item.id})}" method="post">
+                                        <input type="hidden" name="postId" th:value="${post.id}">
+                                        <button type="submit" class="board-vote-button">
+                                            <div class="board-vote-track">
+                                                <div class="board-vote-fill"
+                                                    th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
+                                                </div>
+                                                <span class="board-vote-label" th:text="${item.itemText}"></span>
+                                                <span class="board-vote-count" th:text="${item.voteCount} + '표'"></span>
+                                            </div>
+                                        </button>
+                                    </form>
+                                    <!-- 투표자 목록 -->
+                                    <div th:if="${not #lists.isEmpty(item.votedMemberNames)}" style="margin-top:6px;">
+                                        <button type="button" onclick="toggleVoters(this)"
+                                            style="background:none; border:none; color:#9f8773; font-size:12px; cursor:pointer; padding:0;">
+                                            투표 (<span th:text="${#lists.size(item.votedMemberNames)}"></span>명) ▼
+                                        </button>
+                                        <div class="voter-list" style="display:none; font-size:12px; color:#9f8773;
+                                                                       margin-top:4px; padding:8px; background:#f6eadb;
+                                                                       border-radius:8px; line-height:1.8;">
+                                            <span th:each="name, stat : ${item.votedMemberNames}">
+                                                <span th:text="${name}"></span><span th:if="${!stat.last}">, </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </article>
+                    </section>
+
+                    <!-- 댓글 -->
+                    <section class="subtab-section">
+                        <article class="board-detail-card">
+                            <div class="board-comment-head">
+                                <h2 class="board-section-title">댓글</h2>
+                                <span class="board-comment-count" th:text="${#lists.size(post.comments)} + '개'"></span>
+                            </div>
+
+                            <div th:each="c : ${post.comments}" class="board-comment-item">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div class="board-comment-author" th:text="${c.author}"></div>
+                                    <form th:if="${loginMemberId != null and loginMemberId == c.memberId}"
+                                        th:action="@{/talkboard/comment/{id}/delete(id=${c.id})}" method="post"
+                                        onsubmit="return confirm('댓글을 삭제하시겠습니까?')">
+                                        <input type="hidden" name="postId" th:value="${post.id}">
+                                        <button type="submit" class="board-mini-button"
+                                            style="font-size:11px; padding:3px 8px;">삭제</button>
+                                    </form>
+                                </div>
+                                <div class="board-comment-content" th:text="${c.content}"></div>
+                                <div class="board-comment-date"
+                                    th:text="${#temporals.format(c.regDate, 'MM/dd HH:mm')}"></div>
+                            </div>
+
+                            <!-- 댓글 작성 (익명 없음) -->
+                            <form th:action="@{/talkboard/{id}/comment(id=${post.id})}" method="post"
+                                class="board-comment-form">
+                                <input type="hidden" name="author" th:value="${loginMemberName}">
+                                <textarea name="content" rows="4" class="board-textarea" placeholder="댓글을 입력하세요"
+                                    required></textarea>
+                                <button type="submit" class="btn-primary board-submit-button">댓글 등록</button>
+                            </form>
+                        </article>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- 이미지 모달 -->
+    <div id="imgModal" onclick="closeModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9);
+                z-index:1000; align-items:center; justify-content:center;">
+        <span onclick="closeModal()" style="position:absolute; top:20px; right:28px; color:white;
+                     font-size:32px; cursor:pointer;">✕</span>
+        <!-- 이전 버튼 -->
+        <button onclick="event.stopPropagation(); modalSlide(-1)" style="position:absolute; left:20px; top:50%; transform:translateY(-50%);
+                       background:rgba(255,255,255,0.2); color:white; border:none;
+                       border-radius:50%; width:44px; height:44px; font-size:24px;
+                       cursor:pointer; z-index:10;">‹</button>
+        <img id="modalImg" src="" alt="확대 이미지" onclick="event.stopPropagation()"
+            style="max-width:90vw; max-height:85vh; border-radius:12px;">
+        <!-- 다음 버튼 -->
+        <button onclick="event.stopPropagation(); modalSlide(1)" style="position:absolute; right:20px; top:50%; transform:translateY(-50%);
+                       background:rgba(255,255,255,0.2); color:white; border:none;
+                       border-radius:50%; width:44px; height:44px; font-size:24px;
+                       cursor:pointer; z-index:10;">›</button>
+        <!-- 인디케이터 -->
+        <div id="modal-indicator" style="position:absolute; bottom:20px; color:white; font-size:13px;"></div>
+    </div>
+
+    <script>
+        // 모달 슬라이더
+        let modalIndex = 0;
+        const modalImages = Array.from(document.querySelectorAll('#image-list img'));
+
+        function openModal(idx) {
+            modalIndex = parseInt(idx);
+            updateModal();
+            document.getElementById('imgModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('imgModal').style.display = 'none';
+        }
+
+        function modalSlide(dir) {
+            if (modalImages.length === 0) return;
+            modalIndex = (modalIndex + dir + modalImages.length) % modalImages.length;
+            updateModal();
+        }
+
+        function updateModal() {
+            document.getElementById('modalImg').src = modalImages[modalIndex].src;
+            const indicator = document.getElementById('modal-indicator');
+            if (modalImages.length > 1) {
+                indicator.textContent = `${modalIndex + 1} / ${modalImages.length}`;
+            } else {
+                indicator.textContent = '';
+            }
+        }
+
+        // 키보드 방향키로도 넘기기
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('imgModal').style.display === 'flex') {
+                if (e.key === 'ArrowLeft') modalSlide(-1);
+                if (e.key === 'ArrowRight') modalSlide(1);
+                if (e.key === 'Escape') closeModal();
+            }
+        });
+
+        function toggleVoters(btn) {
+            const list = btn.nextElementSibling;
+            const isVisible = list.style.display !== 'none';
+            list.style.display = isVisible ? 'none' : 'block';
+            btn.innerHTML = btn.innerHTML.replace(
+                isVisible ? '▲' : '▼',
+                isVisible ? '▼' : '▲'
+            );
+        }
+
+        function toggleDropdown(event) {
+            event.stopPropagation(); // 부모 클릭 이벤트 전파 방지
+            const dropdown = document.getElementById('postDropdown');
+            dropdown.style.display = (dropdown.style.display === 'none' || dropdown.style.display === '') ? 'block' : 'none';
+        }
+
+        // 메뉴 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const dropdown = document.getElementById('postDropdown');
+            if (dropdown && dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

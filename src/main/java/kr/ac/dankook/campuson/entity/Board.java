@@ -18,6 +18,8 @@ public class Board {
 
     private String title;
 
+    private Long chatRoomId; // 연동될 채팅방 ID (나중에 채팅 기능 완성 후 사용)
+
     @Column(columnDefinition = "TEXT")
     private String content;
 

@@ -45,7 +45,7 @@ public class BoardController {
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
         model.addAttribute("selectedCategory", category);
-        model.addAttribute("categories", List.of("익명 게시판", "중고거래", "스터디 모집"));
+        model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
 
         model.addAttribute("posts", boardService.getPostsByCategory(category));
         model.addAttribute("chatRoomName", getChatRoomName());
@@ -57,7 +57,7 @@ public class BoardController {
 
     @GetMapping("/board/write")
     public String writeForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        model.addAttribute("categories", List.of("익명 게시판", "중고거래", "스터디 모집"));
+        model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
 
         // 로그인 유저 이름_학번 형식으로 전달
         Member loginMember = getLoginMember(userDetails);
@@ -108,8 +108,13 @@ public class BoardController {
         boardService.save(board);
 
         // 투표 항목 저장
-        if ("익명 게시판".equals(board.getCategory()) && voteItems != null) {
-            boardService.saveVoteItems(board, voteItems);
+        if (voteItems != null && !voteItems.isEmpty()) {
+            List<String> validItems = voteItems.stream()
+                    .filter(item -> item != null && !item.isBlank())
+                    .toList();
+            if (!validItems.isEmpty()) {
+                boardService.saveVoteItems(board, validItems);
+            }
         }
 
         return "redirect:/board";
@@ -117,6 +122,7 @@ public class BoardController {
 
     @GetMapping("/board/{id}")
     public String detail(@PathVariable Long id,
+            @RequestParam(required = false) String category,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
         Board post = boardService.findById(id);
@@ -136,14 +142,7 @@ public class BoardController {
         model.addAttribute("totalVotes", totalVotes);
         model.addAttribute("chatRoomName", getChatRoomName());
         model.addAttribute("loginMemberId", loginMemberId);
-
-        // 이미 투표했는지 여부
-        boolean alreadyVoted = false;
-        if (loginMemberId != null && post.getVoteItems() != null) {
-            alreadyVoted = post.getVoteItems().stream()
-                    .anyMatch(v -> v.getVotedMemberIds().contains(loginMemberId));
-        }
-        model.addAttribute("alreadyVoted", alreadyVoted);
+        model.addAttribute("fromCategory", category != null ? category : post.getCategory());
 
         return "board/detail";
     }
@@ -171,7 +170,7 @@ public class BoardController {
             return "redirect:/board";
         }
         model.addAttribute("post", post);
-        model.addAttribute("categories", List.of("익명 게시판", "중고거래", "스터디 모집"));
+        model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
         return "board/edit";
     }
 
@@ -229,10 +228,7 @@ public class BoardController {
         if (loginMember == null)
             return "redirect:/login";
 
-        String result = boardService.vote(voteItemId, loginMember.getId());
-        if ("already_voted".equals(result)) {
-            return "redirect:/board/" + boardId + "?error=already_voted";
-        }
+        boardService.vote(voteItemId, loginMember.getId());
         return "redirect:/board/" + boardId;
     }
 }

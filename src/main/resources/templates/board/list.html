@@ -74,9 +74,8 @@
                             아직 등록된 게시글이 없습니다.
                         </div>
 
-                        <a th:href="@{/board/{id}(id=${post.id})}"
-                           th:each="post : ${posts}"
-                           class="board-post-card">
+                        <a th:href="@{/board/{id}(id=${post.id}, category=${selectedCategory})}" th:each="post : ${posts}"
+                            class="board-post-card">
                             <div class="board-post-main">
                                 <div class="board-post-head">
                                     <span class="board-post-category" th:text="'[' + ${post.category} + ']'">[카테고리]</span>

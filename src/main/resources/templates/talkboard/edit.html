@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CampusOn | 게시글 수정</title>
+    <title>CampusOn | 채팅게시판 수정</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
 </head>
@@ -15,25 +15,23 @@
             <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
             <div class="subtab-divider"></div>
         </header>
-
         <div class="subtab-layout">
             <aside class="subtab-sidebar">
                 <section class="subtab-panel">
-                    <p class="subtab-panel-eyebrow">EDIT POST</p>
+                    <p class="subtab-panel-eyebrow">TALK BOARD</p>
                     <h2 class="subtab-profile-name">게시글 수정</h2>
-                    <a th:href="@{/board/{id}(id=${post.id})}" class="subtab-profile-link">돌아가기</a>
+                    <a th:href="@{/talkboard/{id}(id=${post.id})}" class="subtab-profile-link">돌아가기</a>
                 </section>
-
                 <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
                     <a href="/home" class="subtab-shortcut">
                         <span class="subtab-shortcut-icon">⌂</span>
                         <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
                     </a>
-                    <a href="/chat" class="subtab-shortcut">
+                    <a href="/chat" class="subtab-shortcut active">
                         <span class="subtab-shortcut-icon">💬</span>
                         <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
                     </a>
-                    <a href="/board" class="subtab-shortcut active">
+                    <a href="/board" class="subtab-shortcut">
                         <span class="subtab-shortcut-icon">📌</span>
                         <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
                     </a>
@@ -47,29 +45,17 @@
             <section class="subtab-content board-theme-list">
                 <section class="subtab-section">
                     <section class="board-write-card">
-                        <form th:action="@{/board/{id}/edit(id=${post.id})}" method="post" class="board-write-form">
-
-                            <div class="board-form-group">
-                                <label class="board-label">카테고리</label>
-                                <select name="category" class="board-select" required>
-                                    <option value="익명 게시판" th:selected="${post.category == '익명 게시판'}">🎭 익명 게시판</option>
-                                    <option value="중고거래 게시판" th:selected="${post.category == '중고거래 게시판'}">🤝 중고거래 게시판</option>
-                                    <option value="📢 모집중" th:selected="${post.category == '📢 모집중'}">📢 모집중</option>
-                                </select>
-                            </div>
-
+                        <form th:action="@{/talkboard/{id}/edit(id=${post.id})}" method="post" class="board-write-form">
                             <div class="board-form-group">
                                 <label class="board-label">제목</label>
                                 <input type="text" name="title" class="board-input"
                                        th:value="${post.title}" required>
                             </div>
-
                             <div class="board-form-group">
                                 <label class="board-label">본문</label>
                                 <textarea name="content" rows="8" class="board-textarea"
                                           th:text="${post.content}" required></textarea>
                             </div>
-
                             <button type="submit" class="btn-primary board-submit-button">수정 완료</button>
                         </form>
                     </section>

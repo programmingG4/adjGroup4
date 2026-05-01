@@ -24,4 +24,13 @@ public class VoteItem {
     @ManyToOne
     @JoinColumn(name = "board_id")
     private Board board;
+
+    @ManyToOne
+    @JoinColumn(name = "talkboard_id")
+    private TalkBoard talkBoard;
+
+    @ElementCollection
+    @CollectionTable(name = "vote_item_voter_names", joinColumns = @JoinColumn(name = "vote_item_id"))
+    @Column(name = "member_name")
+    private List<String> votedMemberNames = new ArrayList<>();
 }
