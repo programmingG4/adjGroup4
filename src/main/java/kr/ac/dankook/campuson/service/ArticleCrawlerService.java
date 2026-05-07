@@ -21,7 +21,7 @@ import java.util.Set;
 public class ArticleCrawlerService {
 
     private static final Duration CACHE_TTL = Duration.ofMinutes(30);
-    private static final String DKU_LOGO_IMAGE = "/images/dku_cse_logo.jpg";
+    private static final String DKU_NEWS_IMAGE = "/images/dku-news.svg";
 
     private volatile CacheEntry cacheEntry;
 
@@ -237,7 +237,9 @@ public class ArticleCrawlerService {
                     seed.fallbackSummary()
             ), 160);
 
-            String image = firstNonBlank(
+            String image = isDkuCampusSource(seed)
+                    ? DKU_NEWS_IMAGE
+                    : firstNonBlank(
                     absMeta(document, "property", "og:image"),
                     absMeta(document, "name", "twitter:image"),
                     firstImage(document),
@@ -289,7 +291,7 @@ public class ArticleCrawlerService {
                 "https://cms.dankook.ac.kr/web/ace/-39",
                 "단국대학교 공모전·프로그램 공지",
                 "단국대학교 홈페이지에서 제공하는 공모전, 비교과 프로그램, 학생 참여형 공지입니다.",
-                DKU_LOGO_IMAGE,
+                DKU_NEWS_IMAGE,
                 8
         ));
 
@@ -401,7 +403,7 @@ public class ArticleCrawlerService {
 
 
         // 공모전
-        seeds.add(new SeedArticle("contest", "공모전", "단국대학교 ACE사업단", "https://cms.dankook.ac.kr/web/ace/-39", "단국대학교 공모전·프로그램 공지", "단국대학교 홈페이지에서 제공하는 공모전, 비교과 프로그램, 학생 참여형 공지입니다.", "상시 업데이트", DKU_LOGO_IMAGE));
+        seeds.add(new SeedArticle("contest", "공모전", "단국대학교 ACE사업단", "https://cms.dankook.ac.kr/web/ace/-39", "단국대학교 공모전·프로그램 공지", "단국대학교 홈페이지에서 제공하는 공모전, 비교과 프로그램, 학생 참여형 공지입니다.", "상시 업데이트", DKU_NEWS_IMAGE));
         seeds.add(new SeedArticle("contest", "공모전", "위비티", "https://www.wevity.com/?c=find&s=1&gub=1&cidx=22", "위비티 공모전 분야별 목록", "기획, 아이디어, 디자인, 개발 등 대학생이 참여하기 좋은 공모전 정보를 확인할 수 있습니다.", "상시 업데이트"));
         seeds.add(new SeedArticle("contest", "공모전", "캠퍼스픽", "https://www.campuspick.com/contest", "캠퍼스픽 공모전 정보", "대학생 대상 공모전, 대외활동, 학생 참여형 프로그램 정보를 확인할 수 있습니다.", "상시 업데이트"));
         seeds.add(new SeedArticle("career", "취창업", "캠퍼스픽", "https://www.campuspick.com/job", "캠퍼스픽 취업 정보", "대학생과 취업준비생을 위한 채용, 인턴, 취업 관련 정보를 확인할 수 있습니다.", "상시 업데이트"));
@@ -456,6 +458,13 @@ public class ArticleCrawlerService {
             return "";
         }
         return image.absUrl("src");
+    }
+
+
+    private boolean isDkuCampusSource(SeedArticle seed) {
+        String url = seed.articleUrl() == null ? "" : seed.articleUrl().toLowerCase();
+        String source = seed.sourceName() == null ? "" : seed.sourceName();
+        return url.contains("cms.dankook.ac.kr") || source.contains("단국대학교");
     }
 
     private String timeValue(Document document) {
