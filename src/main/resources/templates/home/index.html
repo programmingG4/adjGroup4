@@ -8,91 +8,134 @@
 </head>
 <body>
 <div class="page-shell">
-    <main class="app-frame home-frame">
-        <section class="hero-section">
-            <div class="hero-center">
-                <h1 class="hero-logo">캠퍼스온</h1>
+    <main class="app-frame home-frame home-flow-frame">
+        <section class="hero-section home-soft-hero home-centered-hero">
+            <div class="hero-center hero-center-lined">
+                <h1 class="hero-logo"><span class="hero-logo-campus">CAMPUS</span><span class="hero-logo-on">ON</span></h1>
                 <p class="hero-subtext">학생을 위한 소통과 정보의 시작점</p>
+                <div class="hero-divider" aria-hidden="true"></div>
             </div>
         </section>
 
-        <section class="dashboard-grid">
-            <article class="info-card profile-card">
-                <div class="card-head">
-                    <h2 class="section-title">내 정보</h2>
-                    <a href="/mypage" class="card-link">MY 보기</a>
+        <section class="home-flow-layout">
+            <aside class="home-side-panel">
+                <div class="home-profile-brief">
+                    <p class="home-side-label">MY PAGE</p>
+                    <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '홍길동 님'}">홍길동 님</h2>
+                    <p class="home-side-meta" th:text="${member != null ? member.studentId : '20231234'}">20231234</p>
+                    <a href="/mypage" class="home-side-link">마이페이지 바로가기</a>
                 </div>
-                <p class="card-subtext">마이페이지에서 더 자세한 정보를 확인할 수 있어요.</p>
 
-                <!-- TODO: 로그인 사용자 정보 연동 예정 -->
-                <div class="profile-summary">
-                    <div class="profile-row">
-                        <span class="profile-label">이름</span>
-                        <span class="profile-value">홍길동</span>
-                    </div>
-                    <div class="profile-row">
-                        <span class="profile-label">학과</span>
-                        <span class="profile-value">소프트웨어학과</span>
-                    </div>
-                    <div class="profile-row">
-                        <span class="profile-label">학번</span>
-                        <span class="profile-value">20231234</span>
-                    </div>
-                </div>
-            </article>
+                <nav class="home-shortcut-list" aria-label="바로가기">
+                    <a href="/chat" class="home-shortcut-item">
+                        <span class="home-shortcut-icon">💬</span>
+                        <span class="home-shortcut-copy">
+                            <strong>채팅</strong>
+                            <small>대화와 팀 소통 확인</small>
+                        </span>
+                    </a>
+                    <a href="/articles" class="home-shortcut-item">
+                        <span class="home-shortcut-icon">📰</span>
+                        <span class="home-shortcut-copy">
+                            <strong>기사</strong>
+                            <small>최신 기사와 헤드라인</small>
+                        </span>
+                    </a>
+                    <a href="/board" class="home-shortcut-item">
+                        <span class="home-shortcut-icon">📌</span>
+                        <span class="home-shortcut-copy">
+                            <strong>게시판</strong>
+                            <small>공지와 자유 게시글 확인</small>
+                        </span>
+                    </a>
+                    <a href="/mypage" class="home-shortcut-item">
+                        <span class="home-shortcut-icon">👤</span>
+                        <span class="home-shortcut-copy">
+                            <strong>MY</strong>
+                            <small>내 정보와 활동 관리</small>
+                        </span>
+                    </a>
+                </nav>
+            </aside>
 
-            <article class="info-card feed-card">
-                <div class="card-head">
-                    <h2 class="section-title">채팅방 최신 소식</h2>
-                    <a href="/chat" class="card-link">채팅 보기</a>
-                </div>
-                <p class="card-subtext">최근 활동이 있었던 그룹이에요</p>
+            <div class="home-main-stream">
+                <section class="home-featured-news">
+                    <div class="home-section-head">
+                        <div>
+                            <p class="home-kicker">ARTICLE</p>
+                            <h2 class="home-stream-title">우리 대학교 소식</h2>
+                        </div>
+                        <a href="/articles" class="home-inline-link">전체 기사 보기</a>
+                    </div>
 
-                <!-- TODO: 최근 채팅방 활동 데이터 연동 예정 -->
-                <div class="simple-feed">
-                    <div class="feed-line">
-                        <span class="feed-title">웹프로그래밍 팀 프로젝트</span>
-                        <span class="feed-meta">오후 3:12</span>
-                    </div>
-                    <div class="feed-line">
-                        <span class="feed-title">운영체제 스터디 3팀</span>
-                        <span class="feed-meta">오후 2:48</span>
-                    </div>
-                    <div class="feed-line">
-                        <span class="feed-title">소프트웨어학과 공지 공유방</span>
-                        <span class="feed-meta">오전 11:05</span>
-                    </div>
-                </div>
-            </article>
+                    <section class="home-visual-marquee" aria-label="대표 기사 이미지">
+                        <div class="home-marquee-track">
+                            <div class="home-marquee-slide slide-1"><span>캠퍼스 트렌드</span></div>
+                            <div class="home-marquee-slide slide-2"><span>팀 프로젝트 인사이트</span></div>
+                            <div class="home-marquee-slide slide-3"><span>학생 커리어 가이드</span></div>
+                            <div class="home-marquee-slide slide-4"><span>교내 프로그램 소식</span></div>
+                            <div class="home-marquee-slide slide-1"><span>캠퍼스 트렌드</span></div>
+                            <div class="home-marquee-slide slide-2"><span>팀 프로젝트 인사이트</span></div>
+                        </div>
+                    </section>
 
-            <article class="info-card feed-card">
-                <div class="card-head">
-                    <h2 class="section-title">기사 소식</h2>
-                    <a href="/articles" class="card-link">기사 보기</a>
-                </div>
-                <p class="card-subtext">이런 소식은 어때요?</p>
+                    <div class="home-news-strip-list">
+                        <a href="/articles" class="home-news-strip">
+                            <div class="home-news-thumb thumb-a"></div>
+                            <div class="home-news-copy">
+                                <strong>AI 분야 채용 트렌드, 신입에게 중요한 역량은?</strong>
+                                <p>기술 스택보다 협업 경험과 문제 해결 사례를 보는 기업이 늘고 있습니다.</p>
+                            </div>
+                            <span class="home-news-tag">채용</span>
+                        </a>
+                        <a href="/articles" class="home-news-strip">
+                            <div class="home-news-thumb thumb-b"></div>
+                            <div class="home-news-copy">
+                                <strong>학생 개발자가 알아두면 좋은 협업 도구 정리</strong>
+                                <p>프로젝트 관리, 디자인 공유, 코드 리뷰까지 한 번에 정리한 실전형 가이드입니다.</p>
+                            </div>
+                            <span class="home-news-tag">협업</span>
+                        </a>
+                        <a href="/articles" class="home-news-strip">
+                            <div class="home-news-thumb thumb-c"></div>
+                            <div class="home-news-copy">
+                                <strong>교내 비교과 프로그램 신청 일정 한눈에 보기</strong>
+                                <p>장학, 공모전, 특강 일정까지 놓치기 쉬운 학사 외 활동 소식을 모았습니다.</p>
+                            </div>
+                            <span class="home-news-tag">교내</span>
+                        </a>
+                    </div>
+                </section>
 
-                <!-- TODO: 외부 사이트 크롤링 기사 제목 데이터로 교체 예정 -->
-                <div class="simple-feed">
-                    <div class="feed-line">
-                        <span class="feed-title">AI 분야 채용 트렌드, 신입에게 중요한 역량은?</span>
+                <section class="home-chat-stream">
+                    <div class="home-section-head">
+                        <div>
+                            <p class="home-kicker">CHAT</p>
+                            <h2 class="home-stream-title">채팅방 최신 소식</h2>
+                        </div>
+                        <a href="/chat" class="home-inline-link">채팅방 이동</a>
                     </div>
-                    <div class="feed-line">
-                        <span class="feed-title">학생 개발자가 알아두면 좋은 협업 도구 정리</span>
+
+                    <div class="home-chat-list">
+                        <a href="/chat" class="home-chat-line">
+                            <div class="home-chat-room">웹프로그래밍 팀 프로젝트</div>
+                            <div class="home-chat-message">발표 자료 마지막 장면 수정본 올렸어요. 확인 부탁드립니다.</div>
+                            <div class="home-chat-time">오후 3:12</div>
+                        </a>
+                        <a href="/chat" class="home-chat-line">
+                            <div class="home-chat-room">운영체제 스터디 3팀</div>
+                            <div class="home-chat-message">다음 주 범위는 프로세스 동기화까지로 정리하면 될 것 같아요.</div>
+                            <div class="home-chat-time">오후 2:48</div>
+                        </a>
+                        <a href="/chat" class="home-chat-line">
+                            <div class="home-chat-room">소프트웨어학과 공지 공유방</div>
+                            <div class="home-chat-message">비교과 프로그램 신청 링크가 새로 올라왔습니다. 오늘 자정 마감입니다.</div>
+                            <div class="home-chat-time">오전 11:05</div>
+                        </a>
                     </div>
-                    <div class="feed-line">
-                        <span class="feed-title">교내 비교과 프로그램 신청 일정 한눈에 보기</span>
-                    </div>
-                </div>
-            </article>
+                </section>
+            </div>
         </section>
-
-        <nav class="bottom-nav">
-            <a href="/home" class="nav-item" th:classappend="${activeMenu == 'home'} ? ' active' : ''">메인</a>
-            <a href="/chat" class="nav-item" th:classappend="${activeMenu == 'chat'} ? ' active' : ''">채팅</a>
-            <a href="/articles" class="nav-item" th:classappend="${activeMenu == 'articles'} ? ' active' : ''">기사</a>
-            <a href="/mypage" class="nav-item" th:classappend="${activeMenu == 'mypage'} ? ' active' : ''">MY</a>
-        </nav>
     </main>
 </div>
 </body>

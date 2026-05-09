@@ -5,6 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>회원가입</title>
     <link rel="stylesheet" href="/css/main.css" />
+    <style>
+        select[name="grade"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            font-size: 15px;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aaa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        select[name="grade"]:focus {
+            border-color: var(--point);
+            background-color: #fff;
+        }
+        select[name="grade"] option[value=""][disabled] {
+            color: var(--text-soft);
+        }
+    </style>
 </head>
 <body>
 <div class="page-shell">
@@ -19,6 +44,14 @@
                 <div class="form-group">
                     <input type="text" name="name" placeholder="이름" required />
                     <input type="text" name="studentId" placeholder="학번" required />
+                    <select name="grade" required>
+                        <option value="" disabled selected>학년 선택</option>
+                        <option value="1">1학년</option>
+                        <option value="2">2학년</option>
+                        <option value="3">3학년</option>
+                        <option value="4">4학년</option>
+                    </select>
+                    <p style="margin:0; font-size:12px; color:var(--text-soft); padding-left:4px;">학년은 가입 후 수정이 불가합니다.</p>
                     <input type="password" name="password" placeholder="비밀번호" required />
                 </div>
 

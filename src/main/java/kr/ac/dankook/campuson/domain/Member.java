@@ -29,6 +29,9 @@ public class Member {
     private String imagePath;
 
     @Column(nullable = false)
+    private int grade;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private MemberStatus status = MemberStatus.PENDING;
 

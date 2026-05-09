@@ -27,18 +27,43 @@ public class PageController {
         this.memberService = memberService;
     }
 
-    @GetMapping("/chat")
-    public String chat(Model model) {
-        model.addAttribute("activeMenu", "chat");
-        return "chat/index";
-    }
-
     @GetMapping("/mypage")
     public String mypage(Model model, Principal principal) {
         Member member = memberRepository.findByStudentId(principal.getName());
         model.addAttribute("member", member);
         model.addAttribute("activeMenu", "mypage");
         return "mypage";
+    }
+
+    @GetMapping("/mypage/settings")
+    public String settings(Model model, Principal principal,
+                           @RequestParam(required = false) String updated,
+                           @RequestParam(required = false) String error) {
+        Member member = memberRepository.findByStudentId(principal.getName());
+        model.addAttribute("member", member);
+        if ("password".equals(updated)) {
+            model.addAttribute("successMsg", "비밀번호가 변경되었습니다.");
+        }
+        if ("wrongpw".equals(error)) {
+            model.addAttribute("errorMsg", "현재 비밀번호가 올바르지 않습니다.");
+        }
+        return "mypage-settings";
+    }
+
+    @PostMapping("/mypage/password")
+    public String updatePassword(@RequestParam String currentPassword,
+                                 @RequestParam String newPassword,
+                                 @RequestParam String confirmPassword,
+                                 Principal principal) {
+        if (!newPassword.equals(confirmPassword)) {
+            return "redirect:/mypage/settings?error=wrongpw";
+        }
+        try {
+            memberService.updatePassword(principal.getName(), currentPassword, newPassword);
+            return "redirect:/mypage/settings?updated=password";
+        } catch (IllegalArgumentException e) {
+            return "redirect:/mypage/settings?error=wrongpw";
+        }
     }
 
     @GetMapping("/change-password")
