@@ -7,14 +7,33 @@
     <link rel="stylesheet" href="/css/main.css" />
 </head>
 <body>
-<div class="page-shell">
+<div class="page-shell splash-shell">
     <main class="app-frame splash-frame">
-        <div class="hero-logo">CampusOn</div>
-        <div class="hero-subtext">단국대, 우리 학과만의 커뮤니티</div>
+        <div class="splash-stack">
+            <section class="splash-stage" aria-label="CampusOn 스플래시 애니메이션">
+                <p class="splash-kicker">DKU COMMUNITY PLATFORM</p>
+                <div class="splash-logo-wrap">
+                    <h1 class="splash-logo" aria-label="CampusOn">
+                        <span class="splash-campus">CAMPUS</span>
+                        <span class="splash-on">ON</span>
+                    </h1>
+                    <div class="splash-glow"></div>
+                </div>
+                <p class="hero-subtext splash-subtext">단국대, 우리 학과만의 커뮤니티를 더 넓은 화면에서도 자연스럽게.</p>
+            </section>
 
-        <div class="splash-buttons">
-            <a th:href="@{/login}" class="btn-primary">로그인</a>
-            <a th:href="@{/register}" class="btn-secondary">회원가입</a>
+            <section class="splash-login-panel">
+                <div class="splash-login-inner">
+                    <span class="splash-badge">WELCOME</span>
+                    <h2>CampusOn에 오신 것을 환영합니다</h2>
+                    <p>로그인 후 학과 커뮤니티, 기사, 게시판 기능을 한 화면에서 안정적으로 이용할 수 있어요.</p>
+
+                    <div class="splash-buttons">
+                        <a th:href="@{/login}" class="btn-primary">로그인</a>
+                        <a th:href="@{/register}" class="btn-secondary">회원가입</a>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 </div>
