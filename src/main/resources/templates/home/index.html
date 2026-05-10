@@ -107,21 +107,25 @@
                         <a href="/chat" class="home-inline-link">채팅방 이동</a>
                     </div>
 
-                    <div class="home-chat-list">
-                        <a href="/chat" class="home-chat-line">
-                            <div class="home-chat-room">웹프로그래밍 팀 프로젝트</div>
-                            <div class="home-chat-message">발표 자료 마지막 장면 수정본 올렸어요. 확인 부탁드립니다.</div>
-                            <div class="home-chat-time">오후 3:12</div>
+                    <div class="home-chat-list" th:if="${homeChatRooms != null and !homeChatRooms.isEmpty()}">
+                        <a th:each="room : ${homeChatRooms}"
+                           th:href="@{/chat/{id}(id=${room.id})}"
+                           class="home-chat-line">
+                            <div class="home-chat-room" th:text="${room.name}">채팅방</div>
+                            <div th:if="${homeChatLastMessages[room.id] != null}"
+                                 class="home-chat-message"
+                                 th:text="${homeChatLastMessages[room.id].senderName + ': ' + homeChatLastMessages[room.id].content}">메시지</div>
+                            <div th:if="${homeChatLastMessages[room.id] == null}"
+                                 class="home-chat-message">아직 메시지가 없어요.</div>
+                            <div th:if="${homeChatLastMessages[room.id] != null}"
+                                 class="home-chat-time"
+                                 th:text="${#temporals.format(homeChatLastMessages[room.id].sentAt, 'HH:mm')}">00:00</div>
                         </a>
+                    </div>
+                    <div class="home-chat-list" th:if="${homeChatRooms == null or homeChatRooms.isEmpty()}">
                         <a href="/chat" class="home-chat-line">
-                            <div class="home-chat-room">운영체제 스터디 3팀</div>
-                            <div class="home-chat-message">다음 주 범위는 프로세스 동기화까지로 정리하면 될 것 같아요.</div>
-                            <div class="home-chat-time">오후 2:48</div>
-                        </a>
-                        <a href="/chat" class="home-chat-line">
-                            <div class="home-chat-room">소프트웨어학과 공지 공유방</div>
-                            <div class="home-chat-message">비교과 프로그램 신청 링크가 새로 올라왔습니다. 오늘 자정 마감입니다.</div>
-                            <div class="home-chat-time">오전 11:05</div>
+                            <div class="home-chat-room">전체 채팅방</div>
+                            <div class="home-chat-message">채팅방에 입장해서 대화를 시작해보세요.</div>
                         </a>
                     </div>
                 </section>

@@ -33,10 +33,7 @@
                 <span class="my-theme-info-label">이름</span>
                 <span class="my-theme-info-value" th:text="${member != null ? member.name : '사용자'}">홍길동</span>
               </div>
-              <div class="my-theme-info-row">
-                <span class="my-theme-info-label">학과</span>
-                <span class="my-theme-info-value" th:text="${member != null && member.department != null && member.department != '' ? member.department : '학과 정보 없음'}">소프트웨어학과</span>
-              </div>
+
               <div class="my-theme-info-row">
                 <span class="my-theme-info-label">학번</span>
                 <span class="my-theme-info-value" th:text="${member != null ? member.studentId : '-'}">20231234</span>

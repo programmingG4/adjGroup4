@@ -4,6 +4,7 @@ import kr.ac.dankook.campuson.dto.CrawledArticle;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -24,6 +25,11 @@ public class ArticleCrawlerService {
     private static final String DKU_NEWS_IMAGE = "/images/dku-news.svg";
 
     private volatile CacheEntry cacheEntry;
+
+    @PostConstruct
+    public void warmUpCache() {
+        Thread.ofVirtual().start(this::fetchArticleFeed);
+    }
 
     public ArticleFetchResult fetchArticleFeed() {
         CacheEntry localCache = cacheEntry;
