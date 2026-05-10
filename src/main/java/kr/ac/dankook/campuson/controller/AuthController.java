@@ -32,11 +32,12 @@ public class AuthController {
         @RequestParam String name,
         @RequestParam String studentId,
         @RequestParam String password,
+        @RequestParam int grade,
         @RequestParam MultipartFile image,
         Model model) {
-        
+
         try {
-            memberService.register(name, studentId, password, image);
+            memberService.register(name, studentId, password, grade, image);
             return "redirect:/login";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());

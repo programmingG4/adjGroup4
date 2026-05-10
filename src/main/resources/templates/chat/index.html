@@ -6,6 +6,45 @@
     <title>채팅</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        .unread-badge {
+            display: inline-block;
+            background: #cb8458;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 999px;
+            padding: 1px 7px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .my-grade-badge {
+            display: inline-block;
+            background: rgba(203, 132, 88, 0.15);
+            color: #cb8458;
+            font-size: 11px;
+            font-weight: 800;
+            border-radius: 6px;
+            padding: 1px 7px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .last-msg-preview {
+            font-size: 12px;
+            color: var(--text-soft);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+        .error-msg {
+            color: #e05c5c;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+    </style>
 </head>
 <body>
 <div class="subtab-shell">
@@ -21,7 +60,7 @@
                 <section class="subtab-panel">
                     <p class="subtab-panel-eyebrow">CHAT TAB</p>
                     <h2 class="subtab-profile-name">실시간 소통 공간</h2>
-                    <p class="subtab-profile-meta">팀 프로젝트, 스터디, 공지 공유까지 한 번에 이어지는 채팅 테마를 임시로 통합했습니다.</p>
+                    <p class="subtab-profile-meta">팀 프로젝트, 스터디, 공지 공유까지 한 번에 이어지는 채팅 공간입니다.</p>
                     <a href="/chat" class="subtab-profile-link">채팅 홈 보기</a>
                 </section>
 
@@ -46,60 +85,82 @@
             </aside>
 
             <section class="subtab-content">
+                <!-- 전체 / 카테고리 채팅방 -->
                 <section class="subtab-section">
                     <div class="subtab-title-row">
                         <div>
                             <p class="subtab-eyebrow">CHAT</p>
-                            <h2 class="subtab-title">채팅방 소식을 한눈에</h2>
-                            <p class="subtab-desc">실제 기능 연결 전까지도 메인과 어울리는 테마를 유지하도록, 최근 대화 흐름과 바로가기 동선을 같은 결로 정리했습니다.</p>
+                            <h2 class="subtab-title">전체 / 카테고리 채팅방</h2>
                         </div>
-                        <a href="/board" class="subtab-chip">게시판으로 이동</a>
                     </div>
 
                     <div class="chat-theme-card-list">
-                        <article class="chat-theme-card">
-                            <div>
-                                <div class="chat-theme-card-title">웹프로그래밍 팀 프로젝트</div>
-                                <div class="chat-theme-card-sub">발표 자료 수정, 역할 분담, 최종 제출 체크가 이어지는 공간입니다.</div>
+                        <article th:each="room : ${rooms}" class="chat-theme-card">
+                            <div style="flex:1; min-width:0;">
+                                <div class="chat-theme-card-title">
+                                    <span th:text="${room.name}"></span>
+                                    <!-- 1. 내 학년 배지 -->
+                                    <span th:if="${room.name == myGrade + '학년'}" class="my-grade-badge">내 학년</span>
+                                    <!-- 4. 읽지 않은 메시지 배지 -->
+                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
+                                          class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
+                                </div>
+                                <!-- 3. 마지막 메시지 미리보기 -->
+                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                     th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview"
+                                     th:text="${room.type.name() == 'GLOBAL'} ? '전체 학생 채팅방입니다.' : '학년별 채팅방입니다.'"></div>
                             </div>
-                            <div class="chat-theme-card-badge">최근 대화 14건</div>
-                        </article>
-                        <article class="chat-theme-card">
-                            <div>
-                                <div class="chat-theme-card-title">운영체제 스터디 3팀</div>
-                                <div class="chat-theme-card-sub">시험 범위 정리, 문제 풀이 공유, 발표 일정 조율 내용을 확인할 수 있어요.</div>
-                            </div>
-                            <div class="chat-theme-card-badge">오늘 업데이트</div>
-                        </article>
-                        <article class="chat-theme-card">
-                            <div>
-                                <div class="chat-theme-card-title">소프트웨어학과 공지 공유방</div>
-                                <div class="chat-theme-card-sub">공식 공지 링크, 특강 일정, 공모전 안내를 빠르게 전달하는 용도입니다.</div>
-                            </div>
-                            <div class="chat-theme-card-badge">읽지 않음 3</div>
+                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
                         </article>
                     </div>
                 </section>
 
+                <!-- 1:1 채팅 -->
                 <section class="subtab-section">
-                    <div class="subtab-grid-two">
-                        <article class="subtab-soft-card">
-                            <h3>준비 중인 기능</h3>
-                            <p>실시간 메시지, 읽음 처리, 채팅방 생성, 파일 첨부 기능을 차례로 연결할 수 있도록 구조를 비워 두었습니다.</p>
+                    <div class="subtab-title-row">
+                        <div>
+                            <p class="subtab-eyebrow">PRIVATE</p>
+                            <h2 class="subtab-title">1:1 채팅</h2>
+                        </div>
+                    </div>
+
+                    <div class="chat-theme-card-list">
+                        <article th:if="${#lists.isEmpty(privateRooms)}" class="chat-theme-card">
+                            <div>
+                                <div class="chat-theme-card-title">진행 중인 1:1 채팅이 없어요.</div>
+                                <div class="chat-theme-card-sub">아래에서 학번을 입력해 대화를 시작하세요.</div>
+                            </div>
                         </article>
-                        <article class="subtab-soft-card">
-                            <h3>지금 가능한 동선</h3>
-                            <ul>
-                                <li>게시판으로 이동해 공지와 모집 글 확인</li>
-                                <li>마이페이지에서 계정 정보 점검</li>
-                                <li>메인으로 돌아가 기사/채팅 요약 보기</li>
-                            </ul>
+                        <article th:each="room : ${privateRooms}" class="chat-theme-card">
+                            <div style="flex:1; min-width:0;">
+                                <div class="chat-theme-card-title">
+                                    <!-- 2. 상대방 이름 표시: roomKey="id1_id2", name="name1/name2" (id1<id2 순) -->
+                                    <span th:with="keyParts=${room.roomKey.split('_')}, nameParts=${room.name.split('/')}"
+                                          th:text="${keyParts[0] == member.studentId ? nameParts[1] : nameParts[0]}"></span>
+                                    <!-- 4. 읽지 않은 메시지 배지 -->
+                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
+                                          class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
+                                </div>
+                                <!-- 3. 마지막 메시지 미리보기 -->
+                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                     th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
+                            </div>
+                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
                         </article>
                     </div>
-                    <div class="subtab-cta-row">
-                        <a href="/board" class="subtab-button primary">게시판 열기</a>
-                        <a href="/home" class="subtab-button secondary">메인으로 이동</a>
-                    </div>
+
+                    <form th:action="@{/chat/private}" method="get"
+                          style="margin-top:16px; display:flex; gap:8px; flex-direction:column;">
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" name="targetStudentId" placeholder="학번으로 1:1 채팅 시작"
+                                   style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" />
+                            <button type="submit" class="subtab-button primary" style="margin:0;">시작</button>
+                        </div>
+                        <!-- 5. 에러 메시지 -->
+                        <div th:if="${errorMsg}" class="error-msg" th:text="${errorMsg}"></div>
+                    </form>
                 </section>
             </section>
         </div>

@@ -53,7 +53,7 @@
               <h2 class="subtab-title">내 정보와 계정 상태</h2>
               <p class="subtab-desc">메인과 비슷한 톤을 유지하면서도, 로그인 사용자 정보를 더 안정적으로 볼 수 있도록 마이페이지 전용 화면을 분리했습니다.</p>
             </div>
-            <span class="subtab-chip">계정 관리</span>
+            <a href="/mypage/settings" class="subtab-chip">계정 관리 →</a>
           </div>
 
           <div class="my-theme-profile-grid">
@@ -66,6 +66,10 @@
               <div class="my-theme-info-row">
                 <span class="my-theme-info-label">학번</span>
                 <span class="my-theme-info-value" th:text="${member != null ? member.studentId : '-'}">20231234</span>
+              </div>
+              <div class="my-theme-info-row">
+                <span class="my-theme-info-label">학년</span>
+                <span class="my-theme-info-value" th:text="${member != null and member.grade > 0 ? member.grade + '학년' : '미설정'}">-</span>
               </div>
               <div class="my-theme-info-row">
                 <span class="my-theme-info-label">상태</span>

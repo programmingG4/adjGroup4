@@ -32,7 +32,7 @@ public class MemberService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void register(String name, String studentId, String password, MultipartFile image) throws IOException {
+    public void register(String name, String studentId, String password, int grade, MultipartFile image) throws IOException {
 
         if (memberRepository.existsByStudentId(studentId)) {
             throw new IllegalArgumentException("이미 가입된 학번입니다.");
@@ -55,9 +55,19 @@ public class MemberService {
         member.setName(name);
         member.setStudentId(studentId);
         member.setPassword(passwordEncoder.encode(password));
+        member.setGrade(grade);
         member.setImagePath(imagePath);
         member.setStatus(Member.MemberStatus.APPROVED);
 
+        memberRepository.save(member);
+    }
+
+    public void updatePassword(String studentId, String currentPassword, String newPassword) {
+        Member member = memberRepository.findByStudentId(studentId);
+        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+        member.setPassword(passwordEncoder.encode(newPassword));
         memberRepository.save(member);
     }
 
@@ -100,6 +110,20 @@ public class MemberService {
         JsonNode textAnnotations = root.path("responses").path(0).path("textAnnotations");
         if (textAnnotations.isEmpty()) return "";
         return textAnnotations.path(0).path("description").asText();
+    }
+
+    public void changePassword(String studentId, String currentPassword, String newPassword) {
+        Member member = memberRepository.findByStudentId(studentId);
+        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+        member.setPassword(passwordEncoder.encode(newPassword));
+        memberRepository.save(member);
+    }
+
+    public void deleteAccount(String studentId) {
+        Member member = memberRepository.findByStudentId(studentId);
+        memberRepository.delete(member);
     }
 
     private String saveImage(MultipartFile image) throws IOException {

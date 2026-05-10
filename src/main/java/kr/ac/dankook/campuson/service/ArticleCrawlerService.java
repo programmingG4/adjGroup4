@@ -19,6 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +31,7 @@ public class ArticleCrawlerService {
     private static final Duration CACHE_TTL = Duration.ofMinutes(20);
     private static final List<String> CATEGORY_ORDER = List.of("school", "news", "it", "career", "support");
     private static final Pattern DATE_PATTERN = Pattern.compile("(20\\d{2})[./-](\\d{1,2})[./-](\\d{1,2})");
+    private static final ExecutorService FETCH_POOL = Executors.newFixedThreadPool(16);
 
     private volatile CacheEntry cacheEntry;
 
@@ -54,11 +58,18 @@ public class ArticleCrawlerService {
         candidates.addAll(discoverArticlesFromFeeds());
         candidates.addAll(seedArticles());
 
+        List<CompletableFuture<FetchOutcome>> futures = candidates.stream()
+                .map(seed -> CompletableFuture.supplyAsync(() -> fetchArticle(seed), FETCH_POOL))
+                .toList();
+
+        List<FetchOutcome> outcomes = futures.stream()
+                .map(f -> f.exceptionally(ex -> new FetchOutcome(null, false)).join())
+                .toList();
+
         Map<String, CrawledArticle> unique = new LinkedHashMap<>();
         int failedCount = 0;
 
-        for (SeedArticle seed : candidates) {
-            FetchOutcome outcome = fetchArticle(seed);
+        for (FetchOutcome outcome : outcomes) {
             if (outcome.article() != null) {
                 unique.putIfAbsent(dedupeKey(outcome.article()), outcome.article());
             }
@@ -91,7 +102,7 @@ public class ArticleCrawlerService {
             try {
                 Document document = Jsoup.connect(source.feedUrl())
                         .userAgent("Mozilla/5.0 CampusONBot/1.0")
-                        .timeout(10000)
+                        .timeout(5000)
                         .get();
 
                 Map<String, FeedCandidate> ranked = new LinkedHashMap<>();
@@ -184,7 +195,7 @@ public class ArticleCrawlerService {
         try {
             Document document = Jsoup.connect(seed.articleUrl())
                     .userAgent("Mozilla/5.0 CampusONBot/1.0")
-                    .timeout(10000)
+                    .timeout(5000)
                     .get();
 
             String title = firstNonBlank(

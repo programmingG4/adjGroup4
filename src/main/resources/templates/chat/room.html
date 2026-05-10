@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${displayRoomName} + ' - 채팅'">채팅방</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        .chat-room-wrap {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            min-height: 480px;
+            background: rgba(255, 252, 247, 0.42);
+            border-radius: 28px;
+            overflow: hidden;
+        }
+
+        .chat-room-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 24px;
+            border-bottom: 1px solid rgba(188, 153, 118, 0.22);
+            background: rgba(255, 250, 243, 0.76);
+            flex-shrink: 0;
+        }
+
+        .chat-room-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: rgba(242, 231, 217, 0.92);
+            color: #8f6d4c;
+            font-size: 18px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .chat-room-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #6a503d;
+            margin: 0;
+        }
+
+        .chat-room-type-badge {
+            font-size: 12px;
+            font-weight: 700;
+            background: rgba(189, 123, 77, 0.12);
+            color: #9a6340;
+            border-radius: 999px;
+            padding: 3px 10px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(188, 153, 118, 0.4);
+            border-radius: 999px;
+        }
+
+        .msg-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .msg-row.mine {
+            flex-direction: row-reverse;
+        }
+
+        .msg-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            background: rgba(242, 231, 217, 0.92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: #8e6f53;
+            flex-shrink: 0;
+        }
+
+        .msg-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 65%;
+        }
+
+        .msg-row.mine .msg-body {
+            align-items: flex-end;
+        }
+
+        .msg-sender {
+            font-size: 12px;
+            font-weight: 700;
+            color: #9a7e64;
+        }
+
+        .msg-bubble {
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.55;
+            word-break: break-word;
+            background: rgba(255, 250, 243, 0.9);
+            color: #5d4633;
+            border-bottom-left-radius: 4px;
+        }
+
+        .msg-row.mine .msg-bubble {
+            background: var(--subtab-accent);
+            color: #fff;
+            border-bottom-left-radius: 18px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg-time {
+            font-size: 11px;
+            color: #b09078;
+            padding: 0 2px;
+        }
+
+        .year-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #bd7b4d;
+            background: rgba(189, 123, 77, 0.12);
+            border-radius: 6px;
+            padding: 1px 6px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .chat-input-area {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(188, 153, 118, 0.22);
+            background: rgba(255, 250, 243, 0.76);
+            flex-shrink: 0;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 11px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--subtab-accent);
+        }
+
+        .chat-send-btn {
+            padding: 11px 20px;
+            border-radius: 16px;
+            background: var(--subtab-accent);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.18s;
+            white-space: nowrap;
+        }
+
+        .chat-send-btn:hover {
+            opacity: 0.88;
+        }
+
+        .chat-date-sep {
+            text-align: center;
+            font-size: 12px;
+            color: #b09078;
+            margin: 8px 0 4px;
+            position: relative;
+        }
+
+        .chat-date-sep::before,
+        .chat-date-sep::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 38%;
+            height: 1px;
+            background: rgba(188, 153, 118, 0.25);
+        }
+
+        .chat-date-sep::before { left: 0; }
+        .chat-date-sep::after { right: 0; }
+
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b09078;
+            font-size: 14px;
+        }
+
+        .read-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 0 2px;
+            align-self: flex-end;
+            margin-bottom: 2px;
+        }
+
+        .read-badge.unread {
+            color: #cb8458;
+        }
+
+        .read-badge.read {
+            color: #b09078;
+        }
+    </style>
+</head>
+<body>
+<div class="subtab-shell">
+    <div class="subtab-wrap">
+        <header class="subtab-header">
+            <h1 class="subtab-logo">CAMPUSON</h1>
+            <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+            <div class="subtab-divider"></div>
+        </header>
+
+        <div class="subtab-layout">
+            <aside class="subtab-sidebar">
+                <section class="subtab-panel">
+                    <p class="subtab-panel-eyebrow">CHAT ROOM</p>
+                    <h2 class="subtab-profile-name" th:text="${displayRoomName}">채팅방</h2>
+                    <p class="subtab-profile-meta" th:text="${room.type.name() == 'GLOBAL' ? '전체 학생이 함께하는 채팅방입니다.' : (room.type.name() == 'GRADE' ? '학년별 채팅방입니다.' : '1:1 개인 채팅방입니다.')}"></p>
+                    <a href="/chat" class="subtab-profile-link">← 채팅 목록으로</a>
+                </section>
+
+                <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+                    <a href="/home" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">⌂</span>
+                        <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+                    </a>
+                    <a href="/chat" class="subtab-shortcut active">
+                        <span class="subtab-shortcut-icon">💬</span>
+                        <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
+                    </a>
+                    <a href="/board" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">📌</span>
+                        <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
+                    </a>
+                    <a href="/mypage" class="subtab-shortcut">
+                        <span class="subtab-shortcut-icon">👤</span>
+                        <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span>
+                    </a>
+                </nav>
+            </aside>
+
+            <section class="subtab-content">
+                <div class="chat-room-wrap">
+                    <div class="chat-room-header">
+                        <a href="/chat" class="chat-room-back">←</a>
+                        <h2 class="chat-room-title" th:text="${displayRoomName}">채팅방</h2>
+                        <span class="chat-room-type-badge" th:text="${room.type.name() == 'GLOBAL' ? '전체' : (room.type.name() == 'GRADE' ? '학년' : '1:1')}">전체</span>
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <div th:if="${#lists.isEmpty(messages)}" class="chat-empty">
+                            아직 메시지가 없어요. 첫 번째로 인사해보세요!
+                        </div>
+                        <th:block th:each="msg, stat : ${messages}">
+                            <div class="chat-date-sep" th:if="${stat.first or !#temporals.format(messages[stat.index - 1].sentAt, 'yyyy-MM-dd').equals(#temporals.format(msg.sentAt, 'yyyy-MM-dd'))}"><span th:text="${#temporals.format(msg.sentAt, 'yyyy년 M월 d일')}"></span></div>
+                            <div th:classappend="${msg.sender == member.studentId ? 'mine' : ''}" class="msg-row" th:attr="data-msg-id=${msg.id}">
+                                <div class="msg-avatar" th:if="${msg.sender != member.studentId}" th:text="${#strings.substring(msg.senderName, 0, 1)}">김</div>
+                                <div class="msg-body">
+                                    <span class="msg-sender" th:if="${msg.sender != member.studentId}">
+                                        <span th:text="${msg.senderName}"></span>
+                                        <span class="year-badge" th:if="${msg.sender != null}" th:text="${msg.sender.substring(2, 4) + '학번'}"></span>
+                                    </span>
+                                    <div class="msg-bubble" th:text="${msg.content}">메시지</div>
+                                    <span class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">00:00</span>
+                                </div>
+                                <span th:if="${room.type.name() == 'PRIVATE' and msg.sender == member.studentId}"
+                                      th:classappend="${otherLastRead != null and msg.id <= otherLastRead ? ' read' : ' unread'}"
+                                      class="read-badge"
+                                      th:text="${otherLastRead != null and msg.id <= otherLastRead ? '읽음' : '1'}"></span>
+                            </div>
+                        </th:block>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <form class="chat-input-form" id="chatForm" onsubmit="return false;">
+                            <input type="text" id="msgInput" class="chat-input"
+                                   placeholder="메시지를 입력하세요..." autocomplete="off" maxlength="500" />
+                            <button type="submit" class="chat-send-btn">전송</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- 숨김: 서버에서 전달한 값 -->
+<span id="roomId" th:text="${room.id}" style="display:none;"></span>
+<span id="myId" th:text="${member.studentId}" style="display:none;"></span>
+<span id="myName" th:text="${member.name}" style="display:none;"></span>
+<span id="isPrivate" th:text="${room.type.name() == 'PRIVATE'}" style="display:none;"></span>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    const roomId    = document.getElementById('roomId').textContent.trim();
+    const myId      = document.getElementById('myId').textContent.trim();
+    const myName    = document.getElementById('myName').textContent.trim();
+    const isPrivate = document.getElementById('isPrivate').textContent.trim() === 'true';
+
+    function todayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+    }
+
+    let lastShownDate = (() => {
+        const seps = document.querySelectorAll('.chat-date-sep span');
+        return seps.length > 0 ? seps[seps.length - 1].textContent.trim() : null;
+    })();
+
+    const socket  = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+
+    stompClient.connect({}, function () {
+        stompClient.subscribe('/topic/chat/' + roomId, function (frame) {
+            const msg = JSON.parse(frame.body);
+            appendMessage(msg);
+            if (isPrivate) {
+                stompClient.send('/app/chat/' + roomId + '/read', {}, '{}');
+            }
+        });
+
+        if (isPrivate) {
+            stompClient.subscribe('/topic/chat/' + roomId + '/read', function (frame) {
+                const noti = JSON.parse(frame.body);
+                if (noti.studentId !== myId) {
+                    updateReadStatus(noti.lastReadMessageId);
+                }
+            });
+            stompClient.send('/app/chat/' + roomId + '/read', {}, '{}');
+        }
+    });
+
+    function appendMessage(msg) {
+        const container = document.getElementById('chatMessages');
+
+        // 빈 상태 메시지 제거
+        const empty = container.querySelector('.chat-empty');
+        if (empty) empty.remove();
+
+        const today = todayStr();
+        if (lastShownDate !== today) {
+            const sep = document.createElement('div');
+            sep.className = 'chat-date-sep';
+            sep.innerHTML = `<span>${today}</span>`;
+            container.appendChild(sep);
+            lastShownDate = today;
+        }
+
+        const isMine = msg.sender === myId;
+        const row = document.createElement('div');
+        row.className = 'msg-row' + (isMine ? ' mine' : '');
+        if (msg.id) row.dataset.msgId = msg.id;
+
+        const yearCode = (msg.sender && msg.sender.length >= 4) ? msg.sender.substring(2, 4) : '';
+        const avatarHtml = isMine ? '' :
+            `<div class="msg-avatar">${escHtml((msg.senderName || '?').charAt(0))}</div>`;
+        const senderLabel = isMine ? '' :
+            `<span class="msg-sender">${escHtml(msg.senderName)}<span class="year-badge">${escHtml(yearCode)}학번</span></span>`;
+        const readBadge = (isMine && isPrivate) ?
+            `<span class="read-badge unread">1</span>` : '';
+
+        row.innerHTML = `
+            ${avatarHtml}
+            <div class="msg-body">
+                ${senderLabel}
+                <div class="msg-bubble">${escHtml(msg.content)}</div>
+                <span class="msg-time">${escHtml(msg.sentAt || '')}</span>
+            </div>
+            ${readBadge}
+        `;
+
+        container.appendChild(row);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function updateReadStatus(lastReadMessageId) {
+        if (!lastReadMessageId) return;
+        document.querySelectorAll('.msg-row.mine').forEach(row => {
+            const msgId = parseInt(row.dataset.msgId);
+            if (!msgId) return;
+            const badge = row.querySelector('.read-badge');
+            if (badge && msgId <= lastReadMessageId) {
+                badge.textContent = '읽음';
+                badge.classList.remove('unread');
+                badge.classList.add('read');
+            }
+        });
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    document.getElementById('chatForm').addEventListener('submit', function () {
+        const input = document.getElementById('msgInput');
+        const content = input.value.trim();
+        if (!content) return;
+
+        stompClient.send('/app/chat/' + roomId, {}, JSON.stringify({ content: content }));
+        input.value = '';
+    });
+
+    document.getElementById('msgInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // 초기 스크롤
+    (function () {
+        const c = document.getElementById('chatMessages');
+        c.scrollTop = c.scrollHeight;
+    })();
+</script>
+</body>
+</html>

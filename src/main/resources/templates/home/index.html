@@ -21,8 +21,8 @@
             <aside class="home-side-panel">
                 <div class="home-profile-brief">
                     <p class="home-side-label">MY PAGE</p>
-                    <h2 class="home-side-name">홍길동 님</h2>
-                    <p class="home-side-meta">소프트웨어학과 · 20231234</p>
+                    <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '홍길동 님'}">홍길동 님</h2>
+                    <p class="home-side-meta" th:text="${member != null ? member.studentId : '20231234'}">20231234</p>
                     <a href="/mypage" class="home-side-link">마이페이지 바로가기</a>
                 </div>
 

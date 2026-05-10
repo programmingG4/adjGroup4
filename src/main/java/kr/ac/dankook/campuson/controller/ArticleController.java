@@ -1,5 +1,7 @@
 package kr.ac.dankook.campuson.controller;
 
+import kr.ac.dankook.campuson.domain.Member;
+import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.ArticleCrawlerService;
 import kr.ac.dankook.campuson.service.ArticleCrawlerService.ArticleFetchResult;
 import org.springframework.core.io.ClassPathResource;
@@ -24,19 +26,25 @@ import java.time.Duration;
 public class ArticleController {
 
     private final ArticleCrawlerService articleCrawlerService;
+    private final MemberRepository memberRepository;
     private final HttpClient httpClient = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NORMAL)
             .connectTimeout(Duration.ofSeconds(8))
             .build();
 
-    public ArticleController(ArticleCrawlerService articleCrawlerService) {
+    public ArticleController(ArticleCrawlerService articleCrawlerService, MemberRepository memberRepository) {
         this.articleCrawlerService = articleCrawlerService;
+        this.memberRepository = memberRepository;
     }
 
     @GetMapping("/articles")
-    public String articles(Model model) {
+    public String articles(Model model, java.security.Principal principal) {
         ArticleFetchResult result = articleCrawlerService.fetchArticleFeed();
 
+        if (principal != null) {
+            Member member = memberRepository.findByStudentId(principal.getName());
+            model.addAttribute("member", member);
+        }
         model.addAttribute("activeMenu", "articles");
         model.addAttribute("articles", result.articles());
         model.addAttribute("categoryCounts", result.categoryCounts());
