@@ -17,6 +17,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class ArticleCrawlerService {
@@ -25,10 +26,11 @@ public class ArticleCrawlerService {
     private static final String DKU_NEWS_IMAGE = "/images/dku-news.svg";
 
     private volatile CacheEntry cacheEntry;
+    private final AtomicBoolean refreshing = new AtomicBoolean(false);
 
     @PostConstruct
     public void warmUpCache() {
-        Thread.ofVirtual().start(this::fetchArticleFeed);
+        startBackgroundRefresh();
     }
 
     public ArticleFetchResult fetchArticleFeed() {
@@ -37,15 +39,26 @@ public class ArticleCrawlerService {
             return localCache.result();
         }
 
-        synchronized (this) {
-            localCache = cacheEntry;
-            if (localCache != null && Duration.between(localCache.cachedAt(), Instant.now()).compareTo(CACHE_TTL) < 0) {
-                return localCache.result();
-            }
+        // 캐시가 없거나 만료됐으면 백그라운드에서 갱신 시작
+        startBackgroundRefresh();
 
-            ArticleFetchResult result = crawlSeedArticles();
-            cacheEntry = new CacheEntry(Instant.now(), result);
-            return result;
+        // 갱신 완료까지 기다리지 않고 현재 캐시(또는 빈 결과) 즉시 반환
+        if (localCache != null) {
+            return localCache.result();
+        }
+        return new ArticleFetchResult(List.of(), false, null);
+    }
+
+    private void startBackgroundRefresh() {
+        if (refreshing.compareAndSet(false, true)) {
+            Thread.ofVirtual().start(() -> {
+                try {
+                    ArticleFetchResult result = crawlSeedArticles();
+                    cacheEntry = new CacheEntry(Instant.now(), result);
+                } finally {
+                    refreshing.set(false);
+                }
+            });
         }
     }
 
