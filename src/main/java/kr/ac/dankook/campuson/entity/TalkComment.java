@@ -8,16 +8,16 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-public class Comment {
+public class TalkComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String content;
     private String author;
-    private Long memberId; // 로그인 연동용
+    private Long memberId;
     private LocalDateTime regDate = LocalDateTime.now();
 
     @ManyToOne
-    @JoinColumn(name = "board_id")
-    private Board board;
+    @JoinColumn(name = "talkboard_id")
+    private TalkBoard talkBoard;
 }

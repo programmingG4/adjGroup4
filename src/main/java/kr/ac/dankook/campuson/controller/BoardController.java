@@ -3,18 +3,19 @@ package kr.ac.dankook.campuson.controller;
 import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.entity.Board;
 import kr.ac.dankook.campuson.entity.VoteItem;
-import kr.ac.dankook.campuson.repository.BoardRepository;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.BoardService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.security.Principal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,114 +23,212 @@ import java.util.UUID;
 public class BoardController {
 
     @Autowired
-    private BoardRepository boardRepository;
-
+    private BoardService boardService;
     @Autowired
     private MemberRepository memberRepository;
-    
-    @Autowired
-    private BoardService boardService;
-    
-    private void addLoginMember(Model model, Principal principal) {
-        if (principal != null) {
-            Member member = memberRepository.findByStudentId(principal.getName());
-            model.addAttribute("member", member);
-        }
-    }
 
     private String getChatRoomName() {
         LocalDate now = LocalDate.now();
         String semester = (now.getMonthValue() >= 3 && now.getMonthValue() <= 8) ? "1학기" : "2학기";
         return String.format("[%d-%s] DKU 컴퓨터공학과 통합게시판", now.getYear(), semester);
     }
-    
+
+    // 로그인 유저 -> Member 가져오기
+    private Member getLoginMember(UserDetails userDetails) {
+        if (userDetails == null)
+            return null;
+        return memberRepository.findByStudentId(userDetails.getUsername());
+    }
+
     @GetMapping("/board")
-    public String boardList(@RequestParam(value = "category", defaultValue = "전체") String category, Model model, Principal principal) {
-        addLoginMember(model, principal);
-        List<String> categories = List.of("전체", "공지", "투표", "스터디 모집", "중고거래"); // 카테고리 목록 정의
-        List<Board> posts = boardService.getPostsByCategory(category);
-
-        // 날짜 기반 자동 채팅방 이름 생성
-        LocalDate now = LocalDate.now();
-        int year = now.getYear();
-        int month = now.getMonthValue();
-        String semester = (month >= 3 && month <= 8) ? "1학기" : "2학기";
-
-        String autoChatRoomName = String.format("[%d-%s] DKU 컴퓨터공학과 통합게시판", year, semester);
-
+    public String boardList(@RequestParam(defaultValue = "익명 게시판") String category,
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
         model.addAttribute("selectedCategory", category);
-        model.addAttribute("categories", categories);
-        model.addAttribute("posts", posts);
-        model.addAttribute("chatRoomName", autoChatRoomName);
+        model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
+
+        model.addAttribute("posts", boardService.getPostsByCategory(category));
+        model.addAttribute("chatRoomName", getChatRoomName());
+
+        Member loginMember = getLoginMember(userDetails);
+        model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         return "board/list";
     }
-    
-    // 1. 게시글 작성 버튼 클릭 시 이동
+
     @GetMapping("/board/write")
-    public String writeForm(Model model, Principal principal) {
-        addLoginMember(model, principal);
-        model.addAttribute("categories", List.of("공지", "투표", "스터디 모집", "중고거래"));
+    public String writeForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
+
+        // 로그인 유저 이름_학번 형식으로 전달
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember != null) {
+            // 학번 3,4번째 숫자 추출 (index 2,3)
+            String year = loginMember.getStudentId().substring(2, 4);
+            String memberName = loginMember.getName() + "_" + year; // 예: OOO_24
+            model.addAttribute("loginMemberName", memberName);
+        } else {
+            model.addAttribute("loginMemberName", "");
+        }
         return "board/write";
     }
 
-    // 2. 게시글 저장 (카테고리 포함)
     @PostMapping("/board/save")
     public String save(@ModelAttribute Board board,
             @RequestParam(value = "voteOption", required = false) List<String> voteItems,
-            @RequestParam(required = false) MultipartFile image) throws Exception {
+            @RequestParam(value = "images", required = false) List<MultipartFile> images,
+            @AuthenticationPrincipal UserDetails userDetails) throws Exception {
 
-        // 익명 처리: author가 비어있으면 익명
+        Member loginMember = getLoginMember(userDetails);
+
+        // 익명 처리
         if (board.getAuthor() == null || board.getAuthor().isBlank()) {
             board.setAuthor("익명");
+            board.setMemberId(loginMember != null ? loginMember.getId() : null);
+        } else {
+            if (loginMember != null)
+                board.setMemberId(loginMember.getId());
         }
 
-        // 이미지 업로드 처리
-        if (image != null && !image.isEmpty()) {
+        // 이미지 여러장 업로드
+        if (images != null && !images.isEmpty()) {
             String uploadDir = System.getProperty("user.dir") + "/uploads/";
             new File(uploadDir).mkdirs();
-            String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
-            image.transferTo(new File(uploadDir + filename));
-            board.setImagePath("/uploads/" + filename); // 경로명 변경
+            List<String> paths = new ArrayList<>();
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    String filename = UUID.randomUUID() + "_" + image.getOriginalFilename();
+                    image.transferTo(new File(uploadDir + filename));
+                    paths.add("/uploads/" + filename);
+                }
+            }
+            if (!paths.isEmpty())
+                board.setImagePaths(paths);
         }
 
-        boardRepository.save(board); // 먼저 저장해서 ID 생성
         boardService.save(board);
 
         // 투표 항목 저장
-        if ("투표".equals(board.getCategory()) && voteItems != null) {
-            boardService.saveVoteItems(board, voteItems);
+        if (voteItems != null && !voteItems.isEmpty()) {
+            List<String> validItems = voteItems.stream()
+                    .filter(item -> item != null && !item.isBlank())
+                    .toList();
+            if (!validItems.isEmpty()) {
+                boardService.saveVoteItems(board, validItems);
+            }
         }
 
         return "redirect:/board";
     }
 
-    // 게시글 상세
     @GetMapping("/board/{id}")
-    public String detail(@PathVariable Long id, Model model, Principal principal) {
-        addLoginMember(model, principal);
+    public String detail(@PathVariable Long id,
+            @RequestParam(required = false) String category,
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
         Board post = boardService.findById(id);
-        int totalVotes = post.getVoteItems() == null ? 0 :
-            post.getVoteItems().stream().mapToInt(VoteItem::getVoteCount).sum();
+        int totalVotes = post.getVoteItems() == null ? 0
+                : post.getVoteItems().stream().mapToInt(VoteItem::getVoteCount).sum();
+
+        Member loginMember = getLoginMember(userDetails);
+        Long loginMemberId = loginMember != null ? loginMember.getId() : null;
+        if (loginMember != null) {
+            String year = loginMember.getStudentId().substring(2, 4);
+            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+        } else {
+            model.addAttribute("loginMemberName", "익명");
+        }
+
         model.addAttribute("post", post);
         model.addAttribute("totalVotes", totalVotes);
         model.addAttribute("chatRoomName", getChatRoomName());
+        model.addAttribute("loginMemberId", loginMemberId);
+        model.addAttribute("fromCategory", category != null ? category : post.getCategory());
+
         return "board/detail";
+    }
+
+    // 게시글 삭제
+    @PostMapping("/board/{id}/delete")
+    public String delete(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember != null)
+            boardService.delete(id, loginMember.getId());
+        return "redirect:/board";
+    }
+
+    // 수정 페이지
+    @GetMapping("/board/{id}/edit")
+    public String editForm(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
+        Board post = boardService.findById(id);
+        Member loginMember = getLoginMember(userDetails);
+
+        // 본인 아니면 목록으로
+        if (loginMember == null || !post.getMemberId().equals(loginMember.getId())) {
+            return "redirect:/board";
+        }
+        model.addAttribute("post", post);
+        model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
+        return "board/edit";
+    }
+
+    // 수정 저장
+    @PostMapping("/board/{id}/edit")
+    public String edit(@PathVariable Long id,
+            @RequestParam String title,
+            @RequestParam String content,
+            @RequestParam String category,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember == null)
+            return "redirect:/login";
+
+        Board post = boardService.findById(id);
+        if (!post.getMemberId().equals(loginMember.getId()))
+            return "redirect:/board";
+
+        post.setTitle(title);
+        post.setContent(content);
+        post.setCategory(category);
+        boardService.save(post);
+        return "redirect:/board/" + id;
     }
 
     // 댓글 저장
     @PostMapping("/board/{id}/comment")
     public String saveComment(@PathVariable Long id,
-                              @RequestParam String content,
-                              @RequestParam String author) {
-        boardService.saveComment(id, content, author);
+            @RequestParam String content,
+            @RequestParam String author,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        Long memberId = loginMember != null ? loginMember.getId() : null;
+        boardService.saveComment(id, content, author, memberId);
         return "redirect:/board/" + id;
     }
 
-    // 투표 처리
+    // 댓글 삭제
+    @PostMapping("/comment/{commentId}/delete")
+    public String deleteComment(@PathVariable Long commentId,
+            @RequestParam Long boardId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember != null)
+            boardService.deleteComment(commentId, loginMember.getId());
+        return "redirect:/board/" + boardId;
+    }
+
+    // 투표
     @PostMapping("/vote/{voteItemId}")
     public String vote(@PathVariable Long voteItemId,
-                       @RequestParam Long boardId) {
-        boardService.vote(voteItemId);
+            @RequestParam Long boardId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember == null)
+            return "redirect:/login";
+
+        boardService.vote(voteItemId, loginMember.getId());
         return "redirect:/board/" + boardId;
     }
 }

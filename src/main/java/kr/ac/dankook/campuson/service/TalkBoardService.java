@@ -1,100 +1,95 @@
 package kr.ac.dankook.campuson.service;
 
-import kr.ac.dankook.campuson.entity.Board;
-import kr.ac.dankook.campuson.entity.Comment;
+import kr.ac.dankook.campuson.entity.TalkBoard;
+import kr.ac.dankook.campuson.entity.TalkComment;
 import kr.ac.dankook.campuson.entity.VoteItem;
-import kr.ac.dankook.campuson.repository.BoardRepository;
-import kr.ac.dankook.campuson.repository.CommentRepository;
-import kr.ac.dankook.campuson.repository.VoteItemRepository;
 import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.repository.MemberRepository;
+import kr.ac.dankook.campuson.repository.TalkBoardRepository;
+import kr.ac.dankook.campuson.repository.TalkCommentRepository;
+import kr.ac.dankook.campuson.repository.VoteItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class BoardService {
+public class TalkBoardService {
 
     @Autowired
-    private BoardRepository boardRepository;
+    private TalkBoardRepository talkBoardRepository;
     @Autowired
-    private CommentRepository commentRepository;
+    private TalkCommentRepository talkCommentRepository;
     @Autowired
     private VoteItemRepository voteItemRepository;
-    @Autowired
-    private MemberRepository memberRepository;
+    @Autowired private MemberRepository memberRepository;
 
-    public void save(Board board) {
-        boardRepository.save(board);
+    public void save(TalkBoard post) {
+        talkBoardRepository.save(post);
     }
 
-    // 최신순 조회
-    public List<Board> getPostsByCategory(String category) {
-        if ("전체".equals(category))
-            return boardRepository.findAllByOrderByRegDateDesc();
-        return boardRepository.findByCategoryOrderByRegDateDesc(category);
+    public List<TalkBoard> getPostsByCategory(String category) {
+        return switch (category) {
+            case "투표" -> talkBoardRepository.findAllWithVoteOrderByRegDateDesc();
+            case "사진" -> talkBoardRepository.findAllWithImageOrderByRegDateDesc();
+            case "동영상" -> talkBoardRepository.findAllWithVideoOrderByRegDateDesc();
+            case "파일" -> talkBoardRepository.findAllWithFileOrderByRegDateDesc();
+            default -> talkBoardRepository.findAllByOrderByRegDateDesc(); // 공지
+        };
     }
 
-    public Board findById(Long id) {
-        return boardRepository.findById(id).orElseThrow();
+    public TalkBoard findById(Long id) {
+        return talkBoardRepository.findById(id).orElseThrow();
     }
 
-    // 게시글 삭제 (본인만)
-    public boolean delete(Long boardId, Long memberId) {
-        Board board = findById(boardId);
-        if (board.getMemberId() != null && board.getMemberId().equals(memberId)) {
-            boardRepository.delete(board);
+    public boolean delete(Long id, Long memberId) {
+        TalkBoard post = findById(id);
+        if (post.getMemberId() != null && post.getMemberId().equals(memberId)) {
+            talkBoardRepository.delete(post);
             return true;
         }
         return false;
     }
 
-    // 댓글 저장
-    public void saveComment(Long boardId, String content, String author, Long memberId) {
-        Board board = findById(boardId);
-        Comment comment = new Comment();
+    public void saveComment(Long postId, String content, String author, Long memberId) {
+        TalkBoard post = findById(postId);
+        TalkComment comment = new TalkComment();
         comment.setContent(content);
         comment.setAuthor(author);
         comment.setMemberId(memberId);
-        comment.setBoard(board);
-        commentRepository.save(comment);
+        comment.setTalkBoard(post);
+        talkCommentRepository.save(comment);
     }
 
-    // 댓글 삭제 (본인만)
     public boolean deleteComment(Long commentId, Long memberId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow();
+        TalkComment comment = talkCommentRepository.findById(commentId).orElseThrow();
         if (comment.getMemberId() != null && comment.getMemberId().equals(memberId)) {
-            commentRepository.delete(comment);
+            talkCommentRepository.delete(comment);
             return true;
         }
         return false;
     }
 
-    // 투표 항목 저장
-    public void saveVoteItems(Board board, List<String> items) {
+    public void saveVoteItems(TalkBoard post, List<String> items) {
         for (String item : items) {
             if (item != null && !item.isBlank()) {
                 VoteItem vi = new VoteItem();
                 vi.setItemText(item);
-                vi.setBoard(board);
+                vi.setTalkBoard(post);
                 voteItemRepository.save(vi);
             }
         }
     }
 
-    // 투표 처리 (로그인 유저, 중복 방지)
     public String vote(Long voteItemId, Long memberId) {
         VoteItem newItem = voteItemRepository.findById(voteItemId).orElseThrow();
-        Board board = newItem.getBoard();
+        TalkBoard post = newItem.getTalkBoard();
 
-        // 기존에 투표한 항목 찾기
-        VoteItem previousItem = board.getVoteItems().stream()
+        VoteItem previousItem = post.getVoteItems().stream()
                 .filter(v -> v.getVotedMemberIds().contains(memberId))
                 .findFirst()
                 .orElse(null);
 
         if (previousItem != null) {
-            // 같은 항목 다시 누르면 취소
             if (previousItem.getId().equals(voteItemId)) {
                 previousItem.setVoteCount(previousItem.getVoteCount() - 1);
                 previousItem.getVotedMemberIds().remove(memberId);
@@ -104,7 +99,6 @@ public class BoardService {
                 voteItemRepository.save(previousItem);
                 return "cancelled";
             }
-            // 다른 항목 누르면 기존 취소 후 새로 투표
             previousItem.setVoteCount(previousItem.getVoteCount() - 1);
             previousItem.getVotedMemberIds().remove(memberId);
             previousItem.getVotedMemberNames().removeIf(name -> memberRepository.findById(memberId)
@@ -113,7 +107,6 @@ public class BoardService {
             voteItemRepository.save(previousItem);
         }
 
-        // 새 항목에 투표
         Member member = memberRepository.findById(memberId).orElseThrow();
         String year = member.getStudentId().substring(2, 4);
         String memberName = member.getName() + "_" + year;

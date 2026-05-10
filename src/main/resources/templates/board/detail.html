@@ -1,98 +1,292 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusOn | 게시글 상세</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        .board-detail-card {
+            position: relative;
+            padding: 30px;
+        }
+    
+        .dropdown-content a:hover {
+            background-color: #fffaf4;
+        }
+    </style>
 </head>
+
 <body>
-<div class="subtab-shell">
-    <div class="subtab-wrap">
-        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+    <div class="subtab-shell">
+        <div class="subtab-wrap">
+            <header class="subtab-header">
+                <h1 class="subtab-logo">CAMPUSON</h1>
+                <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+                <div class="subtab-divider"></div>
+            </header>
 
-        <div class="subtab-layout">
-            <aside th:replace="~{fragments/app-layout :: subtabSidebar('board')}"></aside>
+            <div class="subtab-layout">
+                <aside class="subtab-sidebar">
+                    <section class="subtab-panel">
+                        <p class="subtab-panel-eyebrow">BOARD DETAIL</p>
+                        <h2 class="subtab-profile-name">게시글 상세 보기</h2>
+                        <a th:href="@{/board(category=${fromCategory})}" class="subtab-profile-link">게시판으로 돌아가기</a>
+                    </section>
+                    <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+                        <a href="/home" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">⌂</span>
+                            <span><strong class="subtab-shortcut-title">메인</strong><span
+                                    class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+                        </a>
+                        <a href="/chat" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">💬</span>
+                            <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀
+                                    소통과 알림 확인</span></span>
+                        </a>
+                        <a href="/board" class="subtab-shortcut active">
+                            <span class="subtab-shortcut-icon">📌</span>
+                            <span><strong class="subtab-shortcut-title">게시판</strong><span
+                                    class="subtab-shortcut-desc">익명 소통과 거래 공간</span></span>
+                        </a>
+                        <a href="/mypage" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">👤</span>
+                            <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내
+                                    정보와 활동 관리</span></span>
+                        </a>
+                    </nav>
+                </aside>
 
-            <section class="subtab-content board-theme-list">
-                <section class="subtab-section">
-                    <a href="/board" class="board-back-link">← 게시판으로 돌아가기</a>
+                <section class="subtab-content board-theme-list">
+                    <section class="subtab-section">
+                        <a th:href="@{/board(category=${fromCategory})}" class="board-back-link">← 게시판으로 돌아가기</a>
 
-                    <article class="board-detail-card">
-                        <div class="board-detail-category" th:text="'[' + ${post.category} + ']'">[카테고리]</div>
-                        <h1 class="board-detail-title" th:text="${post.title}">게시글 제목</h1>
-                        <div class="board-detail-meta">
-                            <span th:text="${post.author}">작성자</span>
-                            <span class="board-meta-divider">•</span>
-                            <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}">등록일</span>
-                        </div>
-                        <div class="board-detail-content" th:text="${post.content}"></div>
-                        <img th:if="${post.imagePath != null}" th:src="${post.imagePath}" class="board-detail-image" alt="첨부 이미지">
+                        <article class="board-detail-card" style="position: relative;">
+                        
+                            <!-- 점세개 버튼 -->
+                            <div th:if="${(loginMemberId != null and loginMemberId == post.memberId) 
+                                              or post.category == '📢 모집중' 
+                                              or post.category == '중고거래 게시판'}" style="position: absolute; top: 20px; right: 20px;">
+                            
+                                <div class="dropdown-wrapper" style="position: relative; display: inline-block;">
+                                    <button type="button" onclick="toggleDropdown(event)" style="background:none; border:none; font-size:20px; cursor:pointer;
+                                                       color:#9f8773; letter-spacing:2px;">⋮</button>
+                            
+                                    <div id="postDropdown" class="dropdown-content" style="display:none; position:absolute; right:0; top:30px; background:white;
+                                                    min-width:120px; width:max-content;
+                                                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                                                    border-radius:12px; z-index:10;
+                                                    border:1px solid #f0e4d7; overflow:hidden;">
+                            
+                                        <!-- 본인 아닐 때: 채팅 버튼 -->
+                                        <th:block th:if="${loginMemberId == null or loginMemberId != post.memberId}">
+                                            <button th:if="${post.category == '중고거래 게시판'}" onclick="alert('채팅 기능 준비 중입니다.')" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                               background:none; border:none; padding:10px 16px;
+                                                               color:#555; font-size:14px; cursor:pointer; text-align:left;
+                                                               white-space:nowrap; transition:background 0.2s;"
+                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                <span>💬</span> 채팅 보내기
+                                            </button>
+                                            <button th:if="${post.category == '📢 모집중'}" onclick="alert('채팅 기능 준비 중입니다.')" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                               background:none; border:none; padding:10px 16px;
+                                                               color:#555; font-size:14px; cursor:pointer; text-align:left;
+                                                               white-space:nowrap; transition:background 0.2s;"
+                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                <span>👥</span> 채팅방 참여하기
+                                            </button>
+                                        </th:block>
+                            
+                                        <!-- 본인일 때: 수정/삭제 -->
+                                        <th:block th:if="${loginMemberId != null and loginMemberId == post.memberId}">
+                                            <a th:href="@{/board/{id}/edit(id=${post.id})}" style="display:flex; align-items:center; gap:8px; padding:10px 16px;
+                                                          color:#555; text-decoration:none; font-size:14px;
+                                                          border-bottom:1px solid #f8f0e6; white-space:nowrap; transition:background 0.2s;"
+                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                <span>✏️</span> 수정하기
+                                            </a>
+                                            <form th:action="@{/board/{id}/delete(id=${post.id})}" method="post"
+                                                onsubmit="return confirm('정말 삭제하시겠습니까?')" style="margin:0;">
+                                                <button type="submit" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                                   background:none; border:none; padding:10px 16px;
+                                                                   color:#e57373; font-size:14px; cursor:pointer;
+                                                                   white-space:nowrap; transition:background 0.2s; text-align:left;"
+                                                    onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                    <span>🗑️</span> 삭제하기
+                                                </button>
+                                            </form>
+                                        </th:block>
+                                    </div>
+                                </div>
+                            </div>
+                                                    
+                            <h1 class="board-detail-title" th:text="${post.title}"></h1>
+                            <div class="board-detail-meta">
+                                <span th:text="${post.author}"></span>
+                                <span class="board-meta-divider">•</span>
+                                <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}"></span>
+                            </div>
+                            <div class="board-detail-content" th:text="${post.content}"></div>
 
-                        <section class="board-vote-section" th:if="${post.category == '투표' and not #lists.isEmpty(post.voteItems)}">
-                            <h2 class="board-section-title">투표</h2>
-                            <div th:each="item : ${post.voteItems}" class="board-vote-item">
-                                <form th:action="@{/vote/{id}(id=${item.id})}" method="post">
-                                    <input type="hidden" name="boardId" th:value="${post.id}">
-                                    <button type="submit" class="board-vote-button">
-                                        <div class="board-vote-track">
-                                            <div class="board-vote-fill"
-                                                 th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
+                            <!-- 이미지 -->
+                            <div th:if="${not #lists.isEmpty(post.imagePaths)}" style="margin-top:16px;">
+                                <div th:if="${#lists.size(post.imagePaths) == 1}" id="image-list">
+                                    <img th:src="${post.imagePaths[0]}" th:attr="data-index=0" onclick="openModal(0)"
+                                        alt="첨부 이미지" style="width:100%; border-radius:12px; border:1px solid #eadbc9;
+                                            cursor:pointer; display:block;">
+                                </div>
+                                <div th:if="${#lists.size(post.imagePaths) > 1}" id="image-list"
+                                    style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px;">
+                                    <img th:each="img, stat : ${post.imagePaths}" th:src="${img}"
+                                        th:attr="data-index=${stat.index}"
+                                        onclick="openModal(this.getAttribute('data-index'))" alt="첨부 이미지" style="width:100%; aspect-ratio:1; object-fit:cover;
+                                            border-radius:8px; border:1px solid #eadbc9;
+                                            cursor:pointer; display:block;">
+                                </div>
+                            </div>
+
+                            <!-- 투표 -->
+                            <section class="board-vote-section" th:if="${not #lists.isEmpty(post.voteItems)}">
+                                <h2 class="board-section-title">투표</h2>
+                                <div th:each="item : ${post.voteItems}" class="board-vote-item">
+                                    <form th:action="@{/vote/{id}(id=${item.id})}" method="post">
+                                        <input type="hidden" name="boardId" th:value="${post.id}">
+                                        <button type="submit" class="board-vote-button">
+                                            <div class="board-vote-track">
+                                                <div class="board-vote-fill"
+                                                    th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
+                                                </div>
+                                                <span class="board-vote-label" th:text="${item.itemText}"></span>
+                                                <span class="board-vote-count" th:text="${item.voteCount} + '표'"></span>
                                             </div>
-                                            <span class="board-vote-label" th:text="${item.itemText}">항목</span>
-                                            <span class="board-vote-count" th:text="${item.voteCount} + '표'">0표</span>
-                                        </div>
-                                    </button>
-                                </form>
+                                        </button>
+                                    </form>
+                                </div>
+                            </section>
+                        </article>
+                    </section>
+
+                    <section class="subtab-section">
+                        <article class="board-detail-card">
+                            <div class="board-comment-head">
+                                <h2 class="board-section-title">댓글</h2>
+                                <span class="board-comment-count" th:text="${#lists.size(post.comments)} + '개'"></span>
                             </div>
-                        </section>
-                    </article>
-                </section>
-
-                <section class="subtab-section">
-                    <article class="board-detail-card">
-                        <div class="board-comment-head">
-                            <h2 class="board-section-title">댓글</h2>
-                            <span class="board-comment-count" th:text="${#lists.size(post.comments)} + '개'">0개</span>
-                        </div>
-
-                        <div th:each="c : ${post.comments}" class="board-comment-item">
-                            <div class="board-comment-author" th:text="${c.author}"></div>
-                            <div class="board-comment-content" th:text="${c.content}"></div>
-                            <div class="board-comment-date" th:text="${#temporals.format(c.regDate, 'MM/dd HH:mm')}"></div>
-                        </div>
-
-                        <form th:action="@{/board/{id}/comment(id=${post.id})}" method="post" class="board-comment-form">
-                            <div class="board-author-toggle">
-                                <input type="radio" name="authorType" id="c-anon" value="anon" checked onchange="toggleCommentAuthor(this.value)">
-                                <label for="c-anon">🙈 익명</label>
-                                <input type="radio" name="authorType" id="c-named" value="named" onchange="toggleCommentAuthor(this.value)">
-                                <label for="c-named">👤 이름 입력</label>
+                            <div th:each="c : ${post.comments}" class="board-comment-item">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div class="board-comment-author" th:text="${c.author}"></div>
+                                    <form th:if="${loginMemberId != null and loginMemberId == c.memberId}"
+                                        th:action="@{/comment/{id}/delete(id=${c.id})}" method="post"
+                                        onsubmit="return confirm('댓글을 삭제하시겠습니까?')">
+                                        <input type="hidden" name="boardId" th:value="${post.id}">
+                                        <button type="submit" class="board-mini-button"
+                                            style="font-size:11px; padding:3px 8px;">삭제</button>
+                                    </form>
+                                </div>
+                                <div class="board-comment-content" th:text="${c.content}"></div>
+                                <div class="board-comment-date"
+                                    th:text="${#temporals.format(c.regDate, 'MM/dd HH:mm')}"></div>
                             </div>
-                            <input type="text" name="author" id="comment-author-input" value="익명" class="board-input" style="display:none;">
-                            <textarea name="content" rows="4" class="board-textarea" placeholder="댓글을 입력하세요" required></textarea>
-                            <button type="submit" class="btn-primary board-submit-button">댓글 등록</button>
-                        </form>
-                    </article>
+                            <form th:action="@{/board/{id}/comment(id=${post.id})}" method="post"
+                                class="board-comment-form">
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                                    <label class="anon-toggle-btn" id="comment-anon-label"
+                                        style="display:inline-flex; align-items:center; gap:6px;
+                                              padding:8px 16px; border:1.5px solid #eadbc9; border-radius:20px;
+                                              background:#fffaf4; color:#9f8773; font-size:14px; cursor:pointer; transition:0.2s;">
+                                        <input type="checkbox" id="comment-anon-check"
+                                            onchange="toggleCommentAuthor(this.checked)" style="display:none;">
+                                        익명
+                                    </label>
+                                    <input type="text" name="author" id="comment-author-input"
+                                        th:value="${loginMemberName}" th:data-name="${loginMemberName}"
+                                        class="board-input" readonly
+                                        style="flex:1; background:#f0f0f0; cursor:not-allowed;">
+                                </div>
+                                <textarea name="content" rows="4" class="board-textarea" placeholder="댓글을 입력하세요"
+                                    required></textarea>
+                                <button type="submit" class="btn-primary board-submit-button">댓글 등록</button>
+                            </form>
+                        </article>
+                    </section>
                 </section>
-            </section>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    function toggleCommentAuthor(val) {
-        const input = document.getElementById('comment-author-input');
-        if (val === 'named') {
-            input.style.display = 'block';
-            input.value = '';
-            input.placeholder = '이름을 입력하세요';
-        } else {
-            input.style.display = 'none';
-            input.value = '익명';
+    <!-- 이미지 모달 -->
+    <div id="imgModal" onclick="closeModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9);
+            z-index:1000; align-items:center; justify-content:center;">
+        <span onclick="closeModal()"
+            style="position:absolute; top:20px; right:28px; color:white; font-size:32px; cursor:pointer;">✕</span>
+        <button onclick="event.stopPropagation(); modalSlide(-1)" style="position:absolute; left:20px; top:50%; transform:translateY(-50%);
+                   background:rgba(255,255,255,0.2); color:white; border:none;
+                   border-radius:50%; width:44px; height:44px; font-size:24px; cursor:pointer; z-index:10;">‹</button>
+        <img id="modalImg" src="" alt="확대 이미지" onclick="event.stopPropagation()"
+            style="max-width:90vw; max-height:85vh; border-radius:12px;">
+        <button onclick="event.stopPropagation(); modalSlide(1)" style="position:absolute; right:20px; top:50%; transform:translateY(-50%);
+                   background:rgba(255,255,255,0.2); color:white; border:none;
+                   border-radius:50%; width:44px; height:44px; font-size:24px; cursor:pointer; z-index:10;">›</button>
+        <div id="modal-indicator" style="position:absolute; bottom:20px; color:white; font-size:13px;"></div>
+    </div>
+
+    <script th:inline="javascript">
+        const loginMemberName = /*[[${loginMemberName}]]*/ '';
+
+        let modalIndex = 0;
+        const modalImages = Array.from(document.querySelectorAll('#image-list img'));
+
+        function openModal(idx) {
+            modalIndex = parseInt(idx);
+            updateModal();
+            document.getElementById('imgModal').style.display = 'flex';
         }
-    }
-</script>
+        function closeModal() {
+            document.getElementById('imgModal').style.display = 'none';
+        }
+        function modalSlide(dir) {
+            if (modalImages.length === 0) return;
+            modalIndex = (modalIndex + dir + modalImages.length) % modalImages.length;
+            updateModal();
+        }
+        function updateModal() {
+            document.getElementById('modalImg').src = modalImages[modalIndex].src;
+            const indicator = document.getElementById('modal-indicator');
+            indicator.textContent = modalImages.length > 1 ? `${modalIndex + 1} / ${modalImages.length}` : '';
+        }
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('imgModal').style.display === 'flex') {
+                if (e.key === 'ArrowLeft') modalSlide(-1);
+                if (e.key === 'ArrowRight') modalSlide(1);
+                if (e.key === 'Escape') closeModal();
+            }
+        });
+
+        function toggleDropdown(event) {
+            event.stopPropagation(); // 클릭 이벤트 전파 방지
+            const menu = document.getElementById('postDropdown');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+        // 메뉴 바깥 클릭 시 닫기
+        window.onclick = function(event) {
+            const menu = document.getElementById('postDropdown');
+            if (menu && menu.style.display === 'block') {
+                if (!event.target.closest('.dropdown-wrapper') && !event.target.matches('button')) {
+                    menu.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleCommentAuthor(checked) {
+            const input = document.getElementById('comment-author-input');
+            const label = document.getElementById('comment-anon-label');
+            input.value = checked ? '익명' : input.dataset.name;
+            label.style.background = checked ? 'linear-gradient(180deg, #d99a70, #cb8458)' : '#fffaf4';
+            label.style.color = checked ? 'white' : '#9f8773';
+            label.style.borderColor = checked ? '#cb8458' : '#eadbc9';
+        }
+    </script>
 </body>
+
 </html>

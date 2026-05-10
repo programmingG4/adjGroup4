@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOn | 채팅게시판</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+</head>
+
+<body>
+    <div class="subtab-shell">
+        <div class="subtab-wrap">
+            <header class="subtab-header">
+                <h1 class="subtab-logo">CAMPUSON</h1>
+                <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+                <div class="subtab-divider"></div>
+            </header>
+
+            <div class="subtab-layout">
+                <aside class="subtab-sidebar">
+                    <section class="subtab-panel">
+                        <p class="subtab-panel-eyebrow">TALK BOARD</p>
+                        <h2 class="subtab-profile-name">채팅게시판</h2>
+                        <p class="subtab-profile-meta">채팅방과 연동된 공지글들을 확인할 수 있는 게시판입니다.</p>
+                        <a href="/talkboard/write" class="subtab-profile-link">새 글 작성</a>
+                    </section>
+                    <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+                        <a href="/home" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">⌂</span>
+                            <span><strong class="subtab-shortcut-title">메인</strong><span
+                                    class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+                        </a>
+                        <a href="/chat" class="subtab-shortcut active">
+                            <span class="subtab-shortcut-icon">💬</span>
+                            <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀
+                                    소통과 알림 확인</span></span>
+                        </a>
+                        <a href="/board" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">📌</span>
+                            <span><strong class="subtab-shortcut-title">게시판</strong><span
+                                    class="subtab-shortcut-desc">익명 소통과 거래 공간</span></span>
+                        </a>
+                        <a href="/mypage" class="subtab-shortcut">
+                            <span class="subtab-shortcut-icon">👤</span>
+                            <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내
+                                    정보와 활동 관리</span></span>
+                        </a>
+                    </nav>
+                </aside>
+
+                <section class="subtab-content board-theme-list">
+                    <section class="subtab-section">
+                        <section class="board-page-head">
+                            <div>
+                                <p class="board-eyebrow">CHAT BOARD</p>
+                                <h1 class="subpage-title">채팅게시판</h1>
+                                <p class="subpage-desc">채팅방과 연동된 공지글들을 확인할 수 있어요.</p>
+                            </div>
+                            <a href="/chat" class="board-room-chip">← 채팅으로 돌아가기</a>
+                        </section>
+                        <section class="board-category-bar">
+                            <a th:each="cat : ${categories}" th:href="@{/talkboard(category=${cat})}" class="board-category-chip"
+                                th:classappend="${cat == selectedCategory} ? ' active'" th:text="${cat}">카테고리</a>
+                        </section>
+                    </section>
+
+                    <section class="subtab-section">
+                        <section class="board-list-section">
+                            <div th:if="${#lists.isEmpty(posts)}" class="board-empty-state">
+                                아직 등록된 게시글이 없습니다.
+                            </div>
+                            <a th:href="@{/talkboard/{id}(id=${post.id}, category=${selectedCategory})}" th:each="post : ${posts}"
+                                class="board-post-card">
+                                <div class="board-post-main">
+                                    <div class="board-post-head">
+                                        <span class="board-post-category">[공지]</span>
+                                        <strong class="board-post-title" th:text="${post.title}"></strong>
+                                    </div>
+                                    <p class="board-post-content" th:text="${post.content}"></p>
+                                    <div class="board-post-meta">
+                                        <span th:text="${post.author}"></span>
+                                        <span class="board-meta-divider">•</span>
+                                        <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}"></span>
+                                    </div>
+                                </div>
+                                <img th:if="${not #lists.isEmpty(post.imagePaths)}" th:src="${post.imagePaths[0]}"
+                                    class="board-post-thumb" alt="썸네일">
+                            </a>
+                        </section>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
