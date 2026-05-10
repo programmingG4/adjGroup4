@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>계정 관리</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/subtab-theme.css" />
+  <style>
+    .settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 400px;
+    }
+    .settings-input {
+      width: 100%;
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .settings-input:focus {
+      border-color: var(--subtab-accent);
+    }
+    .settings-success {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: rgba(100, 180, 120, 0.12);
+      color: #3a7d52;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .settings-error {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: rgba(220, 80, 80, 0.1);
+      color: #c04040;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div class="subtab-shell">
+  <div class="subtab-wrap">
+    <header class="subtab-header">
+      <h1 class="subtab-logo">CAMPUSON</h1>
+      <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+      <div class="subtab-divider"></div>
+    </header>
+
+    <div class="subtab-layout">
+      <aside class="subtab-sidebar">
+        <section class="subtab-panel">
+          <p class="subtab-panel-eyebrow">MY PAGE</p>
+          <h2 class="subtab-profile-name" th:text="${member.name + '님'}">홍길동님</h2>
+          <p class="subtab-profile-meta" th:text="${member.studentId + ' · 계정 설정을 관리합니다.'}">20231234 · 계정 설정을 관리합니다.</p>
+          <a href="/mypage" class="subtab-profile-link">← 마이페이지로</a>
+        </section>
+
+        <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
+          <a href="/home" class="subtab-shortcut">
+            <span class="subtab-shortcut-icon">⌂</span>
+            <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
+          </a>
+          <a href="/chat" class="subtab-shortcut">
+            <span class="subtab-shortcut-icon">💬</span>
+            <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
+          </a>
+          <a href="/board" class="subtab-shortcut">
+            <span class="subtab-shortcut-icon">📌</span>
+            <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">공지와 자유 게시글 보기</span></span>
+          </a>
+          <a href="/mypage" class="subtab-shortcut active">
+            <span class="subtab-shortcut-icon">👤</span>
+            <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span>
+          </a>
+        </nav>
+      </aside>
+
+      <section class="subtab-content">
+        <section class="subtab-section">
+          <div class="subtab-title-row">
+            <div>
+              <p class="subtab-eyebrow">SETTINGS</p>
+              <h2 class="subtab-title">계정 관리</h2>
+              <p class="subtab-desc">비밀번호를 변경할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div th:if="${successMsg}" class="settings-success" th:text="${successMsg}"></div>
+          <div th:if="${errorMsg}" class="settings-error" th:text="${errorMsg}"></div>
+
+          <form th:action="@{/mypage/password}" method="post" class="settings-form" style="margin-top: 20px;">
+            <input type="password" name="currentPassword" class="settings-input" placeholder="현재 비밀번호" required />
+            <input type="password" name="newPassword" class="settings-input" placeholder="새 비밀번호" required />
+            <input type="password" name="confirmPassword" class="settings-input" placeholder="새 비밀번호 확인" required />
+            <div>
+              <button type="submit" class="subtab-button primary" style="border: none; cursor: pointer;">비밀번호 변경</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>
