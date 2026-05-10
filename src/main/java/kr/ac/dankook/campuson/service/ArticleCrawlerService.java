@@ -46,7 +46,7 @@ public class ArticleCrawlerService {
         if (localCache != null) {
             return localCache.result();
         }
-        return new ArticleFetchResult(List.of(), false, null);
+        return new ArticleFetchResult(List.of(), Map.of(), false, null);
     }
 
     private void startBackgroundRefresh() {
