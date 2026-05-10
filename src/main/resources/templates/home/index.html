@@ -5,58 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusON</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
 </head>
 <body>
 <div class="page-shell">
     <main class="app-frame home-frame home-flow-frame">
-        <section class="hero-section home-soft-hero home-centered-hero">
-            <div class="hero-center hero-center-lined">
-                <h1 class="hero-logo"><span class="hero-logo-campus">CAMPUS</span><span class="hero-logo-on">ON</span></h1>
-                <p class="hero-subtext">학생을 위한 소통과 정보의 시작점</p>
-                <div class="hero-divider" aria-hidden="true"></div>
-            </div>
-        </section>
+        <div th:replace="~{fragments/app-layout :: campusHero}"></div>
 
         <section class="home-flow-layout">
-            <aside class="home-side-panel">
-                <div class="home-profile-brief">
-                    <p class="home-side-label">MY PAGE</p>
-                    <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '홍길동 님'}">홍길동 님</h2>
-                    <p class="home-side-meta" th:text="${member != null ? member.studentId : '20231234'}">20231234</p>
-                    <a href="/mypage" class="home-side-link">마이페이지 바로가기</a>
-                </div>
-
-                <nav class="home-shortcut-list" aria-label="바로가기">
-                    <a href="/chat" class="home-shortcut-item">
-                        <span class="home-shortcut-icon">💬</span>
-                        <span class="home-shortcut-copy">
-                            <strong>채팅</strong>
-                            <small>대화와 팀 소통 확인</small>
-                        </span>
-                    </a>
-                    <a href="/articles" class="home-shortcut-item">
-                        <span class="home-shortcut-icon">📰</span>
-                        <span class="home-shortcut-copy">
-                            <strong>기사</strong>
-                            <small>최신 기사와 헤드라인</small>
-                        </span>
-                    </a>
-                    <a href="/board" class="home-shortcut-item">
-                        <span class="home-shortcut-icon">📌</span>
-                        <span class="home-shortcut-copy">
-                            <strong>게시판</strong>
-                            <small>공지와 자유 게시글 확인</small>
-                        </span>
-                    </a>
-                    <a href="/mypage" class="home-shortcut-item">
-                        <span class="home-shortcut-icon">👤</span>
-                        <span class="home-shortcut-copy">
-                            <strong>MY</strong>
-                            <small>내 정보와 활동 관리</small>
-                        </span>
-                    </a>
-                </nav>
-            </aside>
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('home')}"></aside>
 
             <div class="home-main-stream">
                 <section class="home-featured-news">
@@ -68,41 +25,75 @@
                         <a href="/articles" class="home-inline-link">전체 기사 보기</a>
                     </div>
 
-                    <section class="home-visual-marquee" aria-label="대표 기사 이미지">
-                        <div class="home-marquee-track">
-                            <div class="home-marquee-slide slide-1"><span>캠퍼스 트렌드</span></div>
-                            <div class="home-marquee-slide slide-2"><span>팀 프로젝트 인사이트</span></div>
-                            <div class="home-marquee-slide slide-3"><span>학생 커리어 가이드</span></div>
-                            <div class="home-marquee-slide slide-4"><span>교내 프로그램 소식</span></div>
-                            <div class="home-marquee-slide slide-1"><span>캠퍼스 트렌드</span></div>
-                            <div class="home-marquee-slide slide-2"><span>팀 프로젝트 인사이트</span></div>
+                    <section class="home-visual-marquee" aria-label="대표 기사 토픽">
+                        <div class="home-marquee-track" th:if="${homeSlideArticles != null && !homeSlideArticles.isEmpty()}">
+                            <a th:each="article, iterStat : ${homeSlideArticles}"
+                               th:href="@{/articles(category=${article.categoryKey()})}"
+                               class="home-marquee-slide home-marquee-article"
+                               th:classappend="${' slide-' + ((iterStat.index % 4) + 1)}"
+                               th:style="|background-image: linear-gradient(180deg, rgba(44, 31, 23, 0.05), rgba(44, 31, 23, 0.62)), url('@{/articles/image(url=${article.thumbnailUrl()})}')|">
+                                <small th:text="${article.categoryLabel()}">기사</small>
+                                <span th:text="${article.categoryLabel() == '해커톤' ? '해커톤 소식' : (article.categoryLabel() == '공모전' ? '공모전 소식' : '오늘의 기사')}">오늘의 기사</span>
+                            </a>
+                            <a th:each="article, iterStat : ${homeSlideArticles}"
+                               th:href="@{/articles(category=${article.categoryKey()})}"
+                               class="home-marquee-slide home-marquee-article"
+                               th:classappend="${' slide-' + ((iterStat.index % 4) + 1)}"
+                               th:style="|background-image: linear-gradient(180deg, rgba(44, 31, 23, 0.05), rgba(44, 31, 23, 0.62)), url('@{/articles/image(url=${article.thumbnailUrl()})}')|">
+                                <small th:text="${article.categoryLabel()}">기사</small>
+                                <span th:text="${article.categoryLabel() == '해커톤' ? '해커톤 소식' : (article.categoryLabel() == '공모전' ? '공모전 소식' : '오늘의 기사')}">오늘의 기사</span>
+                            </a>
+                        </div>
+                        <div class="home-marquee-track" th:if="${homeSlideArticles == null || homeSlideArticles.isEmpty()}">
+                            <a href="/articles?category=news" class="home-marquee-slide slide-1"><small>기사</small><span>오늘의 기사</span></a>
+                            <a href="/articles?category=hackathon" class="home-marquee-slide slide-2"><small>해커톤</small><span>해커톤 소식</span></a>
+                            <a href="/articles?category=contest" class="home-marquee-slide slide-3"><small>공모전</small><span>공모전 소식</span></a>
+                            <a href="/articles?category=news" class="home-marquee-slide slide-1"><small>기사</small><span>오늘의 기사</span></a>
+                            <a href="/articles?category=hackathon" class="home-marquee-slide slide-2"><small>해커톤</small><span>해커톤 소식</span></a>
+                            <a href="/articles?category=contest" class="home-marquee-slide slide-3"><small>공모전</small><span>공모전 소식</span></a>
                         </div>
                     </section>
 
-                    <div class="home-news-strip-list">
-                        <a href="/articles" class="home-news-strip">
+                    <div class="home-news-strip-list" th:if="${homeScrapArticles != null && !homeScrapArticles.isEmpty()}">
+                        <a th:each="article : ${homeScrapArticles}"
+                           th:href="${article.articleUrl()}"
+                           class="home-news-strip"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            <div class="home-news-thumb home-news-thumb-image"
+                                 th:style="|background-image: url('@{/articles/image(url=${article.thumbnailUrl()})}')|"></div>
+                            <div class="home-news-copy">
+                                <strong th:text="${article.title()}">기사 제목</strong>
+                                <p th:text="${article.summary()}">기사 요약</p>
+                            </div>
+                            <span class="home-news-tag" th:text="${article.categoryLabel()}">기사</span>
+                        </a>
+                    </div>
+
+                    <div class="home-news-strip-list" th:if="${homeScrapArticles == null || homeScrapArticles.isEmpty()}">
+                        <a href="/articles?category=news" class="home-news-strip">
                             <div class="home-news-thumb thumb-a"></div>
                             <div class="home-news-copy">
                                 <strong>AI 분야 채용 트렌드, 신입에게 중요한 역량은?</strong>
                                 <p>기술 스택보다 협업 경험과 문제 해결 사례를 보는 기업이 늘고 있습니다.</p>
                             </div>
-                            <span class="home-news-tag">채용</span>
+                            <span class="home-news-tag">기사</span>
                         </a>
-                        <a href="/articles" class="home-news-strip">
+                        <a href="/articles?category=hackathon" class="home-news-strip">
                             <div class="home-news-thumb thumb-b"></div>
                             <div class="home-news-copy">
-                                <strong>학생 개발자가 알아두면 좋은 협업 도구 정리</strong>
-                                <p>프로젝트 관리, 디자인 공유, 코드 리뷰까지 한 번에 정리한 실전형 가이드입니다.</p>
+                                <strong>학생 개발자를 위한 해커톤 소식 모음</strong>
+                                <p>개발 행사와 팀 프로젝트 참여 기회를 한 번에 확인할 수 있습니다.</p>
                             </div>
-                            <span class="home-news-tag">협업</span>
+                            <span class="home-news-tag">해커톤</span>
                         </a>
-                        <a href="/articles" class="home-news-strip">
+                        <a href="/articles?category=contest" class="home-news-strip">
                             <div class="home-news-thumb thumb-c"></div>
                             <div class="home-news-copy">
-                                <strong>교내 비교과 프로그램 신청 일정 한눈에 보기</strong>
-                                <p>장학, 공모전, 특강 일정까지 놓치기 쉬운 학사 외 활동 소식을 모았습니다.</p>
+                                <strong>교내외 공모전과 비교과 프로그램 한눈에 보기</strong>
+                                <p>장학, 공모전, 특강 일정까지 놓치기 쉬운 활동 소식을 모았습니다.</p>
                             </div>
-                            <span class="home-news-tag">교내</span>
+                            <span class="home-news-tag">공모전</span>
                         </a>
                     </div>
                 </section>

@@ -25,7 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const PAGE_SIZE = 5;
     const PAGE_BUTTONS_PER_GROUP = 5;
     const PLACEHOLDER_IMAGE = "/images/article-placeholder.svg";
-    let currentCategory = "all";
+    const initialCategory = new URLSearchParams(window.location.search).get("category") || "all";
+    let currentCategory = initialCategory;
     let currentPage = 1;
 
     function filteredRows() {
@@ -132,6 +133,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     chips.forEach((chip) => {
+        if ((chip.dataset.category || "all") === currentCategory) {
+            chips.forEach((item) => item.classList.remove("active"));
+            chip.classList.add("active");
+        }
+
         chip.addEventListener("click", () => {
             chips.forEach((item) => item.classList.remove("active"));
             chip.classList.add("active");

@@ -5,64 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CampusON 기사</title>
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
     <link rel="stylesheet" href="/css/article-page.css">
 </head>
 <body>
 <div class="page-shell article-shell-page">
     <main class="article-hub">
-        <header class="article-hub-header hero-center hero-center-lined">
-            <h1 class="hero-logo">CAMPUSON</h1>
-            <p class="hero-subtext">학생을 위한 소통과 정보의 시작점</p>
-            <div class="hero-divider" aria-hidden="true"></div>
-        </header>
+        <header th:replace="~{fragments/app-layout :: articleHero}"></header>
 
         <div class="article-hub-layout">
-            <aside class="article-shared-side-panel">
-                <div class="home-profile-brief article-profile-brief">
-                    <p class="home-side-label">MY PAGE</p>
-                    <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '홍길동 님'}">홍길동 님</h2>
-                    <p class="home-side-meta" th:text="${member != null ? member.studentId : '20231234'}">20231234</p>
-                    <a href="/mypage" class="home-side-link">마이페이지 바로가기</a>
-                </div>
-
-                <nav class="home-shortcut-list article-shortcut-list" aria-label="바로가기">
-                    <a href="/chat" class="home-shortcut-item article-shortcut-item">
-                        <span class="home-shortcut-icon">💬</span>
-                        <span class="home-shortcut-copy">
-                            <strong>채팅</strong>
-                            <small>대화와 팀 소통 확인</small>
-                        </span>
-                    </a>
-                    <a href="/articles" class="home-shortcut-item article-shortcut-item is-active" aria-current="page">
-                        <span class="home-shortcut-icon">📰</span>
-                        <span class="home-shortcut-copy">
-                            <strong>기사</strong>
-                            <small>최신 기사와 헤드라인</small>
-                        </span>
-                    </a>
-                    <a href="/board" class="home-shortcut-item article-shortcut-item">
-                        <span class="home-shortcut-icon">📌</span>
-                        <span class="home-shortcut-copy">
-                            <strong>게시판</strong>
-                            <small>공지와 자유 게시글 확인</small>
-                        </span>
-                    </a>
-                    <a href="/mypage" class="home-shortcut-item article-shortcut-item">
-                        <span class="home-shortcut-icon">👤</span>
-                        <span class="home-shortcut-copy">
-                            <strong>MY</strong>
-                            <small>내 정보와 활동 관리</small>
-                        </span>
-                    </a>
-                </nav>
-            </aside>
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('articles')}"></aside>
 
             <section class="article-hub-main">
                 <section class="article-hub-intro">
                     <div>
                         <p class="article-kicker">ARTICLE</p>
                         <h1 class="article-main-title">우리 대학교 소식</h1>
-                        <p class="article-main-desc">학교, IT, 취창업, 기술개발 지원 소식을 한 번에 모아보세요. 메인 화면과 같은 톤으로 기사 대표 사진과 미리보기 목록을 이어서 볼 수 있습니다.</p>
+                        <p class="article-main-desc">학교, IT, 취창업, 기술개발 지원, 공모전, 해커톤 소식을 한 번에 모아보세요. 메인 화면과 같은 톤으로 기사 대표 사진과 미리보기 목록을 이어서 볼 수 있습니다.</p>
                     </div>
                     <a class="article-main-link" href="/home">메인으로 돌아가기</a>
                 </section>
@@ -78,6 +37,8 @@
                     <button class="article-category-chip" type="button" data-category="it">최신 IT정보</button>
                     <button class="article-category-chip" type="button" data-category="career">취창업</button>
                     <button class="article-category-chip" type="button" data-category="support">기술개발 지원</button>
+                    <button class="article-category-chip" type="button" data-category="contest">공모전</button>
+                    <button class="article-category-chip" type="button" data-category="hackathon">해커톤</button>
                     <button class="article-category-chip" type="button" data-category="school">학교 소식</button>
                 </section>
 

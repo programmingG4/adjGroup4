@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.security.Principal;
 import java.time.Duration;
 
 @Controller
@@ -38,13 +39,14 @@ public class ArticleController {
     }
 
     @GetMapping("/articles")
-    public String articles(Model model, java.security.Principal principal) {
+    public String articles(Model model, Principal principal) {
         ArticleFetchResult result = articleCrawlerService.fetchArticleFeed();
 
         if (principal != null) {
             Member member = memberRepository.findByStudentId(principal.getName());
             model.addAttribute("member", member);
         }
+
         model.addAttribute("activeMenu", "articles");
         model.addAttribute("articles", result.articles());
         model.addAttribute("categoryCounts", result.categoryCounts());
@@ -56,7 +58,15 @@ public class ArticleController {
 
     @GetMapping("/articles/image")
     public ResponseEntity<byte[]> proxyImage(@RequestParam(required = false) String url) throws IOException, InterruptedException {
-        if (url == null || url.isBlank() || !(url.startsWith("http://") || url.startsWith("https://"))) {
+        if (url == null || url.isBlank()) {
+            return placeholderImage();
+        }
+
+        if (url.startsWith("/images/")) {
+            return localImage(url);
+        }
+
+        if (!(url.startsWith("http://") || url.startsWith("https://"))) {
             return placeholderImage();
         }
 
@@ -80,6 +90,31 @@ public class ArticleController {
         }
 
         return placeholderImage();
+    }
+
+    private ResponseEntity<byte[]> localImage(String url) throws IOException {
+        String safePath = url.replaceFirst("^/+", "");
+        if (safePath.contains("..")) {
+            return placeholderImage();
+        }
+
+        ClassPathResource resource = new ClassPathResource("static/" + safePath);
+        if (!resource.exists()) {
+            return placeholderImage();
+        }
+
+        byte[] body = StreamUtils.copyToByteArray(resource.getInputStream());
+        String lowerPath = safePath.toLowerCase();
+        MediaType mediaType = lowerPath.endsWith(".png")
+                ? MediaType.IMAGE_PNG
+                : lowerPath.endsWith(".svg")
+                ? MediaType.parseMediaType("image/svg+xml")
+                : MediaType.IMAGE_JPEG;
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(1)))
+                .body(body);
     }
 
     private ResponseEntity<byte[]> placeholderImage() throws IOException {

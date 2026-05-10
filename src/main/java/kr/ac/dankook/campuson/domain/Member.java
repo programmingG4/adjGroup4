@@ -26,6 +26,9 @@ public class Member {
     private String password;
 
     @Column
+    private String department;
+
+    @Column
     private String imagePath;
 
     @Column(nullable = false)

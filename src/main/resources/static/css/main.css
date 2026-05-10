@@ -2080,3 +2080,43 @@ body {
 .hero-logo-on {
     display: inline-block;
 }
+
+/* Home article binding patch: keep existing theme while making article blocks data-driven. */
+.hero-logo-link {
+    display: inline-block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.hero-logo-link:hover {
+    opacity: 0.92;
+}
+
+.home-marquee-slide {
+    flex-direction: column;
+    justify-content: flex-end;
+    text-decoration: none;
+}
+
+.home-marquee-slide small {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-bottom: 8px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255, 250, 244, 0.22);
+    color: #fffaf4;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.home-marquee-slide span {
+    display: block;
+}
+
+.home-news-thumb-image {
+    background-size: cover;
+    background-position: center;
+}
