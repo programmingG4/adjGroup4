@@ -59,15 +59,19 @@ public class ChatWebSocketController {
 
     private void sendNotification(ChatRoom room, Member sender, String content) {
         String preview = content.length() > 35 ? content.substring(0, 35) + "…" : content;
-        ChatNotificationDto notif = new ChatNotificationDto(room.getId(), room.getName(), sender.getName(), preview);
 
         switch (room.getType()) {
-            case GLOBAL -> messagingTemplate.convertAndSend("/topic/notifications/global", notif);
+            case GLOBAL -> {
+                ChatNotificationDto notif = new ChatNotificationDto(room.getId(), room.getName(), sender.getName(), preview, false);
+                messagingTemplate.convertAndSend("/topic/notifications/global", notif);
+            }
             case GRADE -> {
+                ChatNotificationDto notif = new ChatNotificationDto(room.getId(), room.getName(), sender.getName(), preview, false);
                 String grade = room.getRoomKey().replace("grade_", "");
                 messagingTemplate.convertAndSend("/topic/notifications/grade/" + grade, notif);
             }
             case PRIVATE -> {
+                ChatNotificationDto notif = new ChatNotificationDto(room.getId(), sender.getName(), sender.getName(), preview, true);
                 String[] keys = room.getRoomKey().split("_");
                 String otherStudentId = keys[0].equals(sender.getStudentId()) ? keys[1] : keys[0];
                 messagingTemplate.convertAndSendToUser(otherStudentId, "/queue/notifications", notif);

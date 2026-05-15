@@ -157,9 +157,12 @@
                 const container = document.getElementById('chat-notif-container');
                 const toast = document.createElement('div');
                 toast.className = 'chat-notif-toast';
+                const msgLine = n.isPrivate
+                    ? n.content
+                    : n.senderName + ': ' + n.content;
                 toast.innerHTML =
                     '<div class="chat-notif-room">💬 ' + n.roomName + '</div>' +
-                    '<div class="chat-notif-msg">' + n.senderName + ': ' + n.content + '</div>';
+                    '<div class="chat-notif-msg">' + msgLine + '</div>';
                 toast.addEventListener('click', function () {
                     window.location.href = '/chat/' + n.roomId;
                 });

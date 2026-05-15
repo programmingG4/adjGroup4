@@ -14,4 +14,5 @@ public class ChatNotificationDto {
     private String roomName;
     private String senderName;
     private String content;
+    private boolean isPrivate;
 }
