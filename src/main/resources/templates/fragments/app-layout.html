@@ -83,5 +83,98 @@
     </nav>
 </aside>
 
+
+<div th:fragment="chatNotifications" th:if="${member != null}">
+    <style>
+        #chat-notif-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .chat-notif-toast {
+            background: #fff8f2;
+            border: 1px solid rgba(189,123,77,0.25);
+            border-left: 4px solid #bd7b4d;
+            border-radius: 12px;
+            padding: 12px 16px;
+            min-width: 260px;
+            max-width: 320px;
+            box-shadow: 0 4px 18px rgba(100,60,20,0.13);
+            cursor: pointer;
+            pointer-events: all;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        .chat-notif-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .chat-notif-room {
+            font-size: 12px;
+            font-weight: 700;
+            color: #bd7b4d;
+            margin-bottom: 3px;
+        }
+        .chat-notif-msg {
+            font-size: 13px;
+            color: #5a3d28;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+    <div id="chat-notif-container"></div>
+    <input type="hidden" id="notif-grade" th:value="${member.grade}">
+    <script src="/js/sockjs.min.js"></script>
+    <script src="/js/stomp.min.js"></script>
+    <script th:inline="javascript">
+        (function () {
+            const grade = parseInt(document.getElementById('notif-grade').value) || 0;
+            const socket = new SockJS('/ws');
+            const stomp = Stomp.over(socket);
+            stomp.debug = null;
+
+            stomp.connect({}, function () {
+                stomp.subscribe('/topic/notifications/global', onNotif);
+                if (grade > 0) {
+                    stomp.subscribe('/topic/notifications/grade/' + grade, onNotif);
+                }
+                stomp.subscribe('/user/queue/notifications', onNotif);
+            });
+
+            function onNotif(frame) {
+                const n = JSON.parse(frame.body);
+                showToast(n);
+            }
+
+            function showToast(n) {
+                const container = document.getElementById('chat-notif-container');
+                const toast = document.createElement('div');
+                toast.className = 'chat-notif-toast';
+                toast.innerHTML =
+                    '<div class="chat-notif-room">💬 ' + n.roomName + '</div>' +
+                    '<div class="chat-notif-msg">' + n.senderName + ': ' + n.content + '</div>';
+                toast.addEventListener('click', function () {
+                    window.location.href = '/chat/' + n.roomId;
+                });
+                container.appendChild(toast);
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () { toast.classList.add('show'); });
+                });
+                setTimeout(function () {
+                    toast.classList.remove('show');
+                    setTimeout(function () { toast.remove(); }, 300);
+                }, 5000);
+            }
+        })();
+    </script>
+</div>
+
 </body>
 </html>
