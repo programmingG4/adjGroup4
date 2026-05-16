@@ -8,19 +8,19 @@
     <link rel="stylesheet" href="/css/subtab-theme.css">
 </head>
 <body>
-<div class="page-shell">
-    <main class="app-frame home-frame home-flow-frame">
-        <div th:replace="~{fragments/app-layout :: campusHero}"></div>
+<div class="subtab-shell home-shell-page">
+    <div class="subtab-wrap">
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
-        <section class="home-flow-layout">
+        <div class="subtab-layout home-subtab-layout">
             <aside th:replace="~{fragments/app-layout :: subtabSidebar('home')}"></aside>
 
-            <div class="home-main-stream">
-                <section class="home-it-headline-section" aria-label="우리 대학교 소식 최신 IT정보">
+            <section class="subtab-content home-subtab-main">
+                <section class="subtab-section home-it-headline-section" aria-label="우리 대학교 소식 최신 IT정보">
                     <div class="home-section-head home-it-headline-head">
                         <div>
                             <p class="home-kicker">ARTICLE PICK</p>
-                            <h2 class="home-stream-title">다음 소식들을 기사 게시판에서 찾아볼 수 있어요!</h2>
+                            <h2 class="home-stream-title">최신 IT정보 3줄 요약</h2>
                         </div>
                     </div>
 
@@ -40,9 +40,9 @@
                         </li>
                     </ol>
                 </section>
-            </div>
-        </section>
-    </main>
+            </section>
+        </div>
+    </div>
 </div>
 <div th:replace="~{fragments/app-layout :: chatNotifications}"></div>
 </body>
