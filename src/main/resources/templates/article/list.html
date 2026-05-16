@@ -9,15 +9,15 @@
     <link rel="stylesheet" href="/css/article-page.css">
 </head>
 <body>
-<div class="page-shell article-shell-page">
-    <main class="article-hub">
-        <header th:replace="~{fragments/app-layout :: articleHero}"></header>
+<div class="subtab-shell article-shell-page">
+    <div class="subtab-wrap">
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
-        <div class="article-hub-layout">
+        <div class="subtab-layout article-hub-layout">
             <aside th:replace="~{fragments/app-layout :: subtabSidebar('articles')}"></aside>
 
-            <section class="article-hub-main">
-                <section class="article-hub-intro">
+            <section class="subtab-content article-hub-main">
+                <section class="subtab-section article-hub-intro">
                     <div>
                         <p class="article-kicker">ARTICLE</p>
                         <h1 class="article-main-title">우리 대학교 소식</h1>
@@ -118,7 +118,7 @@
                 </section>
             </section>
         </div>
-    </main>
+    </div>
 </div>
 
 <script src="/js/article-tabs.js"></script>
