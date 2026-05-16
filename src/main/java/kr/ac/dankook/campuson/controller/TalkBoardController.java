@@ -1,9 +1,11 @@
 package kr.ac.dankook.campuson.controller;
 
 import kr.ac.dankook.campuson.domain.Member;
+import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.TalkBoard;
 import kr.ac.dankook.campuson.entity.VoteItem;
 import kr.ac.dankook.campuson.repository.MemberRepository;
+import kr.ac.dankook.campuson.service.ChatService;
 import kr.ac.dankook.campuson.service.TalkBoardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,6 +27,9 @@ public class TalkBoardController {
     private TalkBoardService talkBoardService;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private ChatService chatService;
+
 
     private Member getLoginMember(UserDetails userDetails) {
         if (userDetails == null)
@@ -35,6 +40,8 @@ public class TalkBoardController {
     // 채팅게시판 목록
     @GetMapping("/talkboard")
     public String list(@RequestParam(defaultValue = "공지") String category,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) Long roomId,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
         model.addAttribute("selectedCategory", category);
@@ -50,12 +57,22 @@ public class TalkBoardController {
         } else {
             model.addAttribute("loginMemberName", "");
         }
+
+        if ("chat".equals(from) && roomId != null) {
+            model.addAttribute("backUrl", "/chat/" + roomId);
+        } else {
+            model.addAttribute("backUrl", null);
+        }
+        
         return "talkboard/list";
     }
 
     // 글쓰기 페이지
     @GetMapping("/talkboard/write")
-    public String writeForm(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String writeForm(@RequestParam(required = false) String from,
+            @RequestParam(required = false) Long roomId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
         Member loginMember = getLoginMember(userDetails);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
@@ -63,12 +80,25 @@ public class TalkBoardController {
         } else {
             model.addAttribute("loginMemberName", "");
         }
+
+        if ("chat".equals(from) && roomId != null) {
+            model.addAttribute("backUrl", "/chat/" + roomId);
+        } else {
+            model.addAttribute("backUrl", "/talkboard");
+        }
+
+        model.addAttribute("from", from);
+        model.addAttribute("roomId", roomId);
+
         return "talkboard/write";
     }
 
     // 글 저장
     @PostMapping("/talkboard/save")
     public String save(@ModelAttribute TalkBoard post,
+            @RequestParam(value = "pinned", required = false) boolean pinned,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) Long roomId,
             @RequestParam(value = "voteOption", required = false) List<String> voteItems,
             @RequestParam(value = "images", required = false) List<MultipartFile> images,
             @RequestParam(value = "videos", required = false) List<MultipartFile> videos,
@@ -131,7 +161,20 @@ public class TalkBoardController {
             }
         }
 
+        post.setPinned(pinned);
         talkBoardService.save(post);
+
+        // 전체 채팅방에 알림 메시지 전송
+        chatService.findByRoomKey("global").ifPresent(room -> {
+            String noticeContent = "📣 새 공지가 등록되었습니다.\n"
+                    + "「 " + post.getTitle() + " 」"
+                    + "\n[LINK]/talkboard/" + post.getId();
+            ChatMessage msg = chatService.sendSystemMessage(room.getId(), noticeContent);
+            if (msg != null) {
+                msg.setSenderName("공지");
+                chatService.saveMessage(msg);
+            }
+        });
 
         // 투표 저장
         if (voteItems != null && !voteItems.isEmpty()) {
@@ -142,13 +185,18 @@ public class TalkBoardController {
                 talkBoardService.saveVoteItems(post, validItems);
         }
 
+        if ("chat".equals(from) && roomId != null) {
+            return "redirect:/chat/" + roomId;
+        }
         return "redirect:/talkboard";
     }
 
     // 상세 페이지
     @GetMapping("/talkboard/{id}")
     public String detail(@PathVariable Long id,
-            @RequestParam(defaultValue = "공지") String category,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) Long roomId,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
         TalkBoard post = talkBoardService.findById(id);
@@ -169,6 +217,17 @@ public class TalkBoardController {
         } else {
             model.addAttribute("loginMemberName", "");
         }
+
+        // 채팅방에서 왔으면 채팅방으로 아니면 게시판으로
+        if ("chat".equals(from) && roomId != null) {
+            model.addAttribute("backUrl", "/chat/" + roomId);
+            model.addAttribute("backLabel", "← 채팅방으로 돌아가기");
+        } else {
+            model.addAttribute("backUrl", "/talkboard?category=" + (category != null ? category : "공지"));
+            model.addAttribute("backLabel", "← 게시판으로 돌아가기");
+        }
+
+        model.addAttribute("fromCategory", category != null ? category : "공지");
         return "talkboard/detail";
     }
 
@@ -249,5 +308,61 @@ public class TalkBoardController {
             return "redirect:/login";
         talkBoardService.vote(voteItemId, loginMember.getId());
         return "redirect:/talkboard/" + postId;
+    }
+
+    // 좋아요
+    @PostMapping("/talkboard/{id}/like")
+    public String like(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember != null)
+            talkBoardService.toggleLike(id, loginMember.getId());
+        return "redirect:/talkboard/" + id;
+    }
+
+    // 상단 고정
+    @PostMapping("/talkboard/{id}/pin")
+    public String pin(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember == null)
+            return "redirect:/login";
+
+        TalkBoard post = talkBoardService.findById(id);
+        if (!post.getMemberId().equals(loginMember.getId()))
+            return "redirect:/talkboard/" + id;
+
+        boolean newPinned = !post.isPinned();
+        post.setPinned(newPinned);
+        talkBoardService.save(post);
+
+        chatService.findByRoomKey("global").ifPresent(room -> {
+            if (newPinned) {
+                chatService.updatePinnedNotice(
+                        room.getId(), post.getTitle(), post.getContent(), post.getId());
+            } else {
+                chatService.clearPinnedNotice(room.getId(), post.getId());
+            }
+        });
+
+        return "redirect:/talkboard/" + id;
+    }
+
+    // 검색
+    @GetMapping("/talkboard/search")
+    public String search(@RequestParam String keyword,
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
+        model.addAttribute("posts", talkBoardService.search(keyword));
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categories", List.of("공지", "투표", "사진", "동영상", "파일"));
+        model.addAttribute("selectedCategory", "");
+        Member loginMember = getLoginMember(userDetails);
+        model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
+        if (loginMember != null) {
+            String year = loginMember.getStudentId().substring(2, 4);
+            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+        }
+        return "talkboard/list";
     }
 }

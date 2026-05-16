@@ -61,7 +61,7 @@
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
-                        <a th:href="@{/board(category=${fromCategory})}" class="board-back-link">← 게시판으로 돌아가기</a>
+                        <a th:href="${backUrl}" class="board-back-link" th:text="${backLabel}">← 게시판으로 돌아가기</a>
 
                         <article class="board-detail-card" style="position: relative;">
                         
@@ -95,6 +95,13 @@
                                                                white-space:nowrap; transition:background 0.2s;"
                                                 onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
                                                 <span>👥</span> 채팅방 참여하기
+                                            </button>
+                                            <div style="height:1px; background:#f0e4d7; margin:2px 0;"></div>
+                                            <button onclick="alert('신고가 접수되었습니다.')" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                               background:none; border:none; padding:10px 14px;
+                                                               color:#e57373; font-size:13px; cursor:pointer; text-align:left;"
+                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                <span>🚨</span> 신고하기
                                             </button>
                                         </th:block>
                             
@@ -164,6 +171,20 @@
                                     </form>
                                 </div>
                             </section>
+
+                            <!-- 좋아요 버튼 -->
+                            <div style="display:flex; justify-content:flex-end;
+                                        padding-top:16px; border-top:1px solid #f0f0f0; margin-top:16px;">
+                                <form th:action="@{/board/{id}/like(id=${post.id})}" method="post" style="margin:0;">
+                                    <button type="submit" style="display:flex; align-items:center; gap:6px;
+                                                   padding:8px 16px; border-radius:20px;
+                                                   border:1px solid #eadbc9; background:#fffaf4;
+                                                   color:#9f8773; font-size:14px; cursor:pointer; transition:0.2s;">
+                                        <span th:text="${post.likedMemberIds.contains(loginMemberId)} ? '❤️' : '🤍'">🤍</span>
+                                        <span th:text="${#lists.size(post.likedMemberIds)}">0</span>
+                                    </button>
+                                </form>
+                            </div>
                         </article>
                     </section>
 
@@ -286,6 +307,17 @@
             label.style.color = checked ? 'white' : '#9f8773';
             label.style.borderColor = checked ? '#cb8458' : '#eadbc9';
         }
+
+        const loginMemberId = /*[[${loginMemberId}]]*/ null;
+
+        let liked = loginMemberId && likedMemberIds.includes(loginMemberId);
+
+        function updateLikeBtn() {
+            document.getElementById('like-icon').textContent = liked ? '❤️' : '🤍';
+            document.getElementById('like-btn').style.borderColor = liked ? '#e57373' : '#eadbc9';
+            document.getElementById('like-btn').style.color = liked ? '#e57373' : '#9f8773';
+        }
+        updateLikeBtn();
     </script>
 </body>
 

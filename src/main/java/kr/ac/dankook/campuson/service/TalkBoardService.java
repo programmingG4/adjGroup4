@@ -27,14 +27,47 @@ public class TalkBoardService {
         talkBoardRepository.save(post);
     }
 
+    // 좋아요 토글
+    public int toggleLike(Long postId, Long memberId) {
+        TalkBoard post = talkBoardRepository.findById(postId).orElseThrow(); // boardRepository 아닌지 확인
+        if (post.getLikedMemberIds().contains(memberId)) {
+            post.getLikedMemberIds().remove(memberId);
+        } else {
+            post.getLikedMemberIds().add(memberId);
+        }
+        talkBoardRepository.save(post);
+        return post.getLikedMemberIds().size();
+    }
+
+    // 상단 고정 토글
+    public void togglePin(Long postId, Long memberId) {
+        TalkBoard post = findById(postId);
+        if (post.getMemberId().equals(memberId)) {
+            post.setPinned(!post.isPinned());
+            talkBoardRepository.save(post);
+        }
+    }
+
+    // 검색
+    public List<TalkBoard> search(String keyword) {
+        return talkBoardRepository.findAllByOrderByRegDateDesc().stream()
+                .filter(p -> p.getTitle().contains(keyword) || p.getContent().contains(keyword))
+                .toList();
+    }
+
+    // 목록 조회 - pinned 먼저 정렬
     public List<TalkBoard> getPostsByCategory(String category) {
-        return switch (category) {
+        List<TalkBoard> posts = switch (category) {
             case "투표" -> talkBoardRepository.findAllWithVoteOrderByRegDateDesc();
             case "사진" -> talkBoardRepository.findAllWithImageOrderByRegDateDesc();
             case "동영상" -> talkBoardRepository.findAllWithVideoOrderByRegDateDesc();
             case "파일" -> talkBoardRepository.findAllWithFileOrderByRegDateDesc();
-            default -> talkBoardRepository.findAllByOrderByRegDateDesc(); // 공지
+            default -> talkBoardRepository.findAllByOrderByRegDateDesc();
         };
+        // pinned 글 먼저
+        return posts.stream()
+                .sorted((a, b) -> Boolean.compare(b.isPinned(), a.isPinned()))
+                .toList();
     }
 
     public TalkBoard findById(Long id) {

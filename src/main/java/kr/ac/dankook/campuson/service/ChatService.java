@@ -113,8 +113,73 @@ public class ChatService {
             chatReadStatusRepository.findByStudentIdAndRoomId(studentId, roomId)
                     .ifPresentOrElse(
                             s -> s.setLastReadMessageId(lastMsg.getId()),
-                            () -> chatReadStatusRepository.save(new ChatReadStatus(studentId, roomId, lastMsg.getId()))
-                    );
+                            () -> chatReadStatusRepository
+                                    .save(new ChatReadStatus(studentId, roomId, lastMsg.getId())));
         });
+    }
+
+    @Transactional
+    public void updatePinnedNotice(Long roomId, String title, String content, Long talkBoardId) {
+        chatRoomRepository.findById(roomId).ifPresent(room -> {
+            // 기존 단일 공지 (최신 공지용)
+            room.setPinnedNotice(content);
+            room.setPinnedNoticeTitle(title);
+            room.setPinnedTalkBoardId(talkBoardId);
+
+            // 목록에 추가 (중복 방지)
+            int existingIdx = room.getPinnedTalkBoardIds().indexOf(talkBoardId);
+            if (existingIdx >= 0) {
+                room.getPinnedTalkBoardIds().remove(existingIdx);
+                room.getPinnedNoticeTitles().remove(existingIdx);
+            }
+            room.getPinnedNoticeTitles().add(title);
+            room.getPinnedTalkBoardIds().add(talkBoardId);
+            chatRoomRepository.save(room);
+        });
+    }
+
+    @Transactional
+    public void clearPinnedNotice(Long roomId, Long talkBoardId) {
+        chatRoomRepository.findById(roomId).ifPresent(room -> {
+            // 목록에서 제거
+            int idx = room.getPinnedTalkBoardIds().indexOf(talkBoardId);
+            if (idx >= 0) {
+                room.getPinnedTalkBoardIds().remove(idx);
+                room.getPinnedNoticeTitles().remove(idx);
+            }
+
+            // 단일 공지 업데이트 (가장 최근 것으로)
+            if (room.getPinnedTalkBoardIds().isEmpty()) {
+                room.setPinnedNotice(null);
+                room.setPinnedNoticeTitle(null);
+                room.setPinnedTalkBoardId(null);
+            } else {
+                int lastIdx = room.getPinnedTalkBoardIds().size() - 1;
+                room.setPinnedNoticeTitle(room.getPinnedNoticeTitles().get(lastIdx));
+                room.setPinnedTalkBoardId(room.getPinnedTalkBoardIds().get(lastIdx));
+            }
+            chatRoomRepository.save(room);
+        });
+    }
+
+    public List<ChatRoom> getPublicRooms() {
+        return chatRoomRepository.findByTypeIn(
+                List.of(ChatRoom.RoomType.GLOBAL, ChatRoom.RoomType.GRADE));
+    }
+
+    public Optional<ChatRoom> findByRoomKey(String roomKey) {
+        return chatRoomRepository.findByRoomKey(roomKey);
+    }
+
+    @Transactional
+    public ChatMessage sendSystemMessage(Long roomId, String content) {
+        return chatRoomRepository.findById(roomId).map(room -> {
+            ChatMessage message = new ChatMessage();
+            message.setRoom(room);
+            message.setSender("SYSTEM");
+            message.setSenderName("채팅게시판");
+            message.setContent(content);
+            return chatMessageRepository.save(message);
+        }).orElse(null);
     }
 }

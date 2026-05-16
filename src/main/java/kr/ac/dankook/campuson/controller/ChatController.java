@@ -68,7 +68,8 @@ public class ChatController {
                 String[] keys = room.getRoomKey().split("_");
                 String otherStudentId = keys[0].equals(member.getStudentId()) ? keys[1] : keys[0];
                 Member other = memberRepository.findByStudentId(otherStudentId);
-                if (other != null) displayRoomName = other.getName();
+                if (other != null)
+                    displayRoomName = other.getName();
                 otherLastRead = chatService.getLastReadMessageId(otherStudentId, id);
             }
 
@@ -77,6 +78,16 @@ public class ChatController {
             model.addAttribute("otherLastRead", otherLastRead);
             model.addAttribute("messages", messages);
             model.addAttribute("member", member);
+
+            // 공지 정보 추가
+            model.addAttribute("pinnedNotice", room.getPinnedNotice());
+            model.addAttribute("pinnedNoticeTitle", room.getPinnedNoticeTitle());
+            model.addAttribute("pinnedTalkBoardId", room.getPinnedTalkBoardId());
+            model.addAttribute("pinnedNoticeTitles",
+                    room.getPinnedNoticeTitles() != null ? room.getPinnedNoticeTitles() : new ArrayList<>());
+            model.addAttribute("pinnedTalkBoardIds",
+                    room.getPinnedTalkBoardIds() != null ? room.getPinnedTalkBoardIds() : new ArrayList<>());
+
             return "chat/room";
         }).orElse("redirect:/chat");
     }
@@ -84,7 +95,7 @@ public class ChatController {
     @GetMapping("/private")
     public String startPrivateChat(@RequestParam String targetStudentId,
                                    Principal principal,
-                                   RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
         Member me = memberRepository.findByStudentId(principal.getName());
         Member target = memberRepository.findByStudentId(targetStudentId);
 
@@ -99,8 +110,7 @@ public class ChatController {
 
         ChatRoom room = chatService.getOrCreatePrivateRoom(
                 me.getName(), me.getStudentId(),
-                target.getName(), target.getStudentId()
-        );
+                target.getName(), target.getStudentId());
         return "redirect:/chat/" + room.getId();
     }
 }

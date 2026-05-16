@@ -164,7 +164,7 @@
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
-                        <a th:href="@{/talkboard(category=${fromCategory})}" class="board-back-link">← 게시판으로 돌아가기</a>
+                        <a th:href="${backUrl}" class="board-back-link" th:text="${backLabel}">← 게시판으로 돌아가기</a>
                         <article class="board-detail-card">
                             <div class="board-detail-category">[공지]</div>
                             <h1 class="board-detail-title" th:text="${post.title}"></h1>
@@ -208,9 +208,8 @@
                                 </div>
                             </div>
 
-                            <!-- 수정/삭제 버튼 (본인만) -->
-                            <div th:if="${loginMemberId != null and loginMemberId == post.memberId}"
-                                style="position: absolute; top: 20px; right: 20px;">
+                            <!-- 수정/삭제 버튼 -->
+                            <div th:if="${loginMemberId != null}" style="position: absolute; top: 20px; right: 20px;">
                             
                                 <div class="dropdown-wrapper" style="position: relative; display: inline-block;">
                                     <button type="button" onclick="toggleDropdown(event)"
@@ -222,18 +221,35 @@
                                                 border-radius: 12px; /* 게시글 곡률에 맞춘 부드러운 모서리 */
                                                 z-index: 10; border: 1px solid #f0e4d7; overflow: hidden;">
                                     
-                                        <a th:href="@{/talkboard/{id}/edit(id=${post.id})}" class="dropdown-item"
-                                            style="color:#555; text-decoration:none; border-bottom:1px solid #f8f0e6; white-space:nowrap;">
-                                            <span>✏️</span> 수정하기
-                                        </a>
+                                        <!-- 본인일 때: 상단고정 + 수정 + 삭제 -->
+                                        <th:block th:if="${loginMemberId != null and loginMemberId == post.memberId}">
+                                            <form th:action="@{/talkboard/{id}/pin(id=${post.id})}" method="post" style="margin:0;">
+                                                <button type="submit" class="dropdown-item" style="width:100%; background:none; border:none;
+                                                                   color:#555; white-space:nowrap; text-align:left;
+                                                                   border-bottom:1px solid #f8f0e6;">
+                                                    <span th:text="${post.pinned} ? '📌 공지 내리기' : '📌 상단 고정'"></span>
+                                                </button>
+                                            </form>
+                                            <a th:href="@{/talkboard/{id}/edit(id=${post.id})}" class="dropdown-item" style="color:#555; text-decoration:none;
+                                                          border-bottom:1px solid #f8f0e6; white-space:nowrap;">
+                                                <span>✏️</span> 수정하기
+                                            </a>
+                                            <form th:action="@{/talkboard/{id}/delete(id=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?')"
+                                                style="margin:0;">
+                                                <button type="submit" class="dropdown-item" style="width:100%; background:none; border:none;
+                                                                   color:#e57373; white-space:nowrap; text-align:left;">
+                                                    <span>🗑️</span> 삭제하기
+                                                </button>
+                                            </form>
+                                        </th:block>
                                         
-                                        <form th:action="@{/talkboard/{id}/delete(id=${post.id})}" method="post" onsubmit="return confirm('정말 삭제하시겠습니까?')"
-                                            style="margin:0;">
-                                            <button type="submit" class="dropdown-item"
-                                                style="width:100%; background:none; border:none; color:#e57373; white-space:nowrap; text-align:left;">
-                                                <span>🗑️</span> 삭제하기
+                                        <!-- 본인 아닐 때: 신고하기 -->
+                                        <th:block th:if="${loginMemberId == null or loginMemberId != post.memberId}">
+                                            <button onclick="alert('신고가 접수되었습니다.')" class="dropdown-item" style="width:100%; background:none; border:none;
+                                                               color:#e57373; white-space:nowrap; text-align:left;">
+                                                <span>🚨</span> 신고하기
                                             </button>
-                                        </form>
+                                        </th:block>
                                     </div>
                                 </div>
                             </div>
@@ -270,6 +286,20 @@
                                     </div>
                                 </div>
                             </section>
+
+                            <!-- 좋아요 버튼 -->
+                            <div style="display:flex; justify-content:flex-end;
+                                        padding-top:16px; border-top:1px solid #f0f0f0; margin-top:16px;">
+                                <form th:action="@{/talkboard/{id}/like(id=${post.id})}" method="post" style="margin:0;">
+                                    <button type="submit" style="display:flex; align-items:center; gap:6px;
+                                                   padding:8px 16px; border-radius:20px;
+                                                   border:1px solid #eadbc9; background:#fffaf4;
+                                                   color:#9f8773; font-size:14px; cursor:pointer; transition:0.2s;">
+                                        <span th:text="${post.likedMemberIds.contains(loginMemberId)} ? '❤️' : '🤍'">🤍</span>
+                                        <span th:text="${#lists.size(post.likedMemberIds)}">0</span>
+                                    </button>
+                                </form>
+                            </div>
                         </article>
                     </section>
 
@@ -396,6 +426,17 @@
                 dropdown.style.display = 'none';
             }
         }
+
+        const loginMemberId = /*[[${loginMemberId}]]*/ null;
+
+        let liked = loginMemberId && likedMemberIds.includes(loginMemberId);
+
+        function updateLikeBtn() {
+            document.getElementById('like-icon').textContent = liked ? '❤️' : '🤍';
+            document.getElementById('like-btn').style.borderColor = liked ? '#e57373' : '#eadbc9';
+            document.getElementById('like-btn').style.color = liked ? '#e57373' : '#9f8773';
+        }
+        updateLikeBtn();
     </script>
 </body>
 

@@ -58,11 +58,27 @@
                                 <h1 class="subpage-title">채팅게시판</h1>
                                 <p class="subpage-desc">채팅방과 연동된 공지글들을 확인할 수 있어요.</p>
                             </div>
-                            <a href="/chat" class="board-room-chip">← 채팅으로 돌아가기</a>
+                            <!-- 채팅방에서 왔으면 채팅방으로, 아니면 채팅 홈으로 -->
+                            <a th:if="${backUrl != null}" th:href="${backUrl}" class="board-room-chip">← 채팅방으로 돌아가기</a>
+                            <a th:if="${backUrl == null}" href="/chat" class="board-room-chip">← 채팅으로 돌아가기</a>
                         </section>
-                        <section class="board-category-bar">
+                        <section class="board-category-bar" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <button onclick="toggleSearch()" class="board-category-chip" style="display:flex; align-items:center; gap:4px;">
+                                🔍
+                            </button>
+                        
                             <a th:each="cat : ${categories}" th:href="@{/talkboard(category=${cat})}" class="board-category-chip"
                                 th:classappend="${cat == selectedCategory} ? ' active'" th:text="${cat}">카테고리</a>
+                        
+                            <div id="search-bar" style="display:none; width:100%; margin-top:8px;">
+                                <form th:action="@{/talkboard/search}" method="get" style="display:flex; gap:8px;">
+                                    <input type="text" name="keyword" class="board-input" th:value="${keyword}" placeholder="제목 또는 내용 검색..."
+                                        style="flex:1; padding:10px 14px; border-radius:20px;
+                                                  border:1px solid #eadbc9; background:#fffaf4;
+                                                  font-size:14px; outline:none;">
+                                    <button type="submit" class="board-category-chip active" style="padding:10px 16px;">검색</button>
+                                </form>
+                            </div>
                         </section>
                     </section>
 
@@ -72,10 +88,12 @@
                                 아직 등록된 게시글이 없습니다.
                             </div>
                             <a th:href="@{/talkboard/{id}(id=${post.id}, category=${selectedCategory})}" th:each="post : ${posts}"
-                                class="board-post-card">
+                                class="board-post-card" th:style="${post.pinned} ? 'border-left: 3px solid #cb8458;' : ''">
                                 <div class="board-post-main">
                                     <div class="board-post-head">
-                                        <span class="board-post-category" th:text="${post.hasVote() ? '[투표]' : (post.hasImage() ? '[사진]' : (post.hasVideo() ? '[동영상]' : (post.hasFile() ? '[파일]' : '[공지]')))}"></span>
+                                        <span th:if="${post.pinned}" style="color:#cb8458; font-size:12px; margin-right:4px;">📌</span>
+                                        <span class="board-post-category"
+                                            th:text="${post.hasVote() ? '[투표]' : (post.hasImage() ? '[사진]' : (post.hasVideo() ? '[동영상]' : (post.hasFile() ? '[파일]' : '[공지]')))}"></span>
                                         <strong class="board-post-title" th:text="${post.title}"></strong>
                                     </div>
                                     <p class="board-post-content" th:text="${post.content}"></p>
@@ -94,6 +112,17 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleSearch() {
+            const bar = document.getElementById('search-bar');
+            bar.style.display = bar.style.display === 'none' ? 'block' : 'none';
+            if (bar.style.display === 'block') {
+                bar.querySelector('input').focus();
+            }
+        }
+    </script>
+
 </body>
 
 </html>

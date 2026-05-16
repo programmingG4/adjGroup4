@@ -231,4 +231,29 @@ public class BoardController {
         boardService.vote(voteItemId, loginMember.getId());
         return "redirect:/board/" + boardId;
     }
+
+    // 좋아요
+    @PostMapping("/board/{id}/like")
+    public String like(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember != null)
+            boardService.toggleLike(id, loginMember.getId());
+        return "redirect:/board/" + id;
+    }
+
+    // 검색
+    @GetMapping("/board/search")
+    public String search(@RequestParam String keyword,
+            @AuthenticationPrincipal UserDetails userDetails,
+            Model model) {
+        model.addAttribute("posts", boardService.search(keyword));
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
+        model.addAttribute("selectedCategory", "");
+        model.addAttribute("chatRoomName", getChatRoomName());
+        Member loginMember = getLoginMember(userDetails);
+        model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
+        return "board/list";
+    }
 }

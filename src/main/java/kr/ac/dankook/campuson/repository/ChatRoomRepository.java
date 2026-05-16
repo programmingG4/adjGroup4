@@ -14,4 +14,6 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     @Query("SELECT r FROM ChatRoom r WHERE r.type = 'PRIVATE' AND (r.roomKey LIKE CONCAT(:sid, '_%') OR r.roomKey LIKE CONCAT('%_', :sid))")
     List<ChatRoom> findPrivateRoomsForStudent(@Param("sid") String studentId);
+    
+    List<ChatRoom> findByTypeIn(List<ChatRoom.RoomType> types);
 }
