@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.File;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,16 +38,19 @@ public class ChatController {
 
         List<ChatRoom> rooms = chatService.getPublicRoomsForMember(member.getGrade());
         List<ChatRoom> privateRooms = chatService.getPrivateRoomsForUser(member.getStudentId());
+        List<ChatRoom> groupRooms = chatService.getGroupRoomsForUser(member.getStudentId());
 
         List<Long> allRoomIds = new ArrayList<>();
         rooms.forEach(r -> allRoomIds.add(r.getId()));
         privateRooms.forEach(r -> allRoomIds.add(r.getId()));
+        groupRooms.forEach(r -> allRoomIds.add(r.getId()));
 
         Map<Long, ChatMessage> lastMessages = chatService.getLastMessages(allRoomIds);
         Map<Long, Long> unreadCounts = chatService.getUnreadCounts(member.getStudentId(), allRoomIds);
 
         model.addAttribute("rooms", rooms);
         model.addAttribute("privateRooms", privateRooms);
+        model.addAttribute("groupRooms", groupRooms);
         model.addAttribute("member", member);
         model.addAttribute("myGrade", String.valueOf(member.getGrade()));
         model.addAttribute("lastMessages", lastMessages);
@@ -93,6 +97,38 @@ public class ChatController {
         String url = "/uploads/" + filename;
         String type = file.getContentType() != null && file.getContentType().startsWith("image/") ? "image" : "file";
         return Map.of("url", url, "type", type, "fileName", file.getOriginalFilename() != null ? file.getOriginalFilename() : filename);
+    }
+
+    @PostMapping("/group/create")
+    public String createGroupRoom(@RequestParam String name,
+                                  @RequestParam(defaultValue = "") String memberIds,
+                                  Principal principal,
+                                  RedirectAttributes redirectAttributes) {
+        if (name.isBlank()) {
+            redirectAttributes.addFlashAttribute("groupError", "채팅방 이름을 입력해주세요.");
+            return "redirect:/chat";
+        }
+        Member me = memberRepository.findByStudentId(principal.getName());
+        List<String> ids = Arrays.stream(memberIds.split("[,\\s]+"))
+                .map(String::trim).filter(s -> !s.isBlank()).toList();
+        ChatRoom room = chatService.createGroupRoom(name.trim(), me.getStudentId(), ids);
+        return "redirect:/chat/" + room.getId();
+    }
+
+    @PostMapping("/{id}/invite")
+    public String inviteMember(@PathVariable Long id,
+                               @RequestParam String studentId,
+                               RedirectAttributes redirectAttributes) {
+        Member target = memberRepository.findByStudentId(studentId.trim());
+        if (target == null) {
+            redirectAttributes.addFlashAttribute("inviteError", "존재하지 않는 학번입니다.");
+            return "redirect:/chat/" + id;
+        }
+        boolean added = chatService.addMemberToGroup(id, studentId.trim());
+        if (!added) {
+            redirectAttributes.addFlashAttribute("inviteError", "이미 채팅방에 참여 중인 멤버입니다.");
+        }
+        return "redirect:/chat/" + id;
     }
 
     @GetMapping("/private")

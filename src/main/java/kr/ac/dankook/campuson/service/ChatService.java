@@ -4,13 +4,16 @@ import jakarta.annotation.PostConstruct;
 import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatReadStatus;
 import kr.ac.dankook.campuson.entity.ChatRoom;
+import kr.ac.dankook.campuson.entity.ChatRoomMember;
 import kr.ac.dankook.campuson.repository.ChatMessageRepository;
 import kr.ac.dankook.campuson.repository.ChatReadStatusRepository;
+import kr.ac.dankook.campuson.repository.ChatRoomMemberRepository;
 import kr.ac.dankook.campuson.repository.ChatRoomRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatService {
@@ -18,13 +21,16 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatReadStatusRepository chatReadStatusRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     public ChatService(ChatRoomRepository chatRoomRepository,
                        ChatMessageRepository chatMessageRepository,
-                       ChatReadStatusRepository chatReadStatusRepository) {
+                       ChatReadStatusRepository chatReadStatusRepository,
+                       ChatRoomMemberRepository chatRoomMemberRepository) {
         this.chatRoomRepository = chatRoomRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.chatReadStatusRepository = chatReadStatusRepository;
+        this.chatRoomMemberRepository = chatRoomMemberRepository;
     }
 
     @PostConstruct
@@ -50,6 +56,38 @@ public class ChatService {
 
     public List<ChatRoom> getPrivateRoomsForUser(String studentId) {
         return chatRoomRepository.findPrivateRoomsForStudent(studentId);
+    }
+
+    public List<ChatRoom> getGroupRoomsForUser(String studentId) {
+        return chatRoomMemberRepository.findByStudentIdAndRoom_Type(studentId, ChatRoom.RoomType.GROUP)
+                .stream().map(ChatRoomMember::getRoom).collect(Collectors.toList());
+    }
+
+    public List<String> getGroupRoomMemberIds(Long roomId) {
+        return chatRoomMemberRepository.findByRoomId(roomId)
+                .stream().map(ChatRoomMember::getStudentId).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ChatRoom createGroupRoom(String name, String creatorId, List<String> memberIds) {
+        String key = "group_" + UUID.randomUUID();
+        ChatRoom room = chatRoomRepository.save(new ChatRoom(name, key, ChatRoom.RoomType.GROUP));
+        chatRoomMemberRepository.save(new ChatRoomMember(room, creatorId));
+        for (String mid : memberIds) {
+            if (!mid.isBlank() && !mid.equals(creatorId)) {
+                chatRoomMemberRepository.save(new ChatRoomMember(room, mid));
+            }
+        }
+        return room;
+    }
+
+    @Transactional
+    public boolean addMemberToGroup(Long roomId, String studentId) {
+        if (chatRoomMemberRepository.existsByRoomIdAndStudentId(roomId, studentId)) {
+            return false;
+        }
+        findById(roomId).ifPresent(room -> chatRoomMemberRepository.save(new ChatRoomMember(room, studentId)));
+        return true;
     }
 
     public Optional<ChatRoom> findById(Long id) {

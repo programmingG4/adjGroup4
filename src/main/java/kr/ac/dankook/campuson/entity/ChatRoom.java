@@ -24,7 +24,7 @@ public class ChatRoom {
     private RoomType type;
 
     public enum RoomType {
-        GLOBAL, GRADE, PRIVATE
+        GLOBAL, GRADE, PRIVATE, GROUP
     }
 
     public ChatRoom(String name, String roomKey, RoomType type) {

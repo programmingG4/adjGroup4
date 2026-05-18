@@ -120,6 +120,53 @@
                     </div>
                 </section>
 
+                <!-- 그룹 채팅 -->
+                <section class="subtab-section">
+                    <div class="subtab-title-row">
+                        <div>
+                            <p class="subtab-eyebrow">GROUP</p>
+                            <h2 class="subtab-title">그룹 채팅</h2>
+                        </div>
+                        <button type="button" class="subtab-chip" onclick="toggleGroupForm()" style="white-space:nowrap;">+ 새 그룹</button>
+                    </div>
+
+                    <div id="groupCreateForm" style="display:none; margin-bottom:16px; padding:16px; background:rgba(255,250,243,0.7); border-radius:14px; border:1px solid rgba(188,153,118,0.2);">
+                        <form th:action="@{/chat/group/create}" method="post" style="display:flex; flex-direction:column; gap:10px;">
+                            <input type="text" name="name" placeholder="그룹 채팅방 이름"
+                                   style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" maxlength="40" required />
+                            <input type="text" name="memberIds" placeholder="초대할 학번 (쉼표로 구분, 선택)"
+                                   style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" />
+                            <div style="display:flex; gap:8px;">
+                                <button type="submit" class="subtab-button primary" style="margin:0;">만들기</button>
+                                <button type="button" class="subtab-button" style="margin:0;" onclick="toggleGroupForm()">취소</button>
+                            </div>
+                        </form>
+                        <div th:if="${groupError}" class="error-msg" th:text="${groupError}"></div>
+                    </div>
+
+                    <div class="chat-theme-card-list">
+                        <article th:if="${#lists.isEmpty(groupRooms)}" class="chat-theme-card">
+                            <div>
+                                <div class="chat-theme-card-title">참여 중인 그룹 채팅이 없어요.</div>
+                                <div class="chat-theme-card-sub" style="font-size:12px; color:var(--text-soft); margin-top:2px;">위에서 새 그룹 채팅방을 만들어보세요.</div>
+                            </div>
+                        </article>
+                        <article th:each="room : ${groupRooms}" class="chat-theme-card">
+                            <div style="flex:1; min-width:0;">
+                                <div class="chat-theme-card-title">
+                                    <span th:text="${room.name}"></span>
+                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
+                                          class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
+                                </div>
+                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                     th:text="${lastMessages[room.id].senderName + ': ' + (lastMessages[room.id].mediaType != null ? '[미디어]' : lastMessages[room.id].content)}"></div>
+                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
+                            </div>
+                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
+                        </article>
+                    </div>
+                </section>
+
                 <!-- 1:1 채팅 -->
                 <section class="subtab-section">
                     <div class="subtab-title-row">
@@ -170,5 +217,16 @@
         </div>
     </div>
 </div>
+<script>
+    function toggleGroupForm() {
+        const form = document.getElementById('groupCreateForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+    // groupError 있으면 폼 자동 열기
+    (function () {
+        const err = document.querySelector('#groupCreateForm .error-msg');
+        if (err) document.getElementById('groupCreateForm').style.display = 'block';
+    })();
+</script>
 </body>
 </html>

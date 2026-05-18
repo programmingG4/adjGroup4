@@ -80,6 +80,14 @@ public class ChatWebSocketController {
                 String otherStudentId = keys[0].equals(sender.getStudentId()) ? keys[1] : keys[0];
                 messagingTemplate.convertAndSendToUser(otherStudentId, "/queue/notifications", notif);
             }
+            case GROUP -> {
+                ChatNotificationDto notif = new ChatNotificationDto(room.getId(), room.getName(), sender.getName(), preview, false);
+                chatService.getGroupRoomMemberIds(room.getId()).forEach(memberId -> {
+                    if (!memberId.equals(sender.getStudentId())) {
+                        messagingTemplate.convertAndSendToUser(memberId, "/queue/notifications", notif);
+                    }
+                });
+            }
         }
     }
 
