@@ -5,18 +5,19 @@ import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatRoom;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.ChatService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/chat")
@@ -79,6 +80,19 @@ public class ChatController {
             model.addAttribute("member", member);
             return "chat/room";
         }).orElse("redirect:/chat");
+    }
+
+    @PostMapping("/{id}/upload")
+    @ResponseBody
+    public Map<String, String> uploadFile(@PathVariable Long id,
+                                          @RequestParam("file") MultipartFile file) throws Exception {
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        new File(uploadDir).mkdirs();
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        file.transferTo(new File(uploadDir + filename));
+        String url = "/uploads/" + filename;
+        String type = file.getContentType() != null && file.getContentType().startsWith("image/") ? "image" : "file";
+        return Map.of("url", url, "type", type, "fileName", file.getOriginalFilename() != null ? file.getOriginalFilename() : filename);
     }
 
     @GetMapping("/private")
