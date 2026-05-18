@@ -27,5 +27,9 @@ public class ChatMessage {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    private String mediaUrl;
+    private String mediaType;  // "image" or "file"
+    private String fileName;
+
     private LocalDateTime sentAt = LocalDateTime.now();
 }

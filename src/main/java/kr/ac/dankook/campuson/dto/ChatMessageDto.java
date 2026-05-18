@@ -13,4 +13,7 @@ public class ChatMessageDto {
     private String senderName;
     private String content;
     private String sentAt;
+    private String mediaUrl;
+    private String mediaType;
+    private String fileName;
 }

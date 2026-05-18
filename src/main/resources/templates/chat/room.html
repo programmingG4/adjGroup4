@@ -248,6 +248,43 @@
         .read-badge.read {
             color: #b09078;
         }
+
+        .chat-attach-btn {
+            padding: 11px 14px;
+            border-radius: 16px;
+            background: rgba(189,123,77,0.1);
+            color: var(--subtab-accent);
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.18s;
+            white-space: nowrap;
+        }
+        .chat-attach-btn:hover { background: rgba(189,123,77,0.2); }
+
+        .msg-image {
+            max-width: 240px;
+            max-height: 240px;
+            border-radius: 10px;
+            margin-top: 6px;
+            display: block;
+            cursor: pointer;
+        }
+        .msg-file-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: rgba(189,123,77,0.1);
+            border-radius: 10px;
+            color: var(--subtab-accent);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .msg-file-link:hover { background: rgba(189,123,77,0.18); }
     </style>
 </head>
 <body>
@@ -309,7 +346,11 @@
                                         <span th:text="${msg.senderName}"></span>
                                         <span class="year-badge" th:if="${msg.sender != null}" th:text="${msg.sender.substring(2, 4) + '학번'}"></span>
                                     </span>
-                                    <div class="msg-bubble" th:text="${msg.content}">메시지</div>
+                                    <div class="msg-bubble">
+                                        <span th:if="${msg.content != null and !msg.content.isEmpty()}" th:text="${msg.content}"></span>
+                                        <img th:if="${msg.mediaType == 'image'}" th:src="${msg.mediaUrl}" class="msg-image" th:alt="${msg.fileName}">
+                                        <a th:if="${msg.mediaType == 'file'}" th:href="${msg.mediaUrl}" th:text="${'📄 ' + msg.fileName}" class="msg-file-link" target="_blank" download></a>
+                                    </div>
                                     <span class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">00:00</span>
                                 </div>
                                 <span th:if="${room.type.name() == 'PRIVATE' and msg.sender == member.studentId}"
@@ -322,6 +363,8 @@
 
                     <div class="chat-input-area">
                         <form class="chat-input-form" id="chatForm" onsubmit="return false;">
+                            <input type="file" id="fileInput" style="display:none;" accept="*/*">
+                            <button type="button" class="chat-attach-btn" id="attachBtn" title="파일 첨부">📎</button>
                             <input type="text" id="msgInput" class="chat-input"
                                    placeholder="메시지를 입력하세요..." autocomplete="off" maxlength="500" />
                             <button type="submit" class="chat-send-btn">전송</button>
@@ -410,11 +453,21 @@
         const readBadge = (isMine && isPrivate) ?
             `<span class="read-badge unread">1</span>` : '';
 
+        let mediaHtml = '';
+        if (msg.mediaType === 'image') {
+            mediaHtml = `<img src="${escHtml(msg.mediaUrl)}" class="msg-image" alt="${escHtml(msg.fileName || '')}" onclick="window.open(this.src)">`;
+        } else if (msg.mediaType === 'file') {
+            mediaHtml = `<a href="${escHtml(msg.mediaUrl)}" class="msg-file-link" target="_blank" download>📄 ${escHtml(msg.fileName || '파일')}</a>`;
+        }
+
         row.innerHTML = `
             ${avatarHtml}
             <div class="msg-body">
                 ${senderLabel}
-                <div class="msg-bubble">${escHtml(msg.content)}</div>
+                <div class="msg-bubble">
+                    ${msg.content ? escHtml(msg.content) : ''}
+                    ${mediaHtml}
+                </div>
                 <span class="msg-time">${escHtml(msg.sentAt || '')}</span>
             </div>
             ${readBadge}
@@ -450,7 +503,6 @@
         const input = document.getElementById('msgInput');
         const content = input.value.trim();
         if (!content) return;
-
         stompClient.send('/app/chat/' + roomId, {}, JSON.stringify({ content: content }));
         input.value = '';
     });
@@ -460,6 +512,31 @@
             e.preventDefault();
             document.getElementById('chatForm').dispatchEvent(new Event('submit'));
         }
+    });
+
+    document.getElementById('attachBtn').addEventListener('click', function () {
+        document.getElementById('fileInput').click();
+    });
+
+    document.getElementById('fileInput').addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/chat/' + roomId + '/upload', { method: 'POST', body: formData })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                stompClient.send('/app/chat/' + roomId, {}, JSON.stringify({
+                    content: '',
+                    mediaUrl: data.url,
+                    mediaType: data.type,
+                    fileName: data.fileName
+                }));
+            })
+            .catch(function () { alert('파일 업로드에 실패했습니다.'); })
+            .finally(function () { document.getElementById('fileInput').value = ''; });
     });
 
     // 초기 스크롤
