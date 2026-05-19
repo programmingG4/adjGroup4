@@ -49,20 +49,21 @@ public class TalkBoardService {
     }
 
     // 검색
-    public List<TalkBoard> search(String keyword) {
-        return talkBoardRepository.findAllByOrderByRegDateDesc().stream()
+    public List<TalkBoard> search(String keyword, String roomKey) {
+        return talkBoardRepository.findAllByRoomKeyOrderByRegDateDesc(roomKey).stream()
+                .filter(p -> p.getTitle() != null && p.getContent() != null)
                 .filter(p -> p.getTitle().contains(keyword) || p.getContent().contains(keyword))
                 .toList();
     }
 
     // 목록 조회 - pinned 먼저 정렬
-    public List<TalkBoard> getPostsByCategory(String category) {
+    public List<TalkBoard> getPostsByCategory(String category, String roomKey) {
         List<TalkBoard> posts = switch (category) {
-            case "투표" -> talkBoardRepository.findAllWithVoteOrderByRegDateDesc();
-            case "사진" -> talkBoardRepository.findAllWithImageOrderByRegDateDesc();
-            case "동영상" -> talkBoardRepository.findAllWithVideoOrderByRegDateDesc();
-            case "파일" -> talkBoardRepository.findAllWithFileOrderByRegDateDesc();
-            default -> talkBoardRepository.findAllByOrderByRegDateDesc();
+            case "투표" -> talkBoardRepository.findWithVoteByRoomKey(roomKey);
+            case "사진" -> talkBoardRepository.findWithImageByRoomKey(roomKey);
+            case "동영상" -> talkBoardRepository.findWithVideoByRoomKey(roomKey);
+            case "파일" -> talkBoardRepository.findWithFileByRoomKey(roomKey);
+            default -> talkBoardRepository.findAllByRoomKeyOrderByRegDateDesc(roomKey);
         };
         // pinned 글 먼저
         return posts.stream()

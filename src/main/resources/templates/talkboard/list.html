@@ -72,6 +72,7 @@
                         
                             <div id="search-bar" style="display:none; width:100%; margin-top:8px;">
                                 <form th:action="@{/talkboard/search}" method="get" style="display:flex; gap:8px;">
+                                    <input type="hidden" name="roomKey" th:value="${roomKey}">
                                     <input type="text" name="keyword" class="board-input" th:value="${keyword}" placeholder="제목 또는 내용 검색..."
                                         style="flex:1; padding:10px 14px; border-radius:20px;
                                                   border:1px solid #eadbc9; background:#fffaf4;

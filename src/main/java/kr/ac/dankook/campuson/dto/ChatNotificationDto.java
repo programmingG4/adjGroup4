@@ -1,5 +1,6 @@
 package kr.ac.dankook.campuson.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -7,13 +8,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChatMessageDto {
-    private Long id;
-    private String sender;      // studentId
+@AllArgsConstructor
+public class ChatNotificationDto {
+    private Long roomId;
+    private String roomName;
     private String senderName;
     private String content;
-    private String sentAt;
-    private String mediaUrl;
-    private String mediaType;
-    private String fileName;
+    private boolean isPrivate;
 }

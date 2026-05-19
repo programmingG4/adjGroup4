@@ -23,6 +23,9 @@ public class TalkBoard {
     private String author;
     private Long memberId;
 
+    @Column(nullable = false)
+    private String roomKey = "global"; // 기본값: 전체
+
     @ElementCollection
     @CollectionTable(name = "talkboard_images", joinColumns = @JoinColumn(name = "talkboard_id"))
     @Column(name = "image_path")

@@ -33,7 +33,7 @@ public class ChatRoom {
     private Long pinnedTalkBoardId; // 연동된 채팅게시판 글 ID
 
     public enum RoomType {
-        GLOBAL, GRADE, PRIVATE
+        GLOBAL, GRADE, PRIVATE, GROUP, TRADE
     }
 
     public ChatRoom(String name, String roomKey, RoomType type) {

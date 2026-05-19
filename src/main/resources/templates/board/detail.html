@@ -82,18 +82,21 @@
                             
                                         <!-- 본인 아닐 때: 채팅 버튼 -->
                                         <th:block th:if="${loginMemberId == null or loginMemberId != post.memberId}">
-                                            <button th:if="${post.category == '중고거래 게시판'}" onclick="alert('채팅 기능 준비 중입니다.')" style="width:100%; display:flex; align-items:center; gap:8px;
-                                                               background:none; border:none; padding:10px 16px;
-                                                               color:#555; font-size:14px; cursor:pointer; text-align:left;
-                                                               white-space:nowrap; transition:background 0.2s;"
-                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                            <!-- 중고거래: 1:1 채팅 -->
+                                            <button th:if="${post.category == '중고거래 게시판'}" th:onclick="|location.href='/board/${post.id}/chat'|" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                           background:none; border:none; padding:10px 16px;
+                                                           color:#555; font-size:14px; cursor:pointer; text-align:left;
+                                                           white-space:nowrap; transition:background 0.2s;" onmouseover="this.style.background='#f8f4f0'"
+                                                onmouseout="this.style.background='none'">
                                                 <span>💬</span> 채팅 보내기
                                             </button>
-                                            <button th:if="${post.category == '📢 모집중'}" onclick="alert('채팅 기능 준비 중입니다.')" style="width:100%; display:flex; align-items:center; gap:8px;
-                                                               background:none; border:none; padding:10px 16px;
-                                                               color:#555; font-size:14px; cursor:pointer; text-align:left;
-                                                               white-space:nowrap; transition:background 0.2s;"
-                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                            
+                                            <!-- 모집중: 단체 채팅방 참여 -->
+                                            <button th:if="${post.category == '📢 모집중'}" th:onclick="|location.href='/board/${post.id}/join'|" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                           background:none; border:none; padding:10px 16px;
+                                                           color:#555; font-size:14px; cursor:pointer; text-align:left;
+                                                           white-space:nowrap; transition:background 0.2s;" onmouseover="this.style.background='#f8f4f0'"
+                                                onmouseout="this.style.background='none'">
                                                 <span>👥</span> 채팅방 참여하기
                                             </button>
                                             <div style="height:1px; background:#f0e4d7; margin:2px 0;"></div>

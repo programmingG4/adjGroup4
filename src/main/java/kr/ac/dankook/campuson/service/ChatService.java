@@ -182,4 +182,38 @@ public class ChatService {
             return chatMessageRepository.save(message);
         }).orElse(null);
     }
+
+    @Transactional
+    public ChatRoom getOrCreateGroupRoom(String name, String roomKey) {
+        return chatRoomRepository.findByRoomKey(roomKey)
+                .orElseGet(() -> chatRoomRepository.save(
+                        new ChatRoom(name, roomKey, ChatRoom.RoomType.GROUP))); // 여기
+    }
+
+    @Transactional
+    public void addMemberToRoom(Long roomId, String studentId) {
+        // 채팅방 입장 처리 - 기존 메시지 읽음 처리
+        markAsRead(studentId, roomId);
+    }
+
+    public List<ChatRoom> getGroupRoomsForUser(String studentId) {
+        return chatRoomRepository.findGroupRoomsForStudent(studentId);
+    }
+
+    public List<ChatRoom> getTradeRoomsForUser(String studentId) {
+        return chatRoomRepository.findTradeRoomsForStudent(studentId);
+    }
+
+    @Transactional
+    public ChatRoom getOrCreateTradeRoom(String myName, String myId, String targetName, String targetId) {
+        String key = "trade_" + (myId.compareTo(targetId) < 0
+                ? myId + "_" + targetId
+                : targetId + "_" + myId);
+        String name = myId.compareTo(targetId) < 0
+                ? myName + "/" + targetName
+                : targetName + "/" + myName;
+        return chatRoomRepository.findByRoomKey(key)
+                .orElseGet(() -> chatRoomRepository.save(
+                        new ChatRoom(name, key, ChatRoom.RoomType.TRADE)));
+    }
 }

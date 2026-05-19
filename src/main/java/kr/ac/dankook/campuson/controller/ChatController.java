@@ -5,18 +5,19 @@ import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatRoom;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.ChatService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.File;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/chat")
@@ -36,16 +37,22 @@ public class ChatController {
 
         List<ChatRoom> rooms = chatService.getPublicRoomsForMember(member.getGrade());
         List<ChatRoom> privateRooms = chatService.getPrivateRoomsForUser(member.getStudentId());
+        List<ChatRoom> groupRooms = chatService.getGroupRoomsForUser(member.getStudentId());
+        List<ChatRoom> tradeRooms = chatService.getTradeRoomsForUser(member.getStudentId());
 
         List<Long> allRoomIds = new ArrayList<>();
         rooms.forEach(r -> allRoomIds.add(r.getId()));
         privateRooms.forEach(r -> allRoomIds.add(r.getId()));
+        groupRooms.forEach(r -> allRoomIds.add(r.getId()));
+        tradeRooms.forEach(r -> allRoomIds.add(r.getId()));
 
         Map<Long, ChatMessage> lastMessages = chatService.getLastMessages(allRoomIds);
         Map<Long, Long> unreadCounts = chatService.getUnreadCounts(member.getStudentId(), allRoomIds);
 
         model.addAttribute("rooms", rooms);
         model.addAttribute("privateRooms", privateRooms);
+        model.addAttribute("groupRooms", groupRooms);
+        model.addAttribute("tradeRooms", tradeRooms);
         model.addAttribute("member", member);
         model.addAttribute("myGrade", String.valueOf(member.getGrade()));
         model.addAttribute("lastMessages", lastMessages);
@@ -83,13 +90,26 @@ public class ChatController {
             model.addAttribute("pinnedNotice", room.getPinnedNotice());
             model.addAttribute("pinnedNoticeTitle", room.getPinnedNoticeTitle());
             model.addAttribute("pinnedTalkBoardId", room.getPinnedTalkBoardId());
-            model.addAttribute("pinnedNoticeTitles",
-                    room.getPinnedNoticeTitles() != null ? room.getPinnedNoticeTitles() : new ArrayList<>());
-            model.addAttribute("pinnedTalkBoardIds",
-                    room.getPinnedTalkBoardIds() != null ? room.getPinnedTalkBoardIds() : new ArrayList<>());
+            List<String> titles = room.getPinnedNoticeTitles() != null ? room.getPinnedNoticeTitles() : new ArrayList<>();
+            List<Long> ids = room.getPinnedTalkBoardIds() != null ? room.getPinnedTalkBoardIds() : new ArrayList<>();
+            model.addAttribute("pinnedNoticeTitles", titles);
+            model.addAttribute("pinnedTalkBoardIds", ids);
 
             return "chat/room";
         }).orElse("redirect:/chat");
+    }
+
+    @PostMapping("/{id}/upload")
+    @ResponseBody
+    public Map<String, String> uploadFile(@PathVariable Long id,
+                                          @RequestParam("file") MultipartFile file) throws Exception {
+        String uploadDir = System.getProperty("user.dir") + "/uploads/";
+        new File(uploadDir).mkdirs();
+        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        file.transferTo(new File(uploadDir + filename));
+        String url = "/uploads/" + filename;
+        String type = file.getContentType() != null && file.getContentType().startsWith("image/") ? "image" : "file";
+        return Map.of("url", url, "type", type, "fileName", file.getOriginalFilename() != null ? file.getOriginalFilename() : filename);
     }
 
     @GetMapping("/private")

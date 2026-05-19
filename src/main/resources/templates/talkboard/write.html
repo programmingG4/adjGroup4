@@ -115,6 +115,7 @@
                                 class="board-write-form">
                                 <input type="hidden" name="from" th:value="${from}">
                                 <input type="hidden" name="roomId" th:value="${roomId}">
+                                <input type="hidden" name="roomKey" th:value="${roomKey}">
 
                                 <!-- 작성자: 로그인 이름 자동 -->
                                 <div class="board-form-group">
@@ -156,11 +157,10 @@
                                     </button>
 
                                     <!-- 오른쪽 끝 상단 고정 -->
-                                    <label class="board-option-btn" for="pinned-check" id="pin-label" style="margin-left:auto; cursor:pointer;"
-                                        onclick="togglePinStyle()">
+                                    <label class="board-option-btn" for="pinned-check" id="pin-label" style="margin-left:auto; cursor:pointer;">
                                         📌 상단 고정
                                     </label>
-                                    <input type="checkbox" name="pinned" id="pinned-check" value="true" hidden>
+                                    <input type="checkbox" name="pinned" id="pinned-check" value="true" hidden onchange="togglePinStyle(this.checked)">
                                 </div>
 
                                 <!-- 이미지 미리보기 -->
@@ -296,14 +296,12 @@
             }, 100);
         }
 
-        function togglePinStyle() {
+        function togglePinStyle(checked) {
             const label = document.getElementById('pin-label');
-            const check = document.getElementById('pinned-check');
-            check.checked = !check.checked;
-            label.style.background = check.checked
+            label.style.background = checked 
                 ? 'linear-gradient(180deg, #d99a70, #cb8458)' : '';
-            label.style.color = check.checked ? 'white' : '';
-            label.style.borderColor = check.checked ? '#cb8458' : '';
+            label.style.color = checked ? 'white' : '';
+            label.style.borderColor = checked ? '#cb8458' : '';
         }
     </script>
 </body>

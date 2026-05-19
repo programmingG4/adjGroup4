@@ -42,13 +42,30 @@ public class TalkBoardController {
     public String list(@RequestParam(defaultValue = "공지") String category,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) Long roomId,
+            @RequestParam(defaultValue = "global") String roomKey,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
+
+        // 학년별 접근 권한 체크
+        Member loginMember = getLoginMember(userDetails);
+        if (roomKey.startsWith("grade_")) {
+            int grade = Integer.parseInt(roomKey.replace("grade_", ""));
+            if (loginMember == null || loginMember.getGrade() != grade) {
+                return "redirect:/talkboard?roomKey=global";
+            }
+        }
+
         model.addAttribute("selectedCategory", category);
         model.addAttribute("categories", List.of("공지", "투표", "사진", "동영상", "파일"));
-        model.addAttribute("posts", talkBoardService.getPostsByCategory(category));
+        model.addAttribute("posts", talkBoardService.getPostsByCategory(category, roomKey));
+        model.addAttribute("roomKey", roomKey);
 
-        Member loginMember = getLoginMember(userDetails);
+        if ("chat".equals(from) && roomId != null) {
+            model.addAttribute("backUrl", "/chat/" + roomId);
+        } else {
+            model.addAttribute("backUrl", null);
+        }
+
         Long loginMemberId = loginMember != null ? loginMember.getId() : null;
         model.addAttribute("loginMemberId", loginMemberId);
         if (loginMember != null) {
@@ -57,13 +74,6 @@ public class TalkBoardController {
         } else {
             model.addAttribute("loginMemberName", "");
         }
-
-        if ("chat".equals(from) && roomId != null) {
-            model.addAttribute("backUrl", "/chat/" + roomId);
-        } else {
-            model.addAttribute("backUrl", null);
-        }
-        
         return "talkboard/list";
     }
 
@@ -71,6 +81,7 @@ public class TalkBoardController {
     @GetMapping("/talkboard/write")
     public String writeForm(@RequestParam(required = false) String from,
             @RequestParam(required = false) Long roomId,
+            @RequestParam(defaultValue = "global") String roomKey,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
         Member loginMember = getLoginMember(userDetails);
@@ -80,16 +91,14 @@ public class TalkBoardController {
         } else {
             model.addAttribute("loginMemberName", "");
         }
-
+        model.addAttribute("from", from);
+        model.addAttribute("roomId", roomId);
+        model.addAttribute("roomKey", roomKey);
         if ("chat".equals(from) && roomId != null) {
             model.addAttribute("backUrl", "/chat/" + roomId);
         } else {
-            model.addAttribute("backUrl", "/talkboard");
+            model.addAttribute("backUrl", "/talkboard?roomKey=" + roomKey);
         }
-
-        model.addAttribute("from", from);
-        model.addAttribute("roomId", roomId);
-
         return "talkboard/write";
     }
 
@@ -99,6 +108,7 @@ public class TalkBoardController {
             @RequestParam(value = "pinned", required = false) boolean pinned,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) Long roomId,
+            @RequestParam(defaultValue = "global") String roomKey,
             @RequestParam(value = "voteOption", required = false) List<String> voteItems,
             @RequestParam(value = "images", required = false) List<MultipartFile> images,
             @RequestParam(value = "videos", required = false) List<MultipartFile> videos,
@@ -161,11 +171,12 @@ public class TalkBoardController {
             }
         }
 
+        post.setRoomKey(roomKey);
         post.setPinned(pinned);
         talkBoardService.save(post);
 
-        // 전체 채팅방에 알림 메시지 전송
-        chatService.findByRoomKey("global").ifPresent(room -> {
+        // 해당 채팅방에 알림 전송
+        chatService.findByRoomKey(roomKey).ifPresent(room -> {
             String noticeContent = "📣 새 공지가 등록되었습니다.\n"
                     + "「 " + post.getTitle() + " 」"
                     + "\n[LINK]/talkboard/" + post.getId();
@@ -173,6 +184,11 @@ public class TalkBoardController {
             if (msg != null) {
                 msg.setSenderName("공지");
                 chatService.saveMessage(msg);
+            }
+
+            // 상단 고정 체크했으면 채팅방 공지도 업데이트
+            if (pinned) {
+                chatService.updatePinnedNotice(room.getId(), post.getTitle(), post.getContent(), post.getId());
             }
         });
 
@@ -188,7 +204,7 @@ public class TalkBoardController {
         if ("chat".equals(from) && roomId != null) {
             return "redirect:/chat/" + roomId;
         }
-        return "redirect:/talkboard";
+        return "redirect:/talkboard?roomKey=" + roomKey;
     }
 
     // 상세 페이지
@@ -223,7 +239,9 @@ public class TalkBoardController {
             model.addAttribute("backUrl", "/chat/" + roomId);
             model.addAttribute("backLabel", "← 채팅방으로 돌아가기");
         } else {
-            model.addAttribute("backUrl", "/talkboard?category=" + (category != null ? category : "공지"));
+            String roomKey = post.getRoomKey() != null ? post.getRoomKey() : "global";
+            model.addAttribute("backUrl",
+                    "/talkboard?category=" + (category != null ? category : "공지") + "&roomKey=" + roomKey);
             model.addAttribute("backLabel", "← 게시판으로 돌아가기");
         }
 
@@ -323,6 +341,7 @@ public class TalkBoardController {
     // 상단 고정
     @PostMapping("/talkboard/{id}/pin")
     public String pin(@PathVariable Long id,
+            @RequestParam(required = false) String category,
             @AuthenticationPrincipal UserDetails userDetails) {
         Member loginMember = getLoginMember(userDetails);
         if (loginMember == null)
@@ -336,12 +355,14 @@ public class TalkBoardController {
         post.setPinned(newPinned);
         talkBoardService.save(post);
 
-        chatService.findByRoomKey("global").ifPresent(room -> {
+        // 해당 roomKey의 채팅방에 공지 연동
+        chatService.findByRoomKey(post.getRoomKey()).ifPresent(room -> {
             if (newPinned) {
-                chatService.updatePinnedNotice(
-                        room.getId(), post.getTitle(), post.getContent(), post.getId());
+                chatService.updatePinnedNotice(room.getId(), post.getTitle(), post.getContent(), post.getId());
             } else {
-                chatService.clearPinnedNotice(room.getId(), post.getId());
+                if (post.getId().equals(room.getPinnedTalkBoardId())) {
+                    chatService.clearPinnedNotice(room.getId(), post.getId());
+                }
             }
         });
 
@@ -351,12 +372,14 @@ public class TalkBoardController {
     // 검색
     @GetMapping("/talkboard/search")
     public String search(@RequestParam String keyword,
+            @RequestParam(defaultValue = "global") String roomKey,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
-        model.addAttribute("posts", talkBoardService.search(keyword));
+        model.addAttribute("posts", talkBoardService.search(keyword, roomKey));
         model.addAttribute("keyword", keyword);
         model.addAttribute("categories", List.of("공지", "투표", "사진", "동영상", "파일"));
         model.addAttribute("selectedCategory", "");
+        model.addAttribute("roomKey", roomKey);
         Member loginMember = getLoginMember(userDetails);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         if (loginMember != null) {

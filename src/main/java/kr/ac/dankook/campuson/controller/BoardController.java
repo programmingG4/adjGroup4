@@ -2,9 +2,12 @@ package kr.ac.dankook.campuson.controller;
 
 import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.entity.Board;
+import kr.ac.dankook.campuson.entity.ChatRoom;
 import kr.ac.dankook.campuson.entity.VoteItem;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.BoardService;
+import kr.ac.dankook.campuson.service.ChatService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +29,8 @@ public class BoardController {
     private BoardService boardService;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private ChatService chatService;
 
     private String getChatRoomName() {
         LocalDate now = LocalDate.now();
@@ -255,5 +260,50 @@ public class BoardController {
         Member loginMember = getLoginMember(userDetails);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         return "board/list";
+    }
+    
+    @GetMapping("/board/{id}/chat")
+    public String startChatWithSeller(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember == null)
+            return "redirect:/login";
+
+        Board post = boardService.findById(id);
+        Member seller = memberRepository.findById(post.getMemberId()).orElse(null);
+        if (seller == null)
+            return "redirect:/board/" + id;
+
+        if (seller.getId().equals(loginMember.getId()))
+            return "redirect:/board/" + id;
+
+        ChatRoom room = chatService.getOrCreateTradeRoom(
+                loginMember.getName(), loginMember.getStudentId(),
+                seller.getName(), seller.getStudentId());
+
+        return "redirect:/chat/" + room.getId();
+    }
+    
+    @GetMapping("/board/{id}/join")
+    public String joinGroupChat(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Member loginMember = getLoginMember(userDetails);
+        if (loginMember == null)
+            return "redirect:/login";
+
+        Board post = boardService.findById(id);
+
+        // 채팅방 없으면 새로 생성
+        String roomKey = "board_" + id;
+        ChatRoom room = chatService.getOrCreateGroupRoom(
+                "[모집] " + post.getTitle(), roomKey);
+
+        // board에 chatRoomId 저장
+        if (post.getChatRoomId() == null) {
+            post.setChatRoomId(room.getId());
+            boardService.save(post);
+        }
+
+        return "redirect:/chat/" + room.getId();
     }
 }
