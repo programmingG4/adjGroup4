@@ -260,7 +260,10 @@
             transition: background 0.18s;
             white-space: nowrap;
         }
-        .chat-attach-btn:hover { background: rgba(189,123,77,0.2); }
+
+        .chat-attach-btn:hover {
+            background: rgba(189,123,77,0.2);
+        }
 
         .msg-image {
             max-width: 240px;
@@ -270,6 +273,7 @@
             display: block;
             cursor: pointer;
         }
+
         .msg-file-link {
             display: inline-flex;
             align-items: center;
@@ -284,46 +288,19 @@
             text-decoration: none;
             word-break: break-all;
         }
-        .msg-file-link:hover { background: rgba(189,123,77,0.18); }
+
+        .msg-file-link:hover {
+            background: rgba(189,123,77,0.18);
+        }
     </style>
 </head>
 <body>
 <div class="subtab-shell">
     <div class="subtab-wrap">
-        <header class="subtab-header">
-            <h1 class="subtab-logo">CAMPUSON</h1>
-            <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
-            <div class="subtab-divider"></div>
-        </header>
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
         <div class="subtab-layout">
-            <aside class="subtab-sidebar">
-                <section class="subtab-panel">
-                    <p class="subtab-panel-eyebrow">CHAT ROOM</p>
-                    <h2 class="subtab-profile-name" th:text="${displayRoomName}">채팅방</h2>
-                    <p class="subtab-profile-meta" th:text="${room.type.name() == 'GLOBAL' ? '전체 학생이 함께하는 채팅방입니다.' : (room.type.name() == 'GRADE' ? '학년별 채팅방입니다.' : '1:1 개인 채팅방입니다.')}"></p>
-                    <a href="/chat" class="subtab-profile-link">← 채팅 목록으로</a>
-                </section>
-
-                <nav class="subtab-shortcuts" aria-label="바로가기 메뉴">
-                    <a href="/home" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">⌂</span>
-                        <span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span>
-                    </a>
-                    <a href="/chat" class="subtab-shortcut active">
-                        <span class="subtab-shortcut-icon">💬</span>
-                        <span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span>
-                    </a>
-                    <a href="/board" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">📌</span>
-                        <span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">익명 소통과 거래 공간</span></span>
-                    </a>
-                    <a href="/mypage" class="subtab-shortcut">
-                        <span class="subtab-shortcut-icon">👤</span>
-                        <span><strong class="subtab-shortcut-title">MY</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span>
-                    </a>
-                </nav>
-            </aside>
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('chat')}"></aside>
 
             <section class="subtab-content">
                 <div class="chat-room-wrap">
@@ -348,7 +325,7 @@
                                     </span>
                                     <div class="msg-bubble">
                                         <span th:if="${msg.content != null and !msg.content.isEmpty()}" th:text="${msg.content}"></span>
-                                        <img th:if="${msg.mediaType == 'image'}" th:src="${msg.mediaUrl}" class="msg-image" th:alt="${msg.fileName}">
+                                        <img th:if="${msg.mediaType == 'image'}" th:src="${msg.mediaUrl}" class="msg-image" th:alt="${msg.fileName}" onclick="window.open(this.src)">
                                         <a th:if="${msg.mediaType == 'file'}" th:href="${msg.mediaUrl}" th:text="${'📄 ' + msg.fileName}" class="msg-file-link" target="_blank" download></a>
                                     </div>
                                     <span class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">00:00</span>
@@ -503,6 +480,7 @@
         const input = document.getElementById('msgInput');
         const content = input.value.trim();
         if (!content) return;
+
         stompClient.send('/app/chat/' + roomId, {}, JSON.stringify({ content: content }));
         input.value = '';
     });
