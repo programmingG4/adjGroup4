@@ -67,31 +67,6 @@
                     </div>
                 </section>
 
-                <section class="subtab-section home-youtube-section" aria-label="대학 컨텐츠 추천">
-                    <div class="home-section-head home-youtube-head">
-                        <div>
-                            <p class="home-kicker">YOUTUBE PICK</p>
-                            <h2 class="home-stream-title">대학 컨텐츠 추천</h2>
-                        </div>
-                    </div>
-
-                    <div class="home-youtube-grid">
-                        <a th:each="video : ${homeYoutubeRecommendations}"
-                           th:href="${video.url()}"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="home-youtube-card">
-                            <div class="home-youtube-thumb">
-                                <span class="home-youtube-play">▶</span>
-                                <span class="home-youtube-badge" th:text="${video.badge()}">추천</span>
-                            </div>
-                            <div class="home-youtube-body">
-                                <strong th:text="${video.title()}">대학 컨텐츠 추천</strong>
-                                <p th:text="${video.description()}">유튜브 추천 설명</p>
-                            </div>
-                        </a>
-                    </div>
-                </section>
             </section>
         </div>
     </div>

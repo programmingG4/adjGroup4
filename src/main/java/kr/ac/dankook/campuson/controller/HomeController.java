@@ -2,7 +2,6 @@ package kr.ac.dankook.campuson.controller;
 
 import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.dto.CrawledArticle;
-import kr.ac.dankook.campuson.dto.YoutubeRecommendation;
 import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatRoom;
 import kr.ac.dankook.campuson.repository.MemberRepository;
@@ -65,7 +64,6 @@ public class HomeController {
         model.addAttribute("homePrivateChatSummaries", member == null
                 ? List.of()
                 : chatService.getUnreadPrivateChatSummaries(member.getStudentId()));
-        model.addAttribute("homeYoutubeRecommendations", selectRandomYoutubeRecommendations());
 
         return "home/index";
     }
@@ -115,46 +113,6 @@ public class HomeController {
     private boolean isItArticle(CrawledArticle article) {
         return article != null
                 && ("it".equals(article.categoryKey()) || "최신 IT정보".equals(article.categoryLabel()));
-    }
-
-    private List<YoutubeRecommendation> selectRandomYoutubeRecommendations() {
-        List<YoutubeRecommendation> recommendations = new ArrayList<>(List.of(
-                new YoutubeRecommendation(
-                        "전과자 대학 생활 콘텐츠",
-                        "다른 학과와 캠퍼스 분위기를 가볍게 보기 좋은 추천 검색",
-                        "https://www.youtube.com/results?search_query=%EC%A0%84%EA%B3%BC%EC%9E%90+%EB%8C%80%ED%95%99+%EC%BD%98%ED%85%90%EC%B8%A0",
-                        "전과자"
-                ),
-                new YoutubeRecommendation(
-                        "전과자 공대·컴공 체험",
-                        "공대/컴공 계열 에피소드를 찾기 좋은 추천 검색",
-                        "https://www.youtube.com/results?search_query=%EC%A0%84%EA%B3%BC%EC%9E%90+%EC%BB%B4%ED%93%A8%ED%84%B0%EA%B3%B5%ED%95%99%EA%B3%BC",
-                        "학과 체험"
-                ),
-                new YoutubeRecommendation(
-                        "단국대 캠퍼스 브이로그",
-                        "단국대 캠퍼스와 학생 일상을 볼 수 있는 추천 검색",
-                        "https://www.youtube.com/results?search_query=%EB%8B%A8%EA%B5%AD%EB%8C%80+%EC%BA%A0%ED%8D%BC%EC%8A%A4+%EB%B8%8C%EC%9D%B4%EB%A1%9C%EA%B7%B8",
-                        "단국대"
-                ),
-                new YoutubeRecommendation(
-                        "단국대 축제·행사 영상",
-                        "학교 분위기를 가볍게 확인하기 좋은 추천 검색",
-                        "https://www.youtube.com/results?search_query=%EB%8B%A8%EA%B5%AD%EB%8C%80+%EC%B6%95%EC%A0%9C+%EC%98%81%EC%83%81",
-                        "캠퍼스"
-                ),
-                new YoutubeRecommendation(
-                        "대학생 공감 예능 콘텐츠",
-                        "대학생활 공감형 짧은 콘텐츠를 보기 좋은 추천 검색",
-                        "https://www.youtube.com/results?search_query=%EB%8C%80%ED%95%99%EC%83%9D+%EA%B3%B5%EA%B0%90+%EC%98%88%EB%8A%A5",
-                        "추천"
-                )
-        ));
-
-        Collections.shuffle(recommendations);
-        return recommendations.stream()
-                .limit(2)
-                .toList();
     }
 
     private List<CrawledArticle> fallbackItArticles() {
