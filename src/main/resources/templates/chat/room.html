@@ -325,7 +325,7 @@
                                     </span>
                                     <div class="msg-bubble">
                                         <span th:if="${msg.content != null and !msg.content.isEmpty()}" th:text="${msg.content}"></span>
-                                        <img th:if="${msg.mediaType == 'image'}" th:src="${msg.mediaUrl}" class="msg-image" th:alt="${msg.fileName}" onclick="window.open(this.src)">
+                                        <img th:if="${msg.mediaType == 'image'}" th:src="${msg.mediaUrl}" class="msg-image" th:alt="${msg.fileName}">
                                         <a th:if="${msg.mediaType == 'file'}" th:href="${msg.mediaUrl}" th:text="${'📄 ' + msg.fileName}" class="msg-file-link" target="_blank" download></a>
                                     </div>
                                     <span class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">00:00</span>

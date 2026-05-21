@@ -1,18 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
-  <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#f2e4d4"/>
-      <stop offset="100%" stop-color="#d7b594"/>
-    </linearGradient>
-  </defs>
-  <rect width="1200" height="675" fill="url(#bg)"/>
-  <g fill="none" stroke="#ffffff" stroke-opacity="0.45">
-    <circle cx="175" cy="130" r="72"/>
-    <circle cx="1035" cy="525" r="88"/>
-    <path d="M120 560c115-105 232-142 352-112 104 26 188 15 284-38 97-54 188-65 324-38"/>
-  </g>
-  <g fill="#6b513d">
-    <text x="600" y="308" font-size="64" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700">CampusON Article</text>
-    <text x="600" y="368" font-size="28" text-anchor="middle" font-family="Arial, sans-serif" opacity="0.72">대표 이미지를 불러오지 못했어요</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">DKU NEWS</title>
+  <desc id="desc">Ivory background with centered white DKU NEWS text outlined in navy.</desc>
+  <rect width="1200" height="675" fill="#fefcf9"/>
+  <g text-anchor="middle"
+     font-family="Arial, Helvetica, sans-serif"
+     font-weight="900"
+     letter-spacing="10"
+     fill="#ffffff"
+     stroke="#0b2d5c"
+     stroke-width="12"
+     stroke-linejoin="round"
+     paint-order="stroke fill">
+    <text x="600" y="310" font-size="136">DKU</text>
+    <text x="600" y="430" font-size="102">NEWS</text>
   </g>
 </svg>

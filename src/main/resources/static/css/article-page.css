@@ -1,23 +1,10 @@
+/* 기사 탭은 게시판/채팅과 같은 subtab 공통 레이아웃을 사용한다. */
 .article-shell-page {
-    padding-top: 12px;
-}
-
-.article-hub {
-    width: 100%;
-    max-width: 1100px;
-}
-
-.article-hub-header {
-    text-align: center;
-    margin-bottom: 8px;
+    padding-top: 18px;
 }
 
 .article-hub-layout {
-    display: grid;
-    grid-template-columns: 218px minmax(0, 1fr);
-    gap: 28px;
-    align-items: start;
-    margin-top: 28px;
+    margin-top: 0;
 }
 
 .article-shared-side-panel {
@@ -49,7 +36,7 @@
     justify-content: space-between;
     align-items: end;
     gap: 18px;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
 
 .article-kicker {
@@ -397,16 +384,12 @@
 }
 
 
-/* Article page now uses the shared subtab sidebar fragment. */
+/* Article page now uses the shared subtab sidebar fragment without its own column width. */
 .article-hub-layout > .subtab-sidebar {
     width: 100%;
 }
 
-@media (max-width: 900px) {
-    .article-hub-layout {
-        grid-template-columns: 1fr;
-    }
-
+@media (max-width: 1024px) {
     .article-hub-layout > .subtab-sidebar {
         position: static;
     }

@@ -1,3 +1,9 @@
+
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 :root {
   --subtab-bg: #f3ede4;
   --subtab-surface: #f8f3ec;
@@ -59,11 +65,17 @@ body {
 }
 
 .subtab-sidebar {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+}
+
+.subtab-sidebar-group {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  position: sticky;
-  top: 20px;
+  width: 240px;
+  min-height: 0;
 }
 
 .subtab-panel {
@@ -108,6 +120,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  padding: 14px;
+  border-radius: 28px;
+  background: rgba(255, 252, 247, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.34);
 }
 
 .subtab-shortcut {

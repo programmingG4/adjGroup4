@@ -2120,3 +2120,292 @@ body {
     background-size: cover;
     background-position: center;
 }
+
+
+/* home first-row IT summary lines */
+.home-it-headline-section {
+    padding: 4px 0 0;
+}
+
+.home-it-headline-head {
+    margin-bottom: 14px;
+}
+
+.home-it-summary-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.home-it-summary-item {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 11px 16px;
+    border-radius: 16px;
+    background: rgba(255, 250, 245, 0.78);
+    border: 1px solid rgba(211, 183, 154, 0.34);
+    box-shadow: 0 8px 18px rgba(93, 70, 51, 0.045);
+}
+
+.home-it-summary-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(246, 234, 219, 0.96);
+    color: var(--point-deep);
+    font-size: 0.82rem;
+    font-weight: 900;
+}
+
+.home-it-summary-title {
+    min-width: 0;
+    color: #5f4634;
+    font-size: 1.02rem;
+    font-weight: 820;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+    .home-it-summary-item {
+        grid-template-columns: 30px minmax(0, 1fr);
+        padding: 10px 13px;
+    }
+
+    .home-it-summary-title {
+        white-space: normal;
+    }
+}
+
+
+/* home private chat and youtube recommendation sections */
+.home-private-chat-section,
+.home-youtube-section {
+    margin-top: 18px;
+}
+
+.home-section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.home-mini-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 13px;
+    border-radius: 999px;
+    background: rgba(246, 234, 219, 0.96);
+    color: var(--point-deep);
+    font-size: 0.82rem;
+    font-weight: 900;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.home-private-chat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.home-private-chat-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    min-height: 54px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    background: rgba(255, 250, 245, 0.78);
+    border: 1px solid rgba(211, 183, 154, 0.34);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(93, 70, 51, 0.045);
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.home-private-chat-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(189, 123, 77, 0.42);
+    background: rgba(255, 252, 248, 0.95);
+}
+
+.home-private-chat-main {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.home-private-chat-main strong {
+    color: #5f4634;
+    font-size: 1rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.home-private-chat-main span {
+    min-width: 0;
+    color: #96775f;
+    font-size: 0.93rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-private-chat-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 46px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(189, 123, 77, 0.14);
+    color: #9a633d;
+    font-size: 0.85rem;
+    font-weight: 900;
+}
+
+.home-private-chat-empty {
+    margin-top: 14px;
+    padding: 15px 16px;
+    border-radius: 16px;
+    background: rgba(255, 250, 245, 0.62);
+    border: 1px dashed rgba(211, 183, 154, 0.46);
+    color: #96775f;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.home-youtube-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.home-youtube-card {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 126px minmax(0, 1fr);
+    align-items: stretch;
+    min-height: 98px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(255, 250, 245, 0.78);
+    border: 1px solid rgba(211, 183, 154, 0.34);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(93, 70, 51, 0.045);
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.home-youtube-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(189, 123, 77, 0.42);
+    background: rgba(255, 252, 248, 0.95);
+}
+
+.home-youtube-thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 98px;
+    background: linear-gradient(135deg, #efd8c1, #fff4e6 58%, #d2a27e);
+}
+
+.home-youtube-play {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 252, 247, 0.9);
+    color: #bd7b4d;
+    font-size: 1rem;
+    font-weight: 900;
+    box-shadow: 0 8px 18px rgba(93, 70, 51, 0.08);
+}
+
+.home-youtube-badge {
+    position: absolute;
+    left: 9px;
+    bottom: 8px;
+    max-width: calc(100% - 18px);
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(88, 60, 39, 0.72);
+    color: #fffaf4;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-youtube-body {
+    min-width: 0;
+    padding: 14px 15px;
+}
+
+.home-youtube-body strong {
+    display: block;
+    color: #5f4634;
+    font-size: 0.98rem;
+    font-weight: 900;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-youtube-body p {
+    margin: 7px 0 0;
+    color: #96775f;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 840px) {
+    .home-youtube-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .home-section-head {
+        flex-direction: column;
+    }
+
+    .home-private-chat-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .home-youtube-card {
+        grid-template-columns: 108px minmax(0, 1fr);
+    }
+}

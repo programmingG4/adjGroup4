@@ -8,130 +8,93 @@
     <link rel="stylesheet" href="/css/subtab-theme.css">
 </head>
 <body>
-<div class="page-shell">
-    <main class="app-frame home-frame home-flow-frame">
-        <div th:replace="~{fragments/app-layout :: campusHero}"></div>
+<div class="subtab-shell home-shell-page">
+    <div class="subtab-wrap">
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
-        <section class="home-flow-layout">
+        <div class="subtab-layout home-subtab-layout">
             <aside th:replace="~{fragments/app-layout :: subtabSidebar('home')}"></aside>
 
-            <div class="home-main-stream">
-                <section class="home-featured-news">
-                    <div class="home-section-head">
+            <section class="subtab-content home-subtab-main">
+                <section class="subtab-section home-it-headline-section" aria-label="우리 대학교 소식 최신 IT정보">
+                    <div class="home-section-head home-it-headline-head">
                         <div>
-                            <p class="home-kicker">ARTICLE</p>
-                            <h2 class="home-stream-title">우리 대학교 소식</h2>
+                            <p class="home-kicker">ARTICLE PICK</p>
+                            <h2 class="home-stream-title">최신 IT정보 3줄 요약</h2>
                         </div>
-                        <a href="/articles" class="home-inline-link">전체 기사 보기</a>
                     </div>
 
-                    <section class="home-visual-marquee" aria-label="대표 기사 토픽">
-                        <div class="home-marquee-track" th:if="${homeSlideArticles != null && !homeSlideArticles.isEmpty()}">
-                            <a th:each="article, iterStat : ${homeSlideArticles}"
-                               th:href="@{/articles(category=${article.categoryKey()})}"
-                               class="home-marquee-slide home-marquee-article"
-                               th:classappend="${' slide-' + ((iterStat.index % 4) + 1)}"
-                               th:style="|background-image: linear-gradient(180deg, rgba(44, 31, 23, 0.05), rgba(44, 31, 23, 0.62)), url('@{/articles/image(url=${article.thumbnailUrl()})}')|">
-                                <small th:text="${article.categoryLabel()}">기사</small>
-                                <span th:text="${article.categoryLabel() == '해커톤' ? '해커톤 소식' : (article.categoryLabel() == '공모전' ? '공모전 소식' : '오늘의 기사')}">오늘의 기사</span>
-                            </a>
-                            <a th:each="article, iterStat : ${homeSlideArticles}"
-                               th:href="@{/articles(category=${article.categoryKey()})}"
-                               class="home-marquee-slide home-marquee-article"
-                               th:classappend="${' slide-' + ((iterStat.index % 4) + 1)}"
-                               th:style="|background-image: linear-gradient(180deg, rgba(44, 31, 23, 0.05), rgba(44, 31, 23, 0.62)), url('@{/articles/image(url=${article.thumbnailUrl()})}')|">
-                                <small th:text="${article.categoryLabel()}">기사</small>
-                                <span th:text="${article.categoryLabel() == '해커톤' ? '해커톤 소식' : (article.categoryLabel() == '공모전' ? '공모전 소식' : '오늘의 기사')}">오늘의 기사</span>
-                            </a>
-                        </div>
-                        <div class="home-marquee-track" th:if="${homeSlideArticles == null || homeSlideArticles.isEmpty()}">
-                            <a href="/articles?category=news" class="home-marquee-slide slide-1"><small>기사</small><span>오늘의 기사</span></a>
-                            <a href="/articles?category=hackathon" class="home-marquee-slide slide-2"><small>해커톤</small><span>해커톤 소식</span></a>
-                            <a href="/articles?category=contest" class="home-marquee-slide slide-3"><small>공모전</small><span>공모전 소식</span></a>
-                            <a href="/articles?category=news" class="home-marquee-slide slide-1"><small>기사</small><span>오늘의 기사</span></a>
-                            <a href="/articles?category=hackathon" class="home-marquee-slide slide-2"><small>해커톤</small><span>해커톤 소식</span></a>
-                            <a href="/articles?category=contest" class="home-marquee-slide slide-3"><small>공모전</small><span>공모전 소식</span></a>
-                        </div>
-                    </section>
+                    <ol class="home-it-summary-list" th:if="${homeItArticles != null && !homeItArticles.isEmpty()}">
+                        <li th:each="article, iterStat : ${homeItArticles}"
+                            th:if="${iterStat.index < 3}"
+                            class="home-it-summary-item">
+                            <span class="home-it-summary-number" th:text="${iterStat.index + 1}">1</span>
+                            <span class="home-it-summary-title" th:text="${article.title()}">최신 IT정보 제목</span>
+                        </li>
+                    </ol>
 
-                    <div class="home-news-strip-list" th:if="${homeScrapArticles != null && !homeScrapArticles.isEmpty()}">
-                        <a th:each="article : ${homeScrapArticles}"
-                           th:href="${article.articleUrl()}"
-                           class="home-news-strip"
+                    <ol class="home-it-summary-list" th:if="${homeItArticles == null || homeItArticles.isEmpty()}">
+                        <li class="home-it-summary-item">
+                            <span class="home-it-summary-number">1</span>
+                            <span class="home-it-summary-title">최신 IT정보를 불러오는 중입니다.</span>
+                        </li>
+                    </ol>
+                </section>
+
+                <section class="subtab-section home-private-chat-section" aria-label="읽지 않은 개인 채팅방 소식">
+                    <div class="home-section-head home-private-chat-head">
+                        <div>
+                            <p class="home-kicker">PRIVATE CHAT</p>
+                            <h2 class="home-stream-title">읽지 않은 개인 채팅방 소식</h2>
+                        </div>
+                        <a href="/chat" class="home-mini-link">채팅으로</a>
+                    </div>
+
+                    <div class="home-private-chat-list" th:if="${homePrivateChatSummaries != null && !homePrivateChatSummaries.isEmpty()}">
+                        <a th:each="chat : ${homePrivateChatSummaries}"
+                           th:href="@{/chat/{id}(id=${chat.roomId()})}"
+                           class="home-private-chat-item">
+                            <div class="home-private-chat-main">
+                                <strong th:text="${chat.otherName()}">홍길동</strong>
+                                <span th:text="|${chat.lastSentAtText()} 도착|">방금 전 도착</span>
+                            </div>
+                            <div class="home-private-chat-count" th:text="|${chat.unreadCount()}개|">2개</div>
+                        </a>
+                    </div>
+
+                    <div class="home-private-chat-empty" th:if="${homePrivateChatSummaries == null || homePrivateChatSummaries.isEmpty()}">
+                        읽지 않은 개인 채팅방 소식이 없습니다.
+                    </div>
+                </section>
+
+                <section class="subtab-section home-youtube-section" aria-label="대학 컨텐츠 추천">
+                    <div class="home-section-head home-youtube-head">
+                        <div>
+                            <p class="home-kicker">YOUTUBE PICK</p>
+                            <h2 class="home-stream-title">대학 컨텐츠 추천</h2>
+                        </div>
+                    </div>
+
+                    <div class="home-youtube-grid">
+                        <a th:each="video : ${homeYoutubeRecommendations}"
+                           th:href="${video.url()}"
                            target="_blank"
-                           rel="noopener noreferrer">
-                            <div class="home-news-thumb home-news-thumb-image"
-                                 th:style="|background-image: url('@{/articles/image(url=${article.thumbnailUrl()})}')|"></div>
-                            <div class="home-news-copy">
-                                <strong th:text="${article.title()}">기사 제목</strong>
-                                <p th:text="${article.summary()}">기사 요약</p>
+                           rel="noopener noreferrer"
+                           class="home-youtube-card">
+                            <div class="home-youtube-thumb">
+                                <span class="home-youtube-play">▶</span>
+                                <span class="home-youtube-badge" th:text="${video.badge()}">추천</span>
                             </div>
-                            <span class="home-news-tag" th:text="${article.categoryLabel()}">기사</span>
-                        </a>
-                    </div>
-
-                    <div class="home-news-strip-list" th:if="${homeScrapArticles == null || homeScrapArticles.isEmpty()}">
-                        <a href="/articles?category=news" class="home-news-strip">
-                            <div class="home-news-thumb thumb-a"></div>
-                            <div class="home-news-copy">
-                                <strong>AI 분야 채용 트렌드, 신입에게 중요한 역량은?</strong>
-                                <p>기술 스택보다 협업 경험과 문제 해결 사례를 보는 기업이 늘고 있습니다.</p>
+                            <div class="home-youtube-body">
+                                <strong th:text="${video.title()}">대학 컨텐츠 추천</strong>
+                                <p th:text="${video.description()}">유튜브 추천 설명</p>
                             </div>
-                            <span class="home-news-tag">기사</span>
-                        </a>
-                        <a href="/articles?category=hackathon" class="home-news-strip">
-                            <div class="home-news-thumb thumb-b"></div>
-                            <div class="home-news-copy">
-                                <strong>학생 개발자를 위한 해커톤 소식 모음</strong>
-                                <p>개발 행사와 팀 프로젝트 참여 기회를 한 번에 확인할 수 있습니다.</p>
-                            </div>
-                            <span class="home-news-tag">해커톤</span>
-                        </a>
-                        <a href="/articles?category=contest" class="home-news-strip">
-                            <div class="home-news-thumb thumb-c"></div>
-                            <div class="home-news-copy">
-                                <strong>교내외 공모전과 비교과 프로그램 한눈에 보기</strong>
-                                <p>장학, 공모전, 특강 일정까지 놓치기 쉬운 활동 소식을 모았습니다.</p>
-                            </div>
-                            <span class="home-news-tag">공모전</span>
                         </a>
                     </div>
                 </section>
-
-                <section class="home-chat-stream">
-                    <div class="home-section-head">
-                        <div>
-                            <p class="home-kicker">CHAT</p>
-                            <h2 class="home-stream-title">채팅방 최신 소식</h2>
-                        </div>
-                        <a href="/chat" class="home-inline-link">채팅방 이동</a>
-                    </div>
-
-                    <div class="home-chat-list" th:if="${homeChatRooms != null and !homeChatRooms.isEmpty()}">
-                        <a th:each="room : ${homeChatRooms}"
-                           th:href="@{/chat/{id}(id=${room.id})}"
-                           class="home-chat-line">
-                            <div class="home-chat-room" th:text="${room.name}">채팅방</div>
-                            <div th:if="${homeChatLastMessages[room.id] != null}"
-                                 class="home-chat-message"
-                                 th:text="${homeChatLastMessages[room.id].senderName + ': ' + homeChatLastMessages[room.id].content}">메시지</div>
-                            <div th:if="${homeChatLastMessages[room.id] == null}"
-                                 class="home-chat-message">아직 메시지가 없어요.</div>
-                            <div th:if="${homeChatLastMessages[room.id] != null}"
-                                 class="home-chat-time"
-                                 th:text="${#temporals.format(homeChatLastMessages[room.id].sentAt, 'HH:mm')}">00:00</div>
-                        </a>
-                    </div>
-                    <div class="home-chat-list" th:if="${homeChatRooms == null or homeChatRooms.isEmpty()}">
-                        <a href="/chat" class="home-chat-line">
-                            <div class="home-chat-room">전체 채팅방</div>
-                            <div class="home-chat-message">채팅방에 입장해서 대화를 시작해보세요.</div>
-                        </a>
-                    </div>
-                </section>
-            </div>
-        </section>
-    </main>
+            </section>
+        </div>
+    </div>
 </div>
 <div th:replace="~{fragments/app-layout :: chatNotifications}"></div>
 </body>
