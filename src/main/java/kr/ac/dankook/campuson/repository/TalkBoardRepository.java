@@ -3,6 +3,8 @@ package kr.ac.dankook.campuson.repository;
 import kr.ac.dankook.campuson.entity.TalkBoard;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 
 public interface TalkBoardRepository extends JpaRepository<TalkBoard, Long> {
@@ -23,4 +25,20 @@ public interface TalkBoardRepository extends JpaRepository<TalkBoard, Long> {
     // 파일 있는 글
     @Query("SELECT t FROM TalkBoard t WHERE t.filePaths IS NOT EMPTY ORDER BY t.regDate DESC")
     List<TalkBoard> findAllWithFileOrderByRegDateDesc();
+
+    List<TalkBoard> findAllByRoomKeyOrderByRegDateDesc(String roomKey);
+    List<TalkBoard> findByRoomKeyOrderByRegDateDesc(String roomKey);
+
+    // 투표/사진/동영상/파일 필터링도 roomKey 추가
+    @Query("SELECT t FROM TalkBoard t WHERE t.roomKey = :roomKey AND t.voteItems IS NOT EMPTY ORDER BY t.regDate DESC")
+    List<TalkBoard> findWithVoteByRoomKey(@Param("roomKey") String roomKey);
+
+    @Query("SELECT t FROM TalkBoard t WHERE t.roomKey = :roomKey AND t.imagePaths IS NOT EMPTY ORDER BY t.regDate DESC")
+    List<TalkBoard> findWithImageByRoomKey(@Param("roomKey") String roomKey);
+
+    @Query("SELECT t FROM TalkBoard t WHERE t.roomKey = :roomKey AND t.videoPaths IS NOT EMPTY ORDER BY t.regDate DESC")
+    List<TalkBoard> findWithVideoByRoomKey(@Param("roomKey") String roomKey);
+
+    @Query("SELECT t FROM TalkBoard t WHERE t.roomKey = :roomKey AND t.filePaths IS NOT EMPTY ORDER BY t.regDate DESC")
+    List<TalkBoard> findWithFileByRoomKey(@Param("roomKey") String roomKey);
 }

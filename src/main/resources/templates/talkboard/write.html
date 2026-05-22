@@ -103,8 +103,16 @@
                                 <h1 class="subpage-title">새 글 작성</h1>
                             </div>
 
+                            <a th:href="${backUrl}" class="btn-secondary board-write-back">목록으로</a>
+                        </section>
+                    </section>
+                    <section class="subtab-section">
+                        <section class="board-write-card">
                             <form th:action="@{/talkboard/save}" method="post" enctype="multipart/form-data"
                                 class="board-write-form">
+                                <input type="hidden" name="from" th:value="${from}">
+                                <input type="hidden" name="roomId" th:value="${roomId}">
+                                <input type="hidden" name="roomKey" th:value="${roomKey}">
 
                                 <!-- 작성자: 로그인 이름 자동 -->
                                 <div class="board-form-group">
@@ -144,6 +152,12 @@
                                         onclick="toggleVoteSection()">
                                         📊 투표 만들기
                                     </button>
+
+                                    <!-- 오른쪽 끝 상단 고정 -->
+                                    <label class="board-option-btn" for="pinned-check" id="pin-label" style="margin-left:auto; cursor:pointer;">
+                                        📌 상단 고정
+                                    </label>
+                                    <input type="checkbox" name="pinned" id="pinned-check" value="true" hidden onchange="togglePinStyle(this.checked)">
                                 </div>
 
                                 <!-- 이미지 미리보기 -->
@@ -277,6 +291,14 @@
                 document.getElementById('submit-btn').textContent = '업로드 중...';
                 document.getElementById('loading-msg').style.display = 'block';
             }, 100);
+        }
+
+        function togglePinStyle(checked) {
+            const label = document.getElementById('pin-label');
+            label.style.background = checked 
+                ? 'linear-gradient(180deg, #d99a70, #cb8458)' : '';
+            label.style.color = checked ? 'white' : '';
+            label.style.borderColor = checked ? '#cb8458' : '';
         }
     </script>
 </body>

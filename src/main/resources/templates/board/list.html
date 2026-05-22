@@ -29,12 +29,25 @@
                         </div>
                     </section>
 
-                    <section class="board-category-bar">
-                        <a th:each="cat : ${categories}"
-                           th:href="@{/board(category=${cat})}"
-                           class="board-category-chip"
-                           th:classappend="${cat == selectedCategory} ? ' active'"
-                           th:text="${cat}">카테고리</a>
+                    <section class="board-category-bar" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <!-- 돋보기 버튼 -->
+                        <button onclick="toggleSearch()" class="board-category-chip" style="display:flex; align-items:center; gap:4px;">
+                            🔍
+                        </button>
+                    
+                        <a th:each="cat : ${categories}" th:href="@{/board(category=${cat})}" class="board-category-chip"
+                            th:classappend="${cat == selectedCategory} ? ' active'" th:text="${cat}">카테고리</a>
+                    
+                        <!-- 검색창 -->
+                        <div id="search-bar" style="display:none; width:100%; margin-top:8px;">
+                            <form th:action="@{/board/search}" method="get" style="display:flex; gap:8px;">
+                                <input type="text" name="keyword" class="board-input" th:value="${keyword}" placeholder="제목 또는 내용 검색..."
+                                    style="flex:1; padding:10px 14px; border-radius:20px;
+                                              border:1px solid #eadbc9; background:#fffaf4;
+                                              font-size:14px; outline:none;">
+                                <button type="submit" class="board-category-chip active" style="padding:10px 16px;">검색</button>
+                            </form>
+                        </div>
                     </section>
                 </section>
 
@@ -70,5 +83,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    function toggleSearch() {
+        const bar = document.getElementById('search-bar');
+        bar.style.display = bar.style.display === 'none' ? 'block' : 'none';
+        if (bar.style.display === 'block') {
+            bar.querySelector('input').focus();
+        }
+    }
+</script>
+
 </body>
 </html>

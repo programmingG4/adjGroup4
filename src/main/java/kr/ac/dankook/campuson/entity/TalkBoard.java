@@ -23,6 +23,9 @@ public class TalkBoard {
     private String author;
     private Long memberId;
 
+    @Column(nullable = false)
+    private String roomKey = "global"; // 기본값: 전체
+
     @ElementCollection
     @CollectionTable(name = "talkboard_images", joinColumns = @JoinColumn(name = "talkboard_id"))
     @Column(name = "image_path")
@@ -50,6 +53,13 @@ public class TalkBoard {
 
     @OneToMany(mappedBy = "talkBoard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VoteItem> voteItems = new ArrayList<>();
+
+    private boolean pinned = false; // 상단 고정
+
+    @ElementCollection
+    @CollectionTable(name = "talkboard_likes", joinColumns = @JoinColumn(name = "talkboard_id"))
+    @Column(name = "member_id")
+    private List<Long> likedMemberIds = new ArrayList<>(); // 좋아요한 멤버 ID
 
     // 필터링용 메서드
     public boolean hasVote() {

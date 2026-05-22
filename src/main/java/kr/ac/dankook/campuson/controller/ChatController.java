@@ -39,11 +39,13 @@ public class ChatController {
         List<ChatRoom> rooms = chatService.getPublicRoomsForMember(member.getGrade());
         List<ChatRoom> privateRooms = chatService.getPrivateRoomsForUser(member.getStudentId());
         List<ChatRoom> groupRooms = chatService.getGroupRoomsForUser(member.getStudentId());
+        List<ChatRoom> tradeRooms = chatService.getTradeRoomsForUser(member.getStudentId());
 
         List<Long> allRoomIds = new ArrayList<>();
         rooms.forEach(r -> allRoomIds.add(r.getId()));
         privateRooms.forEach(r -> allRoomIds.add(r.getId()));
         groupRooms.forEach(r -> allRoomIds.add(r.getId()));
+        tradeRooms.forEach(r -> allRoomIds.add(r.getId()));
 
         Map<Long, ChatMessage> lastMessages = chatService.getLastMessages(allRoomIds);
         Map<Long, Long> unreadCounts = chatService.getUnreadCounts(member.getStudentId(), allRoomIds);
@@ -51,6 +53,7 @@ public class ChatController {
         model.addAttribute("rooms", rooms);
         model.addAttribute("privateRooms", privateRooms);
         model.addAttribute("groupRooms", groupRooms);
+        model.addAttribute("tradeRooms", tradeRooms);
         model.addAttribute("member", member);
         model.addAttribute("myGrade", String.valueOf(member.getGrade()));
         model.addAttribute("lastMessages", lastMessages);
@@ -73,7 +76,8 @@ public class ChatController {
                 String[] keys = room.getRoomKey().split("_");
                 String otherStudentId = keys[0].equals(member.getStudentId()) ? keys[1] : keys[0];
                 Member other = memberRepository.findByStudentId(otherStudentId);
-                if (other != null) displayRoomName = other.getName();
+                if (other != null)
+                    displayRoomName = other.getName();
                 otherLastRead = chatService.getLastReadMessageId(otherStudentId, id);
             }
 
@@ -82,6 +86,16 @@ public class ChatController {
             model.addAttribute("otherLastRead", otherLastRead);
             model.addAttribute("messages", messages);
             model.addAttribute("member", member);
+
+            // 공지 정보 추가
+            model.addAttribute("pinnedNotice", room.getPinnedNotice());
+            model.addAttribute("pinnedNoticeTitle", room.getPinnedNoticeTitle());
+            model.addAttribute("pinnedTalkBoardId", room.getPinnedTalkBoardId());
+            List<String> titles = room.getPinnedNoticeTitles() != null ? room.getPinnedNoticeTitles() : new ArrayList<>();
+            List<Long> ids = room.getPinnedTalkBoardIds() != null ? room.getPinnedTalkBoardIds() : new ArrayList<>();
+            model.addAttribute("pinnedNoticeTitles", titles);
+            model.addAttribute("pinnedTalkBoardIds", ids);
+
             return "chat/room";
         }).orElse("redirect:/chat");
     }
@@ -134,7 +148,7 @@ public class ChatController {
     @GetMapping("/private")
     public String startPrivateChat(@RequestParam String targetStudentId,
                                    Principal principal,
-                                   RedirectAttributes redirectAttributes) {
+            RedirectAttributes redirectAttributes) {
         Member me = memberRepository.findByStudentId(principal.getName());
         Member target = memberRepository.findByStudentId(targetStudentId);
 
@@ -149,8 +163,7 @@ public class ChatController {
 
         ChatRoom room = chatService.getOrCreatePrivateRoom(
                 me.getName(), me.getStudentId(),
-                target.getName(), target.getStudentId()
-        );
+                target.getName(), target.getStudentId());
         return "redirect:/chat/" + room.getId();
     }
 }

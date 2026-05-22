@@ -124,4 +124,25 @@ public class BoardService {
         voteItemRepository.save(newItem);
         return "ok";
     }
+
+    // 좋아요 토글
+    public int toggleLike(Long boardId, Long memberId) {
+        Board board = findById(boardId);
+        if (board.getLikedMemberIds().contains(memberId)) {
+            board.getLikedMemberIds().remove(memberId);
+        } else {
+            board.getLikedMemberIds().add(memberId);
+        }
+        boardRepository.save(board);
+        return board.getLikedMemberIds().size();
+    }
+
+    // 검색
+    public List<Board> search(String keyword) {
+        return boardRepository.findAllByOrderByRegDateDesc().stream()
+                .filter(b -> List.of("익명 게시판", "중고거래 게시판", "📢 모집중").contains(b.getCategory()))  // 카테고리 필터
+                .filter(b -> b.getTitle() != null && b.getContent() != null)
+                .filter(b -> b.getTitle().contains(keyword) || b.getContent().contains(keyword))
+                .toList();
+    }
 }

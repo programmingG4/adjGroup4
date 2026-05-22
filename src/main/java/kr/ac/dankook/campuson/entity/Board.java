@@ -39,4 +39,9 @@ public class Board {
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VoteItem> voteItems = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "board_likes", joinColumns = @JoinColumn(name = "board_id"))
+    @Column(name = "member_id")
+    private List<Long> likedMemberIds = new ArrayList<>(); // 좋아요한 멤버 ID
 }

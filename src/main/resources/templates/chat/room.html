@@ -14,7 +14,7 @@
             min-height: 480px;
             background: rgba(255, 252, 247, 0.42);
             border-radius: 28px;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .chat-room-header {
@@ -25,6 +25,7 @@
             border-bottom: 1px solid rgba(188, 153, 118, 0.22);
             background: rgba(255, 250, 243, 0.76);
             flex-shrink: 0;
+            position: relative;
         }
 
         .chat-room-back {
@@ -310,6 +311,62 @@
             background: rgba(189,123,77,0.18);
         }
 
+        .chat-menu-wrap {
+            position: relative;
+            margin-left: auto;
+        }
+
+        .chat-menu-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #8f6d4c;
+            padding: 4px 8px;
+            border-radius: 8px;
+            line-height: 1;
+        }
+
+        .chat-menu-btn:hover {
+            background: rgba(242, 231, 217, 0.92);
+        }
+
+        .chat-menu-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: white;
+            border: 1px solid #f0e4d7;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            min-width: 160px;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .chat-menu-item {
+            display: block;
+            padding: 11px 16px;
+            font-size: 14px;
+            color: #5d4633;
+            text-decoration: none;
+            transition: background 0.2s;
+            border-bottom: 1px solid #f8f0e6;
+        }
+
+        .chat-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .chat-menu-item:hover {
+            background: #f8f4f0;
+        }
+
+        .chat-menu-item.write {
+            color: #b26f49;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -325,7 +382,30 @@
                     <div class="chat-room-header">
                         <a href="/chat" class="chat-room-back">←</a>
                         <h2 class="chat-room-title" th:text="${displayRoomName}">채팅방</h2>
-                        <span class="chat-room-type-badge" th:text="${room.type.name() == 'GLOBAL' ? '전체' : (room.type.name() == 'GRADE' ? '학년' : (room.type.name() == 'GROUP' ? '그룹' : '1:1'))}">전체</span>
+                        <span class="chat-room-type-badge" th:text="${room.type.name() == 'GLOBAL' ? '전체' :
+                                       (room.type.name() == 'GRADE' ? '학년' :
+                                       (room.type.name() == 'GROUP' ? '그룹' :
+                                       (room.type.name() == 'TRADE' ? '중고거래' : '1:1')))}">전체</span>
+
+                        <!-- 세줄 버튼: 전체/학년 채팅방일 때만 -->
+                        <div class="chat-menu-wrap" th:if="${room.type.name() == 'GLOBAL' or room.type.name() == 'GRADE'}">
+                            <button class="chat-menu-btn" onclick="toggleChatMenu(event)">☰</button>
+                            <div id="chatMenuDropdown" class="chat-menu-dropdown">
+                                <a th:href="@{/talkboard/write(from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
+                                    class="chat-menu-item write">✏️ 공지글 작성하기</a>
+                                <div style="height:1px; background:#f0e4d7;"></div>
+                                <a th:href="@{/talkboard(category=공지, from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
+                                    class="chat-menu-item">📢 공지</a>
+                                <a th:href="@{/talkboard(category=투표, from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
+                                    class="chat-menu-item">📊 투표</a>
+                                <a th:href="@{/talkboard(category=사진, from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
+                                    class="chat-menu-item">📷 사진</a>
+                                <a th:href="@{/talkboard(category=동영상, from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
+                                    class="chat-menu-item">🎬 동영상</a>
+                                <a th:href="@{/talkboard(category=파일, from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
+                                    class="chat-menu-item">📎 파일</a>
+                            </div>
+                        </div>
                     </div>
 
                     <div th:if="${room.type.name() == 'GROUP'}" class="group-invite-bar">
@@ -337,18 +417,82 @@
                         <div th:if="${inviteError}" class="group-invite-error" th:text="${inviteError}"></div>
                     </div>
 
+                    <!-- 공지 배너 -->
+                    <div th:if="${pinnedNotice != null}"
+                        style="background:rgba(203,132,88,0.08); border-bottom:1px solid rgba(203,132,88,0.2);">
+                        <!-- 최신 공지 한 줄 -->
+                        <div style="display:flex; align-items:center; gap:10px; padding:10px 20px;">
+                            <span style="font-size:13px; flex-shrink:0;">📌</span>
+                            <a th:href="@{/talkboard/{id}(id=${pinnedTalkBoardId}, from='chat', roomId=${room.id})}" style="flex:1; text-decoration:none; color:#6a503d;
+                                      font-size:13px; font-weight:600; white-space:nowrap;
+                                      overflow:hidden; text-overflow:ellipsis;" th:text="${pinnedNoticeTitle}">
+                            </a>
+                            <button th:if="${pinnedNoticeTitles != null and #lists.size(pinnedNoticeTitles) > 1}" onclick="togglePinnedList()" id="pinnedToggleBtn" style="background:none; border:none; cursor:pointer;
+                                           font-size:13px; color:#9f8773; padding:2px 6px;
+                                           flex-shrink:0;">▾</button>
+                        </div>
+
+                        <!-- 펼쳐지는 목록 -->
+                        <div id="pinnedList" style="display:none;"
+                            th:if="${pinnedNoticeTitles != null and not #lists.isEmpty(pinnedNoticeTitles) and #lists.size(pinnedNoticeTitles) > 1}">
+                            <div th:each="i : ${#numbers.sequence(0, #lists.size(pinnedNoticeTitles) - 2)}"
+                                style="border-top:1px solid rgba(203,132,88,0.15);">
+                                <a th:href="@{/talkboard/{id}(id=${pinnedTalkBoardIds[i]}, from='chat', roomId=${room.id})}" style="display:flex; align-items:center; gap:10px;
+                                          padding:8px 20px; text-decoration:none;
+                                          color:#6a503d; font-size:13px; font-weight:600;">
+                                    <span style="font-size:13px; flex-shrink:0;">📌</span>
+                                    <span th:text="${pinnedNoticeTitles[i]}"
+                                        style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
+                                </a>
+                            </div>
+                        </div>
+
                     <div class="chat-messages" id="chatMessages">
                         <div th:if="${#lists.isEmpty(messages)}" class="chat-empty">
                             아직 메시지가 없어요. 첫 번째로 인사해보세요!
                         </div>
                         <th:block th:each="msg, stat : ${messages}">
-                            <div class="chat-date-sep" th:if="${stat.first or !#temporals.format(messages[stat.index - 1].sentAt, 'yyyy-MM-dd').equals(#temporals.format(msg.sentAt, 'yyyy-MM-dd'))}"><span th:text="${#temporals.format(msg.sentAt, 'yyyy년 M월 d일')}"></span></div>
-                            <div th:classappend="${msg.sender == member.studentId ? 'mine' : ''}" class="msg-row" th:attr="data-msg-id=${msg.id}">
-                                <div class="msg-avatar" th:if="${msg.sender != member.studentId}" th:text="${#strings.substring(msg.senderName, 0, 1)}">김</div>
+                            <div class="chat-date-sep"
+                                th:if="${stat.first or !#temporals.format(messages[stat.index - 1].sentAt, 'yyyy-MM-dd').equals(#temporals.format(msg.sentAt, 'yyyy-MM-dd'))}">
+                                <span th:text="${#temporals.format(msg.sentAt, 'yyyy년 M월 d일')}"></span>
+                            </div>
+                        
+                            <!-- 시스템 메시지 -->
+                            <div th:if="${msg.sender == 'SYSTEM'}" style="display:flex; gap:10px; align-items:flex-start; margin:4px 0;">
+                                <div class="msg-avatar" style="background:rgba(203,132,88,0.15); color:#cb8458;
+                                            font-size:13px; font-weight:800; flex-shrink:0;">공</div>
+                                <div style="max-width:280px;">
+                                    <span class="msg-sender" style="display:block; margin-bottom:4px;">공지</span>
+                                    <div style="background:rgba(255,250,243,0.9); border:1px solid rgba(203,132,88,0.25);
+                                                border-radius:18px; border-bottom-left-radius:4px;
+                                                overflow:hidden; box-shadow:0 2px 8px rgba(93,70,51,0.08);">
+                                        <!-- 제목 영역 -->
+                                        <div style="padding:12px 16px; font-size:13px; color:#5d4633; line-height:1.6; white-space:pre-line;"
+                                            th:text="${msg.content.contains('[LINK]') ? msg.content.substring(0, msg.content.indexOf('[LINK]') - 1) : msg.content}">
+                                        </div>
+                                        <!-- 구분선 + 버튼 -->
+                                        <div th:if="${msg.content.contains('[LINK]')}" style="border-top:1px solid rgba(203,132,88,0.2);">
+                                            <a th:href="${msg.content.substring(msg.content.indexOf('[LINK]') + 6)} + '?from=chat&roomId=' + ${room.id}" style="display:block; padding:10px 16px; text-align:center;
+                                                      font-size:13px; font-weight:bold; color:#b26f49;
+                                                      text-decoration:none;">
+                                                공지글 보러가기 &gt;
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <span class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}"></span>
+                                </div>
+                            </div>
+                        
+                            <!-- 일반 메시지 -->
+                            <div th:if="${msg.sender != 'SYSTEM'}" th:classappend="${msg.sender == member.studentId ? 'mine' : ''}"
+                                class="msg-row" th:attr="data-msg-id=${msg.id}">
+                                <div class="msg-avatar" th:if="${msg.sender != member.studentId}"
+                                    th:text="${#strings.substring(msg.senderName, 0, 1)}">김</div>
                                 <div class="msg-body">
                                     <span class="msg-sender" th:if="${msg.sender != member.studentId}">
                                         <span th:text="${msg.senderName}"></span>
-                                        <span class="year-badge" th:if="${msg.sender != null}" th:text="${msg.sender.substring(2, 4) + '학번'}"></span>
+                                        <span class="year-badge" th:if="${msg.sender != null}"
+                                            th:text="${msg.sender.substring(2, 4) + '학번'}"></span>
                                     </span>
                                     <div class="msg-bubble">
                                         <span th:if="${msg.content != null and !msg.content.isEmpty()}" th:text="${msg.content}"></span>
@@ -358,9 +502,8 @@
                                     <span class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">00:00</span>
                                 </div>
                                 <span th:if="${room.type.name() == 'PRIVATE' and msg.sender == member.studentId}"
-                                      th:classappend="${otherLastRead != null and msg.id <= otherLastRead ? ' read' : ' unread'}"
-                                      class="read-badge"
-                                      th:text="${otherLastRead != null and msg.id <= otherLastRead ? '읽음' : '1'}"></span>
+                                    th:classappend="${otherLastRead != null and msg.id <= otherLastRead ? ' read' : ' unread'}"
+                                    class="read-badge" th:text="${otherLastRead != null and msg.id <= otherLastRead ? '읽음' : '1'}"></span>
                             </div>
                         </th:block>
                     </div>
@@ -393,6 +536,16 @@
     const myId      = document.getElementById('myId').textContent.trim();
     const myName    = document.getElementById('myName').textContent.trim();
     const isPrivate = document.getElementById('isPrivate').textContent.trim() === 'true';
+
+    function toggleChatMenu(event) {
+        event.stopPropagation();
+        const menu = document.getElementById('chatMenuDropdown');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', () => {
+        const menu = document.getElementById('chatMenuDropdown');
+        if (menu) menu.style.display = 'none';
+    });
 
     function todayStr() {
         const d = new Date();
@@ -444,6 +597,57 @@
             lastShownDate = today;
         }
 
+        // 시스템 메시지 처리
+        if (msg.sender === 'SYSTEM') {
+            const roomIdVal = document.getElementById('roomId').textContent.trim();
+            const content = msg.content || '';
+            const linkIdx = content.indexOf('[LINK]');
+            const text = linkIdx > -1 ? content.substring(0, linkIdx - 1) : content;
+            const link = linkIdx > -1 ? content.substring(linkIdx + 6) + '?from=chat&roomId=' + roomIdVal : null;
+
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; gap:10px; align-items:flex-start; margin:4px 0;';
+            row.innerHTML = `
+        <div class="msg-avatar" style="background:rgba(203,132,88,0.15); color:#cb8458; font-size:13px; font-weight:800; flex-shrink:0;">공</div>
+        <div style="max-width:280px;">
+            <span class="msg-sender" style="display:block; margin-bottom:4px;">공지</span>
+            <div style="background:rgba(255,250,243,0.9); border:1px solid rgba(203,132,88,0.25);
+                        border-radius:18px; border-bottom-left-radius:4px;
+                        overflow:hidden; box-shadow:0 2px 8px rgba(93,70,51,0.08);">
+                <div style="padding:12px 16px; font-size:13px; color:#5d4633; line-height:1.6;">${escHtml(text).replace(/\n/g, '<br>')}</div>
+                ${link ? `
+                <div style="border-top:1px solid rgba(203,132,88,0.2);">
+                    <a href="${link}" style="display:block; padding:10px 16px; text-align:center;
+                               font-size:13px; font-weight:bold; color:#b26f49; text-decoration:none;">
+                        공지글 보러가기
+                    </a>
+                </div>` : ''}
+            </div>
+            <span class="msg-time">${escHtml(msg.sentAt || '')}</span>
+        </div>
+    `;
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
+            return;
+        }
+
+        // sentAt이 없으면 현재 시각으로 채움
+        if (!msg.sentAt) {
+            const now = new Date();
+            msg.sentAt = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        } else if (msg.sentAt.length > 5) {
+            // "2026-05-20T02:03:00" → "02:03"
+            const d = new Date(msg.sentAt);
+            msg.sentAt = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+
+        if (!msg.sentAt) {
+            const now = new Date();
+            msg.sentAt = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        } else if (msg.sentAt.includes('T')) {
+            const d = new Date(msg.sentAt);
+            msg.sentAt = d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
         const isMine = msg.sender === myId;
         const row = document.createElement('div');
         row.className = 'msg-row' + (isMine ? ' mine' : '');
@@ -459,9 +663,9 @@
 
         let mediaHtml = '';
         if (msg.mediaType === 'image') {
-            mediaHtml = `<img src="${escHtml(msg.mediaUrl)}" class="msg-image" alt="${escHtml(msg.fileName || '')}" onclick="window.open(this.src)">`;
+            mediaHtml = `<img src="${safeUrl(msg.mediaUrl)}" class="msg-image" alt="${escHtml(msg.fileName || '')}" onclick="window.open('${safeUrl(msg.mediaUrl)}')">`;
         } else if (msg.mediaType === 'file') {
-            mediaHtml = `<a href="${escHtml(msg.mediaUrl)}" class="msg-file-link" target="_blank" download>📄 ${escHtml(msg.fileName || '파일')}</a>`;
+            mediaHtml = `<a href="${safeUrl(msg.mediaUrl)}" class="msg-file-link" target="_blank" download>📄 ${escHtml(msg.fileName || '파일')}</a>`;
         }
 
         row.innerHTML = `
@@ -469,7 +673,7 @@
             <div class="msg-body">
                 ${senderLabel}
                 <div class="msg-bubble">
-                    ${msg.content ? escHtml(msg.content) : ''}
+                    ${msg.content ? `<span>${escHtml(msg.content)}</span>` : ''}
                     ${mediaHtml}
                 </div>
                 <span class="msg-time">${escHtml(msg.sentAt || '')}</span>
@@ -501,6 +705,10 @@
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
+    }
+
+    function safeUrl(str) {
+        return String(str).replace(/"/g, '&quot;');
     }
 
     document.getElementById('chatForm').addEventListener('submit', function () {
@@ -552,6 +760,14 @@
         const c = document.getElementById('chatMessages');
         c.scrollTop = c.scrollHeight;
     })();
+
+    function togglePinnedList() {
+        const list = document.getElementById('pinnedList');
+        const btn = document.getElementById('pinnedToggleBtn');
+        const isVisible = list.style.display !== 'none';
+        list.style.display = isVisible ? 'none' : 'block';
+        btn.textContent = isVisible ? '▾' : '▴';
+    }
 </script>
 </body>
 </html>
