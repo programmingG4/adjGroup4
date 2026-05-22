@@ -321,10 +321,6 @@ public class ChatService {
         markAsRead(studentId, roomId);
     }
 
-    public List<ChatRoom> getGroupRoomsForUser(String studentId) {
-        return chatRoomRepository.findGroupRoomsForStudent(studentId);
-    }
-
     public List<ChatRoom> getTradeRoomsForUser(String studentId) {
         return chatRoomRepository.findTradeRoomsForStudent(studentId);
     }
