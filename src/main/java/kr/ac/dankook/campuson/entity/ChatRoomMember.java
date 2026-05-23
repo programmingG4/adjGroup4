@@ -5,13 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChatMessage {
+public class ChatRoomMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,15 +19,10 @@ public class ChatMessage {
     @JoinColumn(name = "room_id")
     private ChatRoom room;
 
-    private String sender;      // studentId
-    private String senderName;
+    private String studentId;
 
-    @Column(columnDefinition = "TEXT")
-    private String content;
-
-    private String mediaUrl;
-    private String mediaType;  // "image" or "file"
-    private String fileName;
-
-    private LocalDateTime sentAt = LocalDateTime.now();
+    public ChatRoomMember(ChatRoom room, String studentId) {
+        this.room = room;
+        this.studentId = studentId;
+    }
 }

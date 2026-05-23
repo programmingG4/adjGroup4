@@ -40,6 +40,33 @@
                         </li>
                     </ol>
                 </section>
+
+                <section class="subtab-section home-private-chat-section" aria-label="읽지 않은 개인 채팅방 소식">
+                    <div class="home-section-head home-private-chat-head">
+                        <div>
+                            <p class="home-kicker">PRIVATE CHAT</p>
+                            <h2 class="home-stream-title">읽지 않은 개인 채팅방 소식</h2>
+                        </div>
+                        <a href="/chat" class="home-mini-link">채팅으로</a>
+                    </div>
+
+                    <div class="home-private-chat-list" th:if="${homePrivateChatSummaries != null && !homePrivateChatSummaries.isEmpty()}">
+                        <a th:each="chat : ${homePrivateChatSummaries}"
+                           th:href="@{/chat/{id}(id=${chat.roomId()})}"
+                           class="home-private-chat-item">
+                            <div class="home-private-chat-main">
+                                <strong th:text="${chat.otherName()}">홍길동</strong>
+                                <span th:text="|${chat.lastSentAtText()} 도착|">방금 전 도착</span>
+                            </div>
+                            <div class="home-private-chat-count" th:text="|${chat.unreadCount()}개|">2개</div>
+                        </a>
+                    </div>
+
+                    <div class="home-private-chat-empty" th:if="${homePrivateChatSummaries == null || homePrivateChatSummaries.isEmpty()}">
+                        읽지 않은 개인 채팅방 소식이 없습니다.
+                    </div>
+                </section>
+
             </section>
         </div>
     </div>

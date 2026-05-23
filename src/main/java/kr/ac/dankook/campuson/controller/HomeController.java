@@ -61,6 +61,9 @@ public class HomeController {
         model.addAttribute("articleFetchMessage", fetchMessage);
         model.addAttribute("homeChatRooms", homeChatRooms);
         model.addAttribute("homeChatLastMessages", homeChatLastMessages);
+        model.addAttribute("homePrivateChatSummaries", member == null
+                ? List.of()
+                : chatService.getUnreadPrivateChatSummaries(member.getStudentId()));
 
         return "home/index";
     }

@@ -1,17 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
-  <title id="title">DKU NEWS</title>
-  <desc id="desc">Ivory background with centered white DKU NEWS text outlined in navy.</desc>
-  <rect width="640" height="360" fill="#fefcf9"/>
-  <g text-anchor="middle"
-     font-family="Arial, Helvetica, sans-serif"
-     font-weight="900"
-     letter-spacing="6"
-     fill="#ffffff"
-     stroke="#0b2d5c"
-     stroke-width="7"
-     stroke-linejoin="round"
-     paint-order="stroke fill">
-    <text x="320" y="165" font-size="72">DKU</text>
-    <text x="320" y="235" font-size="56">NEWS</text>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="DKU NEWS">
+  <rect width="800" height="450" rx="44" fill="#ffffff"/>
+  <rect x="18" y="18" width="764" height="414" rx="34" fill="none" stroke="#e9eef7" stroke-width="4"/>
+  <text x="400" y="208" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="900" letter-spacing="8" fill="#0054a6">DKU</text>
+  <text x="400" y="304" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="900" letter-spacing="10" fill="#0054a6">NEWS</text>
 </svg>

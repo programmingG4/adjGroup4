@@ -57,6 +57,33 @@
             padding: 6px 0;
             border-bottom: 1px solid #f0f0f0;
         }
+
+        .board-write-merged-head {
+            margin-bottom: 24px;
+        }
+
+        .board-write-back-small {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 74px;
+            min-height: 34px;
+            margin-bottom: 14px;
+            padding: 0 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .board-write-merged-head .board-eyebrow {
+            margin-top: 0;
+        }
+
+        .board-write-merged-head .subpage-title {
+            margin-bottom: 0;
+        }
+
     </style>
 </head>
 
@@ -69,18 +96,23 @@
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
-                        <section class="board-page-head board-write-head">
-                            <div>
+                        <section class="board-write-card">
+                            <div class="board-write-merged-head">
+                                <a href="/talkboard" class="btn-secondary board-write-back-small">목록으로</a>
                                 <p class="board-eyebrow">TALK BOARD WRITE</p>
                                 <h1 class="subpage-title">새 글 작성</h1>
                             </div>
-                            <a href="/talkboard" class="btn-secondary board-write-back">목록으로</a>
+
+                            <a th:href="${backUrl}" class="btn-secondary board-write-back">목록으로</a>
                         </section>
                     </section>
                     <section class="subtab-section">
                         <section class="board-write-card">
                             <form th:action="@{/talkboard/save}" method="post" enctype="multipart/form-data"
                                 class="board-write-form">
+                                <input type="hidden" name="from" th:value="${from}">
+                                <input type="hidden" name="roomId" th:value="${roomId}">
+                                <input type="hidden" name="roomKey" th:value="${roomKey}">
 
                                 <!-- 작성자: 로그인 이름 자동 -->
                                 <div class="board-form-group">
@@ -120,6 +152,12 @@
                                         onclick="toggleVoteSection()">
                                         📊 투표 만들기
                                     </button>
+
+                                    <!-- 오른쪽 끝 상단 고정 -->
+                                    <label class="board-option-btn" for="pinned-check" id="pin-label" style="margin-left:auto; cursor:pointer;">
+                                        📌 상단 고정
+                                    </label>
+                                    <input type="checkbox" name="pinned" id="pinned-check" value="true" hidden onchange="togglePinStyle(this.checked)">
                                 </div>
 
                                 <!-- 이미지 미리보기 -->
@@ -253,6 +291,14 @@
                 document.getElementById('submit-btn').textContent = '업로드 중...';
                 document.getElementById('loading-msg').style.display = 'block';
             }, 100);
+        }
+
+        function togglePinStyle(checked) {
+            const label = document.getElementById('pin-label');
+            label.style.background = checked 
+                ? 'linear-gradient(180deg, #d99a70, #cb8458)' : '';
+            label.style.color = checked ? 'white' : '';
+            label.style.borderColor = checked ? '#cb8458' : '';
         }
     </script>
 </body>

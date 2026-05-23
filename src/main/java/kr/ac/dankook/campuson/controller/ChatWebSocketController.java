@@ -45,11 +45,15 @@ public class ChatWebSocketController {
             message.setSender(sender.getStudentId());
             message.setSenderName(sender.getName());
             message.setContent(dto.getContent());
+            message.setMediaUrl(dto.getMediaUrl());
+            message.setMediaType(dto.getMediaType());
+            message.setFileName(dto.getFileName());
             ChatMessage saved = chatService.saveMessage(message);
             dto.setId(saved.getId());
             dto.setSentAt(saved.getSentAt().format(FORMATTER));
             chatService.markAsRead(sender.getStudentId(), roomId);
-            sendNotification(room, sender, dto.getContent());
+            String notifContent = dto.getMediaType() != null ? "[" + (dto.getMediaType().equals("image") ? "사진" : "파일") + "]" : dto.getContent();
+            sendNotification(room, sender, notifContent);
         });
 
         dto.setSender(sender.getStudentId());
@@ -75,6 +79,14 @@ public class ChatWebSocketController {
                 String[] keys = room.getRoomKey().split("_");
                 String otherStudentId = keys[0].equals(sender.getStudentId()) ? keys[1] : keys[0];
                 messagingTemplate.convertAndSendToUser(otherStudentId, "/queue/notifications", notif);
+            }
+            case GROUP -> {
+                ChatNotificationDto notif = new ChatNotificationDto(room.getId(), room.getName(), sender.getName(), preview, false);
+                chatService.getGroupRoomMemberIds(room.getId()).forEach(memberId -> {
+                    if (!memberId.equals(sender.getStudentId())) {
+                        messagingTemplate.convertAndSendToUser(memberId, "/queue/notifications", notif);
+                    }
+                });
             }
         }
     }

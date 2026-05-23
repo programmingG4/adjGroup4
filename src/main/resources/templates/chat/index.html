@@ -62,10 +62,6 @@
                             <p class="subtab-eyebrow">CHAT</p>
                             <h2 class="subtab-title">전체 / 카테고리 채팅방</h2>
                         </div>
-                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <a href="/talkboard" class="subtab-chip" style="white-space:nowrap;">채팅게시판</a>
-                            <a href="/talkboard/write" class="subtab-chip" style="white-space:nowrap;">글 작성</a>
-                        </div>
                     </div>
 
                     <div class="chat-theme-card-list">
@@ -90,49 +86,118 @@
                     </div>
                 </section>
 
-                <!-- 1:1 채팅 -->
+                <!-- 그룹 채팅 -->
                 <section class="subtab-section">
                     <div class="subtab-title-row">
                         <div>
-                            <p class="subtab-eyebrow">PRIVATE</p>
-                            <h2 class="subtab-title">1:1 채팅</h2>
+                            <p class="subtab-eyebrow">GROUP</p>
+                            <h2 class="subtab-title">그룹 채팅</h2>
                         </div>
+                        <button type="button" class="subtab-chip" onclick="toggleGroupForm()" style="white-space:nowrap;">+ 새 그룹</button>
+                    </div>
+
+                    <div id="groupCreateForm" style="display:none; margin-bottom:16px; padding:16px; background:rgba(255,250,243,0.7); border-radius:14px; border:1px solid rgba(188,153,118,0.2);">
+                        <form th:action="@{/chat/group/create}" method="post" style="display:flex; flex-direction:column; gap:10px;">
+                            <input type="text" name="name" placeholder="그룹 채팅방 이름"
+                                   style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" maxlength="40" required />
+                            <input type="text" name="memberIds" placeholder="초대할 학번 (쉼표로 구분, 선택)"
+                                   style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" />
+                            <div style="display:flex; gap:8px;">
+                                <button type="submit" class="subtab-button primary" style="margin:0;">만들기</button>
+                                <button type="button" class="subtab-button" style="margin:0;" onclick="toggleGroupForm()">취소</button>
+                            </div>
+                        </form>
+                        <div th:if="${groupError}" class="error-msg" th:text="${groupError}"></div>
                     </div>
 
                     <div class="chat-theme-card-list">
-                        <article th:if="${#lists.isEmpty(privateRooms)}" class="chat-theme-card">
+                        <article th:if="${#lists.isEmpty(groupRooms)}" class="chat-theme-card">
                             <div>
-                                <div class="chat-theme-card-title">진행 중인 1:1 채팅이 없어요.</div>
-                                <div class="chat-theme-card-sub">아래에서 학번을 입력해 대화를 시작하세요.</div>
+                                <div class="chat-theme-card-title">참여 중인 그룹 채팅이 없어요.</div>
+                                <div class="chat-theme-card-sub" style="font-size:12px; color:var(--text-soft); margin-top:2px;">위에서 새 그룹 채팅방을 만들어보세요.</div>
                             </div>
                         </article>
-                        <article th:each="room : ${privateRooms}" class="chat-theme-card">
+                        <article th:each="room : ${groupRooms}" class="chat-theme-card">
                             <div style="flex:1; min-width:0;">
                                 <div class="chat-theme-card-title">
-                                    <!-- 2. 상대방 이름 표시: roomKey="id1_id2", name="name1/name2" (id1<id2 순) -->
-                                    <span th:with="keyParts=${room.roomKey.split('_')}, nameParts=${room.name.split('/')}"
-                                          th:text="${keyParts[0] == member.studentId ? nameParts[1] : nameParts[0]}"></span>
-                                    <!-- 4. 읽지 않은 메시지 배지 -->
+                                    <span th:text="${room.name}"></span>
                                     <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
                                           class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
                                 </div>
-                                <!-- 3. 마지막 메시지 미리보기 -->
                                 <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
-                                     th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                     th:text="${lastMessages[room.id].senderName + ': ' + (lastMessages[room.id].mediaType != null ? '[미디어]' : lastMessages[room.id].content)}"></div>
                                 <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
                             </div>
                             <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
                         </article>
                     </div>
+                </section>
 
+                <!-- 1:1 / 모집 채팅 -->
+                <section class="subtab-section">
+                    <div class="subtab-title-row">
+                        <div>
+                            <p class="subtab-eyebrow">MY CHAT</p>
+                            <h2 class="subtab-title">내 채팅방</h2>
+                        </div>
+                    </div>
+                
+                    <div class="chat-theme-card-list">
+                        <!-- 1:1 채팅 없을 때 -->
+                        <article th:if="${#lists.isEmpty(privateRooms) and #lists.isEmpty(groupRooms)}" class="chat-theme-card">
+                            <div>
+                                <div class="chat-theme-card-title">진행 중인 채팅이 없어요.</div>
+                                <div class="chat-theme-card-sub">아래에서 학번을 입력해 대화를 시작하세요.</div>
+                            </div>
+                        </article>
+                
+                        <!-- 1:1 채팅방 -->
+                        <article th:each="room : ${privateRooms}" class="chat-theme-card">
+                            <div style="flex:1; min-width:0;">
+                                <div class="chat-theme-card-title">
+                                    <span th:with="keyParts=${room.roomKey.split('_')}, nameParts=${room.name.split('/')}"
+                                        th:text="${keyParts[0] == member.studentId ? nameParts[1] : nameParts[0]}"></span>
+                                    <span style="font-size:11px; color:#9f8773; margin-left:6px;
+                                                 background:rgba(189,123,77,0.1); border-radius:6px;
+                                                 padding:1px 6px;">💬 1:1</span>
+                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}" class="unread-badge"
+                                        th:text="${unreadCounts[room.id]}"></span>
+                                </div>
+                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                    th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
+                            </div>
+                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
+                        </article>
+
+                        <!-- 중고거래 채팅방 -->
+                        <article th:each="room : ${tradeRooms}" class="chat-theme-card">
+                            <div style="flex:1; min-width:0;">
+                                <div class="chat-theme-card-title">
+                                    <span th:with="nameParts=${room.name.split('/')}"
+                                        th:text="${nameParts[0] == member.name ? nameParts[1] : nameParts[0]}"></span>
+                                    <span style="font-size:11px; color:#9f8773; margin-left:6px;
+                                                 background:rgba(189,123,77,0.1); border-radius:6px;
+                                                 padding:1px 6px;">🛒 중고거래</span>
+                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}" class="unread-badge"
+                                        th:text="${unreadCounts[room.id]}"></span>
+                                </div>
+                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                    th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
+                            </div>
+                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
+                        </article>
+                
+                    </div>
+                
                     <form th:action="@{/chat/private}" method="get"
-                          style="margin-top:16px; display:flex; gap:8px; flex-direction:column;">
+                        style="margin-top:16px; display:flex; gap:8px; flex-direction:column;">
                         <div style="display:flex; gap:8px;">
-                            <input type="text" name="targetStudentId" placeholder="학번으로 1:1 채팅 시작"
-                                   style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" />
+                            <input type="text" name="targetStudentId" placeholder="학번으로 1:1 채팅 시작" style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+                                          background:var(--surface); color:var(--text); font-size:14px;" />
                             <button type="submit" class="subtab-button primary" style="margin:0;">시작</button>
                         </div>
-                        <!-- 5. 에러 메시지 -->
                         <div th:if="${errorMsg}" class="error-msg" th:text="${errorMsg}"></div>
                     </form>
                 </section>
@@ -140,5 +205,16 @@
         </div>
     </div>
 </div>
+<script>
+    function toggleGroupForm() {
+        const form = document.getElementById('groupCreateForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+    // groupError 있으면 폼 자동 열기
+    (function () {
+        const err = document.querySelector('#groupCreateForm .error-msg');
+        if (err) document.getElementById('groupCreateForm').style.display = 'block';
+    })();
+</script>
 </body>
 </html>
