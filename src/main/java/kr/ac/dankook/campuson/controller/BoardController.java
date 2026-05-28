@@ -45,6 +45,13 @@ public class BoardController {
         return memberRepository.findByStudentId(userDetails.getUsername());
     }
 
+    // 공통 사이드바에서 사용하는 로그인 사용자 정보 전달
+    private Member addLoginMemberToModel(UserDetails userDetails, Model model) {
+        Member loginMember = getLoginMember(userDetails);
+        model.addAttribute("member", loginMember);
+        return loginMember;
+    }
+
     @GetMapping("/board")
     public String boardList(@RequestParam(defaultValue = "익명 게시판") String category,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -55,7 +62,7 @@ public class BoardController {
         model.addAttribute("posts", boardService.getPostsByCategory(category));
         model.addAttribute("chatRoomName", getChatRoomName());
 
-        Member loginMember = getLoginMember(userDetails);
+        Member loginMember = addLoginMemberToModel(userDetails, model);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         return "board/list";
     }
@@ -65,7 +72,7 @@ public class BoardController {
         model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
 
         // 로그인 유저 이름_학번 형식으로 전달
-        Member loginMember = getLoginMember(userDetails);
+        Member loginMember = addLoginMemberToModel(userDetails, model);
         if (loginMember != null) {
             // 학번 3,4번째 숫자 추출 (index 2,3)
             String year = loginMember.getStudentId().substring(2, 4);
@@ -134,7 +141,7 @@ public class BoardController {
         int totalVotes = post.getVoteItems() == null ? 0
                 : post.getVoteItems().stream().mapToInt(VoteItem::getVoteCount).sum();
 
-        Member loginMember = getLoginMember(userDetails);
+        Member loginMember = addLoginMemberToModel(userDetails, model);
         Long loginMemberId = loginMember != null ? loginMember.getId() : null;
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
@@ -168,7 +175,7 @@ public class BoardController {
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
         Board post = boardService.findById(id);
-        Member loginMember = getLoginMember(userDetails);
+        Member loginMember = addLoginMemberToModel(userDetails, model);
 
         // 본인 아니면 목록으로
         if (loginMember == null || !post.getMemberId().equals(loginMember.getId())) {
@@ -257,7 +264,7 @@ public class BoardController {
         model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
         model.addAttribute("selectedCategory", "");
         model.addAttribute("chatRoomName", getChatRoomName());
-        Member loginMember = getLoginMember(userDetails);
+        Member loginMember = addLoginMemberToModel(userDetails, model);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         return "board/list";
     }
