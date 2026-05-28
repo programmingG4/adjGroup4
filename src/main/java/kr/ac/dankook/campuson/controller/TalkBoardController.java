@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -110,6 +112,7 @@ public class TalkBoardController {
             @RequestParam(required = false) Long roomId,
             @RequestParam(defaultValue = "global") String roomKey,
             @RequestParam(value = "voteOption", required = false) List<String> voteItems,
+            @RequestParam(value = "voteDeadline", required = false) String voteDeadline,
             @RequestParam(value = "images", required = false) List<MultipartFile> images,
             @RequestParam(value = "videos", required = false) List<MultipartFile> videos,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
@@ -171,6 +174,14 @@ public class TalkBoardController {
             }
         }
 
+        // 투표 종료 시간 저장
+        if (voteDeadline != null && !voteDeadline.isBlank()) {
+            try {
+                post.setVoteEndTime(LocalDateTime.parse(voteDeadline,
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+            } catch (Exception ignored) {}
+        }
+
         post.setRoomKey(roomKey);
         post.setPinned(pinned);
         talkBoardService.save(post);
@@ -215,17 +226,35 @@ public class TalkBoardController {
             @RequestParam(required = false) Long roomId,
             @AuthenticationPrincipal UserDetails userDetails,
             Model model) {
-        TalkBoard post = talkBoardService.findById(id);
+
+        // 삭제된 글 처리
+        java.util.Optional<TalkBoard> postOpt = talkBoardService.findByIdOptional(id);
+        if (postOpt.isEmpty()) {
+            model.addAttribute("deleted", true);
+            if ("chat".equals(from) && roomId != null) {
+                model.addAttribute("backUrl", "/chat/" + roomId);
+                model.addAttribute("backLabel", "← 채팅방으로 돌아가기");
+            } else {
+                model.addAttribute("backUrl", "/talkboard");
+                model.addAttribute("backLabel", "← 게시판으로 돌아가기");
+            }
+            return "talkboard/detail";
+        }
+
+        TalkBoard post = postOpt.get();
         int totalVotes = post.getVoteItems() == null ? 0
                 : post.getVoteItems().stream().mapToInt(VoteItem::getVoteCount).sum();
 
         Member loginMember = getLoginMember(userDetails);
         Long loginMemberId = loginMember != null ? loginMember.getId() : null;
+        boolean voteEnded = post.getVoteEndTime() != null && post.getVoteEndTime().isBefore(LocalDateTime.now());
 
+        model.addAttribute("deleted", false);
         model.addAttribute("post", post);
         model.addAttribute("totalVotes", totalVotes);
         model.addAttribute("loginMemberId", loginMemberId);
         model.addAttribute("fromCategory", category);
+        model.addAttribute("voteEnded", voteEnded);
 
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);

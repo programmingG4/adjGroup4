@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -53,7 +55,6 @@ public class BoardController {
         model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
 
         model.addAttribute("posts", boardService.getPostsByCategory(category));
-        model.addAttribute("chatRoomName", getChatRoomName());
 
         Member loginMember = getLoginMember(userDetails);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
@@ -81,6 +82,7 @@ public class BoardController {
     public String save(@ModelAttribute Board board,
             @RequestParam(value = "voteOption", required = false) List<String> voteItems,
             @RequestParam(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam(value = "voteDeadline", required = false) String voteDeadline,
             @AuthenticationPrincipal UserDetails userDetails) throws Exception {
 
         Member loginMember = getLoginMember(userDetails);
@@ -108,6 +110,14 @@ public class BoardController {
             }
             if (!paths.isEmpty())
                 board.setImagePaths(paths);
+        }
+
+        // 투표 종료 시간 저장
+        if (voteDeadline != null && !voteDeadline.isBlank()) {
+            try {
+                board.setVoteEndTime(LocalDateTime.parse(voteDeadline,
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+            } catch (Exception ignored) {}
         }
 
         boardService.save(board);
@@ -143,11 +153,14 @@ public class BoardController {
             model.addAttribute("loginMemberName", "익명");
         }
 
+        boolean voteEnded = post.getVoteEndTime() != null && post.getVoteEndTime().isBefore(LocalDateTime.now());
+
         model.addAttribute("post", post);
         model.addAttribute("totalVotes", totalVotes);
-        model.addAttribute("chatRoomName", getChatRoomName());
+
         model.addAttribute("loginMemberId", loginMemberId);
         model.addAttribute("fromCategory", category != null ? category : post.getCategory());
+        model.addAttribute("voteEnded", voteEnded);
 
         return "board/detail";
     }
@@ -256,7 +269,7 @@ public class BoardController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
         model.addAttribute("selectedCategory", "");
-        model.addAttribute("chatRoomName", getChatRoomName());
+
         Member loginMember = getLoginMember(userDetails);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         return "board/list";

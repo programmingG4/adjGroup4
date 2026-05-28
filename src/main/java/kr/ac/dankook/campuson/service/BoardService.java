@@ -10,6 +10,7 @@ import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -86,6 +87,10 @@ public class BoardService {
     public String vote(Long voteItemId, Long memberId) {
         VoteItem newItem = voteItemRepository.findById(voteItemId).orElseThrow();
         Board board = newItem.getBoard();
+
+        if (board.getVoteEndTime() != null && board.getVoteEndTime().isBefore(LocalDateTime.now())) {
+            return "ended";
+        }
 
         // 기존에 투표한 항목 찾기
         VoteItem previousItem = board.getVoteItems().stream()

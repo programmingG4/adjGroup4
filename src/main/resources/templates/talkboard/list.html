@@ -7,6 +7,59 @@
     <title>CampusOn | 채팅게시판</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        .board-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .board-category-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .board-search-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .board-search-input {
+            padding: 7px 32px 7px 14px;
+            border: 1.5px solid #eadbc9;
+            border-radius: 20px;
+            font-size: 13px;
+            outline: none;
+            background: #fffaf4;
+            color: #555;
+            width: 150px;
+            transition: border-color 0.2s;
+        }
+
+        .board-search-input:focus {
+            border-color: #cb8458;
+        }
+
+        .board-search-icon-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1;
+            color: #9f8773;
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -15,7 +68,7 @@
             <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
             <div class="subtab-layout">
-                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board')}"></aside>
+                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', 'talkwrite')}"></aside>
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
@@ -25,33 +78,32 @@
                                 <h1 class="subpage-title">채팅게시판</h1>
                                 <p class="subpage-desc">채팅방과 연동된 공지글들을 확인할 수 있어요.</p>
                             </div>
-                            <!-- 채팅방에서 왔으면 채팅방으로, 아니면 채팅 홈으로 -->
                             <a th:if="${backUrl != null}" th:href="${backUrl}" class="board-room-chip">← 채팅방으로 돌아가기</a>
                             <a th:if="${backUrl == null}" href="/chat" class="board-room-chip">← 채팅으로 돌아가기</a>
-                        </section>
-                        <section class="board-category-bar" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <button onclick="toggleSearch()" class="board-category-chip" style="display:flex; align-items:center; gap:4px;">
-                                🔍
-                            </button>
-                        
-                            <a th:each="cat : ${categories}" th:href="@{/talkboard(category=${cat})}" class="board-category-chip"
-                                th:classappend="${cat == selectedCategory} ? ' active'" th:text="${cat}">카테고리</a>
-                        
-                            <div id="search-bar" style="display:none; width:100%; margin-top:8px;">
-                                <form th:action="@{/talkboard/search}" method="get" style="display:flex; gap:8px;">
-                                    <input type="hidden" name="roomKey" th:value="${roomKey}">
-                                    <input type="text" name="keyword" class="board-input" th:value="${keyword}" placeholder="제목 또는 내용 검색..."
-                                        style="flex:1; padding:10px 14px; border-radius:20px;
-                                                  border:1px solid #eadbc9; background:#fffaf4;
-                                                  font-size:14px; outline:none;">
-                                    <button type="submit" class="board-category-chip active" style="padding:10px 16px;">검색</button>
-                                </form>
-                            </div>
                         </section>
                     </section>
 
                     <section class="subtab-section">
                         <section class="board-list-section">
+
+                            <div class="board-toolbar">
+                                <div class="board-category-group">
+                                    <a th:each="cat : ${categories}"
+                                       th:href="@{/talkboard(category=${cat})}"
+                                       th:text="${cat}"
+                                       th:classappend="${cat == selectedCategory} ? ' active'"
+                                       class="board-category-chip">카테고리</a>
+                                </div>
+                                <form th:action="@{/talkboard/search}" method="get">
+                                    <input type="hidden" name="roomKey" th:value="${roomKey}">
+                                    <div class="board-search-wrap">
+                                        <input type="text" name="keyword" class="board-search-input"
+                                               th:value="${keyword}" placeholder="검색...">
+                                        <button type="submit" class="board-search-icon-btn">🔍</button>
+                                    </div>
+                                </form>
+                            </div>
+
                             <div th:if="${#lists.isEmpty(posts)}" class="board-empty-state">
                                 아직 등록된 게시글이 없습니다.
                             </div>
@@ -80,17 +132,6 @@
             </div>
         </div>
     </div>
-
-    <script>
-        function toggleSearch() {
-            const bar = document.getElementById('search-bar');
-            bar.style.display = bar.style.display === 'none' ? 'block' : 'none';
-            if (bar.style.display === 'block') {
-                bar.querySelector('input').focus();
-            }
-        }
-    </script>
-
 </body>
 
 </html>

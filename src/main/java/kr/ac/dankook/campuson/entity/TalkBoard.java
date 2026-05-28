@@ -61,6 +61,9 @@ public class TalkBoard {
     @Column(name = "member_id")
     private List<Long> likedMemberIds = new ArrayList<>(); // 좋아요한 멤버 ID
 
+    private LocalDateTime voteEndTime;
+    private boolean voteResultNotified = false; // 투표 종료 결과 알림 전송 여부
+
     // 필터링용 메서드
     public boolean hasVote() {
         return !voteItems.isEmpty();
