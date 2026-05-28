@@ -15,7 +15,7 @@
 
             <div th:if="${errorMsg}" class="error-msg" th:text="${errorMsg}"></div>
 
-            <form th:action="@{/login}" method="post">
+            <form th:action="@{/login}" method="post" id="loginForm">
                 <div class="form-group">
                     <input type="text" name="studentId" placeholder="학번" required />
                     <input type="password" name="password" placeholder="비밀번호" required />
@@ -29,5 +29,159 @@
         </section>
     </main>
 </div>
+
+
+<div id="loginLoadingPage" class="login-loading-page" aria-live="polite" aria-hidden="true">
+    <div class="login-loading-card">
+        <div class="login-spinner" aria-hidden="true"></div>
+        <h2>로그인 정보를 확인하고 있어요..</h2>
+        <div class="login-progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="loginProgressBar" class="login-progress-bar"></div>
+        </div>
+        <div id="loginProgressText" class="login-progress-text">0%</div>
+    </div>
+</div>
+
+<style>
+    .login-loading-page {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: radial-gradient(circle at 50% 35%, rgba(255, 247, 232, 0.98), rgba(254, 252, 249, 0.96) 42%, rgba(244, 238, 228, 0.98));
+        backdrop-filter: blur(6px);
+    }
+
+    .login-loading-page.is-active {
+        display: flex;
+    }
+
+    .login-loading-card {
+        width: min(520px, 92vw);
+        padding: 40px 34px 36px;
+        border: 1px solid rgba(64, 55, 46, 0.14);
+        border-radius: 28px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 24px 60px rgba(41, 31, 20, 0.16);
+        text-align: center;
+    }
+
+    .login-spinner {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 22px;
+        border: 7px solid rgba(169, 124, 74, 0.18);
+        border-top-color: #a9783f;
+        border-radius: 50%;
+        animation: loginSpin 0.9s linear infinite;
+    }
+
+    .login-loading-card h2 {
+        margin: 0 0 10px;
+        color: #2f251c;
+        font-size: clamp(1.2rem, 3vw, 1.45rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        white-space: nowrap;
+    }
+
+    .login-progress-wrap {
+        width: 100%;
+        margin-top: 24px;
+        height: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(76, 61, 45, 0.12);
+    }
+
+    .login-progress-bar {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #b88444, #e5ad63);
+        transition: width 0.22s ease;
+    }
+
+    .login-progress-text {
+        margin-top: 10px;
+        color: #4a3828;
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
+
+    @keyframes loginSpin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('loginForm');
+        const loadingPage = document.getElementById('loginLoadingPage');
+        const progressBar = document.getElementById('loginProgressBar');
+        const progressText = document.getElementById('loginProgressText');
+        const progressWrap = loadingPage ? loadingPage.querySelector('.login-progress-wrap') : null;
+        const submitButton = form ? form.querySelector('button[type="submit"]') : null;
+        let progressTimer = null;
+
+        function setProgress(value) {
+            const safeValue = Math.max(0, Math.min(100, value));
+            progressBar.style.width = safeValue + '%';
+            progressText.textContent = safeValue + '%';
+            progressWrap.setAttribute('aria-valuenow', String(safeValue));
+        }
+
+        function startLoadingProgress() {
+            let progress = 0;
+            setProgress(progress);
+            progressTimer = window.setInterval(function () {
+                if (progress < 72) {
+                    progress += Math.floor(Math.random() * 8) + 4;
+                } else if (progress < 92) {
+                    progress += Math.floor(Math.random() * 3) + 1;
+                } else {
+                    progress = 99;
+                }
+                setProgress(progress);
+            }, 260);
+        }
+
+        if (!form || !loadingPage || !progressBar || !progressText || !progressWrap) {
+            return;
+        }
+
+        form.addEventListener('submit', function () {
+            loadingPage.classList.add('is-active');
+            loadingPage.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = '로그인 중...';
+            }
+            startLoadingProgress();
+        });
+
+        window.addEventListener('pageshow', function () {
+            if (progressTimer) {
+                window.clearInterval(progressTimer);
+                progressTimer = null;
+            }
+            loadingPage.classList.remove('is-active');
+            loadingPage.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = '로그인';
+            }
+            setProgress(0);
+        });
+    });
+</script>
+
 </body>
 </html>

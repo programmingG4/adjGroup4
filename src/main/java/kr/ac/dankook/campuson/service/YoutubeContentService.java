@@ -185,6 +185,18 @@ public class YoutubeContentService {
                         "",
                         "https://www.youtube.com/embed?listType=search&list=%EC%A0%84%EA%B3%BC%EC%9E%90%20%EB%8C%80%ED%95%99",
                         "대학 컨텐츠"
+                ),
+                new YoutubeRecommendation(
+                        "대학 생활 컨텐츠 추천",
+                        "",
+                        "https://www.youtube.com/embed?listType=search&list=%EB%8C%80%ED%95%99%EC%83%9D%20%EC%BB%A8%ED%85%90%EC%B8%A0",
+                        "대학 컨텐츠"
+                ),
+                new YoutubeRecommendation(
+                        "캠퍼스 컨텐츠 추천",
+                        "",
+                        "https://www.youtube.com/embed?listType=search&list=%EC%BA%A0%ED%8D%BC%EC%8A%A4%20%EB%8C%80%ED%95%99%20%EC%BB%A8%ED%85%90%EC%B8%A0",
+                        "대학 컨텐츠"
                 )
         );
     }

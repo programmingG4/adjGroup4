@@ -5,7 +5,6 @@ import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatRoom;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.ChatService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;

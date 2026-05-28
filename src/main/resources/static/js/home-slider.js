@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const dots = Array.from(slider.querySelectorAll("[data-slide-index]"));
     const originalSlides = Array.from(track?.querySelectorAll(".home-news-slide") || []);
     const slideCount = originalSlides.length;
-    const SLIDE_DELAY = 10000;
+    const SLIDE_DELAY = 8000;
 
     if (!track || slideCount <= 1) {
         dots.forEach((dot, index) => dot.classList.toggle("is-active", index === 0));

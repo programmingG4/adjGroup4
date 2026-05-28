@@ -39,8 +39,14 @@ public class ArticleController {
     }
 
     @GetMapping("/articles")
-    public String articles(Model model, Principal principal) {
-        ArticleFetchResult result = articleCrawlerService.fetchArticleFeed();
+    public String articles(
+            Model model,
+            Principal principal,
+            @RequestParam(defaultValue = "false") boolean ready
+    ) {
+        if (!ready) {
+            return "article/loading";
+        }
 
         if (principal != null) {
             Member member = memberRepository.findByStudentId(principal.getName());
@@ -48,12 +54,31 @@ public class ArticleController {
         }
 
         model.addAttribute("activeMenu", "articles");
-        model.addAttribute("articles", result.articles());
-        model.addAttribute("categoryCounts", result.categoryCounts());
-        model.addAttribute("fetchFailed", result.failed());
-        model.addAttribute("fetchMessage", result.message());
+        model.addAttribute("articles", java.util.Collections.emptyList());
+        model.addAttribute("categoryCounts", java.util.Collections.singletonMap("all", 0L));
+        model.addAttribute("fetchFailed", false);
+        model.addAttribute("fetchMessage", null);
+        model.addAttribute("currentPage", 1);
+        model.addAttribute("hasMore", true);
 
         return "article/list";
+    }
+
+    @GetMapping("/articles/initial")
+    public ResponseEntity<ArticleFetchResult> initialArticles(
+            @RequestParam(defaultValue = "false") boolean refresh
+    ) {
+        ArticleFetchResult result = articleCrawlerService.fetchInitialCategoryFeed(refresh);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/articles/page")
+    public ResponseEntity<ArticleFetchResult> articlePage(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "false") boolean refresh
+    ) {
+        ArticleFetchResult result = articleCrawlerService.fetchArticlePage(page, refresh);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/articles/image")

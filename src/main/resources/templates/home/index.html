@@ -17,42 +17,47 @@
             <aside th:replace="~{fragments/app-layout :: subtabSidebar('home')}"></aside>
 
             <section class="subtab-content home-subtab-main">
-                <article class="home-main-card" aria-label="메인 화면 본문" th:if="${homeHeroArticles != null && !homeHeroArticles.isEmpty()}">
-                    <section class="home-news-hero" aria-label="움직이는 뉴스 탭">
-                        <div class="home-section-head home-news-hero-head">
-                            <div>
-                                <p class="home-kicker">CAMPUSON NEWS</p>
-                                <h2 class="home-stream-title">오늘의 뉴스/기사</h2>
-                            </div>
-                        </div>
-
-                        <div class="home-news-slider" data-home-news-slider th:if="${homeHeroArticles != null && !homeHeroArticles.isEmpty()}">
+                <article class="home-main-card" aria-label="메인 화면 본문">
+                    <section class="home-news-hero home-quick-hero" aria-label="주요 바로가기">
+                        <div class="home-news-slider home-quick-slider" data-home-news-slider>
                             <div class="home-news-slider-track" data-home-news-track>
-                                <a th:each="article, iterStat : ${homeHeroArticles}"
+                                <a th:each="link, iterStat : ${homeQuickLinks}"
                                    th:if="${iterStat.index < 5}"
-                                   th:href="@{/articles(category=${article.categoryKey()},focus=${article.articleUrl()})}"
-                                   class="home-news-slide"
-                                   th:title="${article.title()}">
-                                    <div class="home-news-slide-thumb"
-                                         th:style="${article.thumbnailUrl() != null && !article.thumbnailUrl().isBlank()} ? |background-image: linear-gradient(180deg, rgba(28, 21, 16, 0.08), rgba(50, 34, 24, 0.58)), url('${article.thumbnailUrl()}');| : null">
-                                        <div class="home-news-slide-copy">
-                                            <span th:text="${article.categoryLabel()}">뉴스</span>
-                                            <strong th:text="${article.title()}">뉴스 제목</strong>
+                                   th:href="${link.url()}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="home-news-slide home-quick-slide"
+                                   th:classappend="${link.styleClass()}"
+                                   th:title="${link.title()}">
+                                    <div class="home-news-slide-thumb home-quick-thumb">
+                                        <img class="home-quick-thumb-image"
+                                             th:src="@{/home/link-thumbnail(target=${link.key()})}"
+                                             th:alt="|${link.title()} 썸네일|"
+                                             loading="lazy"
+                                             onload="this.closest('.home-quick-thumb').classList.add('has-image');"
+                                             onerror="this.closest('.home-quick-thumb').classList.add('is-fallback'); this.remove();">
+                                        <div class="home-quick-overlay-title">
+                                            <p class="home-kicker">CAMPUSON LINKS</p>
+                                            <h2 class="home-stream-title">추천 바로가기</h2>
+                                        </div>
+                                        <div class="home-quick-badge" th:text="${link.badge()}">PORTAL</div>
+                                        <div class="home-news-slide-copy home-quick-copy">
+                                            <span th:text="${link.title()}">바로가기</span>
+                                            <strong th:text="${link.description()}">설명</strong>
                                         </div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="home-news-slider-dots" data-home-news-dots aria-label="뉴스 슬라이드 선택">
-                                <button th:each="article, iterStat : ${homeHeroArticles}"
+                            <div class="home-news-slider-dots" data-home-news-dots aria-label="바로가기 슬라이드 선택">
+                                <button th:each="link, iterStat : ${homeQuickLinks}"
                                         th:if="${iterStat.index < 5}"
                                         type="button"
                                         class="home-news-slider-dot"
                                         th:classappend="${iterStat.index == 0} ? ' is-active'"
-                                        th:attr="data-slide-index=${iterStat.index}, aria-label=|${iterStat.index + 1}번째 기사 보기|">
+                                        th:attr="data-slide-index=${iterStat.index}, aria-label=|${iterStat.index + 1}번째 바로가기 보기|">
                                 </button>
                             </div>
                         </div>
-
                     </section>
 
                     <section class="home-update-grid" aria-label="최신 채팅방 및 게시판 소식">
@@ -123,15 +128,17 @@
                     </section>
 
                     <section class="home-youtube-section" aria-label="대학 컨텐츠 추천">
-                        <div class="home-section-head">
+                        <div class="home-section-head home-youtube-section-head">
                             <div>
                                 <p class="home-kicker">CONTENTS RECOMMENDATION</p>
-                                <h2 class="home-stream-title">대학 컨텐츠 추천</h2>
+                                <h2 class="home-youtube-title">대학 컨텐츠 추천</h2>
                             </div>
                         </div>
 
                         <div class="home-youtube-grid home-youtube-embed-grid" th:if="${homeYoutubeVideos != null && !homeYoutubeVideos.isEmpty()}">
-                            <div th:each="video : ${homeYoutubeVideos}" class="home-youtube-embed-unit">
+                            <div th:each="video, iterStat : ${homeYoutubeVideos}"
+                                 th:if="${iterStat.index < 3}"
+                                 class="home-youtube-embed-unit">
                                 <div class="home-youtube-embed-wrap">
                                     <iframe th:src="${video.url()}"
                                             th:title="${video.title()}"
@@ -139,7 +146,6 @@
                                             allowfullscreen
                                             loading="lazy"></iframe>
                                 </div>
-                                <strong th:text="${video.title()}">대학 컨텐츠 영상 제목</strong>
                             </div>
                         </div>
 
@@ -152,7 +158,6 @@
                                             allowfullscreen
                                             loading="lazy"></iframe>
                                 </div>
-                                <strong>대학 컨텐츠 추천 영상을 불러오는 중입니다.</strong>
                             </div>
                         </div>
                     </section>
