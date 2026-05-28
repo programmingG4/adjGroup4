@@ -4,10 +4,12 @@ import kr.ac.dankook.campuson.domain.Member;
 import kr.ac.dankook.campuson.dto.CrawledArticle;
 import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatRoom;
+import kr.ac.dankook.campuson.repository.BoardRepository;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.ArticleCrawlerService;
 import kr.ac.dankook.campuson.service.ArticleCrawlerService.ArticleFetchResult;
 import kr.ac.dankook.campuson.service.ChatService;
+import kr.ac.dankook.campuson.service.YoutubeContentService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,13 +26,21 @@ import java.util.Set;
 public class HomeController {
 
     private final MemberRepository memberRepository;
+    private final BoardRepository boardRepository;
     private final ArticleCrawlerService articleCrawlerService;
     private final ChatService chatService;
+    private final YoutubeContentService youtubeContentService;
 
-    public HomeController(MemberRepository memberRepository, ArticleCrawlerService articleCrawlerService, ChatService chatService) {
+    public HomeController(MemberRepository memberRepository,
+                          BoardRepository boardRepository,
+                          ArticleCrawlerService articleCrawlerService,
+                          ChatService chatService,
+                          YoutubeContentService youtubeContentService) {
         this.memberRepository = memberRepository;
+        this.boardRepository = boardRepository;
         this.articleCrawlerService = articleCrawlerService;
         this.chatService = chatService;
+        this.youtubeContentService = youtubeContentService;
     }
 
     @GetMapping("/home")
@@ -56,6 +66,7 @@ public class HomeController {
         Map<Long, ChatMessage> homeChatLastMessages = chatService.getLastMessages(chatRoomIds);
 
         model.addAttribute("activeMenu", "home");
+        model.addAttribute("homeHeroArticles", selectHeroArticles(articles));
         model.addAttribute("homeItArticles", selectRandomItArticlesFromFirstThreePages(articles));
         model.addAttribute("articleFetchFailed", fetchFailed);
         model.addAttribute("articleFetchMessage", fetchMessage);
@@ -64,8 +75,42 @@ public class HomeController {
         model.addAttribute("homePrivateChatSummaries", member == null
                 ? List.of()
                 : chatService.getUnreadPrivateChatSummaries(member.getStudentId()));
+        model.addAttribute("homeLatestBoards", boardRepository.findTop5ByOrderByRegDateDesc());
+        model.addAttribute("homeYoutubeVideos", youtubeContentService.fetchJeongwajaVideos());
 
         return "home/index";
+    }
+
+    private List<CrawledArticle> selectHeroArticles(List<CrawledArticle> articles) {
+        List<CrawledArticle> selected = new ArrayList<>();
+        Set<String> usedUrls = new LinkedHashSet<>();
+
+        for (CrawledArticle article : articles) {
+            if (selected.size() >= 5) {
+                break;
+            }
+            if (article != null && hasHeroThumbnail(article) && usedUrls.add(article.articleUrl())) {
+                selected.add(article);
+            }
+        }
+
+        return selected;
+    }
+
+    private boolean hasHeroThumbnail(CrawledArticle article) {
+        if (article == null || article.thumbnailUrl() == null || article.thumbnailUrl().isBlank()) {
+            return false;
+        }
+
+        String thumbnail = article.thumbnailUrl().toLowerCase();
+        return (thumbnail.startsWith("http://") || thumbnail.startsWith("https://"))
+                && !thumbnail.endsWith(".svg")
+                && !thumbnail.contains("article-placeholder")
+                && !thumbnail.contains("dku-news")
+                && !thumbnail.contains("blank")
+                && !thumbnail.contains("default")
+                && !thumbnail.contains("noimage")
+                && !thumbnail.contains("no-image");
     }
 
     private ArticleFetchResult fetchArticleFeedWithWarmupWait() {

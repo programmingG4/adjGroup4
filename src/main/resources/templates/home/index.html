@@ -6,6 +6,7 @@
     <title>CampusON</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
+    <script src="/js/home-slider.js" defer></script>
 </head>
 <body>
 <div class="subtab-shell home-shell-page">
@@ -16,57 +17,146 @@
             <aside th:replace="~{fragments/app-layout :: subtabSidebar('home')}"></aside>
 
             <section class="subtab-content home-subtab-main">
-                <section class="subtab-section home-it-headline-section" aria-label="우리 대학교 소식 최신 IT정보">
-                    <div class="home-section-head home-it-headline-head">
-                        <div>
-                            <p class="home-kicker">ARTICLE PICK</p>
-                            <h2 class="home-stream-title">최신 IT정보 3줄 요약</h2>
-                        </div>
-                    </div>
-
-                    <ol class="home-it-summary-list" th:if="${homeItArticles != null && !homeItArticles.isEmpty()}">
-                        <li th:each="article, iterStat : ${homeItArticles}"
-                            th:if="${iterStat.index < 3}"
-                            class="home-it-summary-item">
-                            <span class="home-it-summary-number" th:text="${iterStat.index + 1}">1</span>
-                            <span class="home-it-summary-title" th:text="${article.title()}">최신 IT정보 제목</span>
-                        </li>
-                    </ol>
-
-                    <ol class="home-it-summary-list" th:if="${homeItArticles == null || homeItArticles.isEmpty()}">
-                        <li class="home-it-summary-item">
-                            <span class="home-it-summary-number">1</span>
-                            <span class="home-it-summary-title">최신 IT정보를 불러오는 중입니다.</span>
-                        </li>
-                    </ol>
-                </section>
-
-                <section class="subtab-section home-private-chat-section" aria-label="읽지 않은 개인 채팅방 소식">
-                    <div class="home-section-head home-private-chat-head">
-                        <div>
-                            <p class="home-kicker">PRIVATE CHAT</p>
-                            <h2 class="home-stream-title">읽지 않은 개인 채팅방 소식</h2>
-                        </div>
-                        <a href="/chat" class="home-mini-link">채팅으로</a>
-                    </div>
-
-                    <div class="home-private-chat-list" th:if="${homePrivateChatSummaries != null && !homePrivateChatSummaries.isEmpty()}">
-                        <a th:each="chat : ${homePrivateChatSummaries}"
-                           th:href="@{/chat/{id}(id=${chat.roomId()})}"
-                           class="home-private-chat-item">
-                            <div class="home-private-chat-main">
-                                <strong th:text="${chat.otherName()}">홍길동</strong>
-                                <span th:text="|${chat.lastSentAtText()} 도착|">방금 전 도착</span>
+                <article class="home-main-card" aria-label="메인 화면 본문" th:if="${homeHeroArticles != null && !homeHeroArticles.isEmpty()}">
+                    <section class="home-news-hero" aria-label="움직이는 뉴스 탭">
+                        <div class="home-section-head home-news-hero-head">
+                            <div>
+                                <p class="home-kicker">CAMPUSON NEWS</p>
+                                <h2 class="home-stream-title">오늘의 뉴스/기사</h2>
                             </div>
-                            <div class="home-private-chat-count" th:text="|${chat.unreadCount()}개|">2개</div>
-                        </a>
-                    </div>
+                        </div>
 
-                    <div class="home-private-chat-empty" th:if="${homePrivateChatSummaries == null || homePrivateChatSummaries.isEmpty()}">
-                        읽지 않은 개인 채팅방 소식이 없습니다.
-                    </div>
-                </section>
+                        <div class="home-news-slider" data-home-news-slider th:if="${homeHeroArticles != null && !homeHeroArticles.isEmpty()}">
+                            <div class="home-news-slider-track" data-home-news-track>
+                                <a th:each="article, iterStat : ${homeHeroArticles}"
+                                   th:if="${iterStat.index < 5}"
+                                   th:href="@{/articles(category=${article.categoryKey()},focus=${article.articleUrl()})}"
+                                   class="home-news-slide"
+                                   th:title="${article.title()}">
+                                    <div class="home-news-slide-thumb"
+                                         th:style="${article.thumbnailUrl() != null && !article.thumbnailUrl().isBlank()} ? |background-image: linear-gradient(180deg, rgba(28, 21, 16, 0.08), rgba(50, 34, 24, 0.58)), url('${article.thumbnailUrl()}');| : null">
+                                        <div class="home-news-slide-copy">
+                                            <span th:text="${article.categoryLabel()}">뉴스</span>
+                                            <strong th:text="${article.title()}">뉴스 제목</strong>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="home-news-slider-dots" data-home-news-dots aria-label="뉴스 슬라이드 선택">
+                                <button th:each="article, iterStat : ${homeHeroArticles}"
+                                        th:if="${iterStat.index < 5}"
+                                        type="button"
+                                        class="home-news-slider-dot"
+                                        th:classappend="${iterStat.index == 0} ? ' is-active'"
+                                        th:attr="data-slide-index=${iterStat.index}, aria-label=|${iterStat.index + 1}번째 기사 보기|">
+                                </button>
+                            </div>
+                        </div>
 
+                    </section>
+
+                    <section class="home-update-grid" aria-label="최신 채팅방 및 게시판 소식">
+                        <article class="home-update-card">
+                            <div class="home-section-head home-update-card-head">
+                                <div>
+                                    <p class="home-kicker">CHAT</p>
+                                    <h2 class="home-update-title">최신 채팅방 소식</h2>
+                                </div>
+                            </div>
+
+                            <div class="home-update-list" th:if="${homePrivateChatSummaries != null && !homePrivateChatSummaries.isEmpty()}">
+                                <a th:each="chat, iterStat : ${homePrivateChatSummaries}"
+                                   th:if="${iterStat.index < 4}"
+                                   th:href="@{/chat/{id}(id=${chat.roomId()})}"
+                                   class="home-update-item">
+                                    <div>
+                                        <strong th:text="${chat.otherName()}">홍길동</strong>
+                                        <span th:text="|${chat.lastSentAtText()} 도착|">방금 전 도착</span>
+                                    </div>
+                                    <em th:text="|${chat.unreadCount()}개|">2개</em>
+                                </a>
+                            </div>
+
+                            <div class="home-update-list" th:if="${(homePrivateChatSummaries == null || homePrivateChatSummaries.isEmpty()) && homeChatRooms != null && !homeChatRooms.isEmpty()}">
+                                <a th:each="room, iterStat : ${homeChatRooms}"
+                                   th:if="${iterStat.index < 4}"
+                                   th:href="@{/chat/{id}(id=${room.id})}"
+                                   class="home-update-item">
+                                    <div>
+                                        <strong th:text="${room.name}">채팅방</strong>
+                                        <span th:if="${homeChatLastMessages[room.id] != null}" th:text="${homeChatLastMessages[room.id].content}">최근 메시지</span>
+                                        <span th:if="${homeChatLastMessages[room.id] == null}">아직 메시지가 없습니다.</span>
+                                    </div>
+                                    <em>입장</em>
+                                </a>
+                            </div>
+
+                            <div class="home-update-empty" th:if="${(homePrivateChatSummaries == null || homePrivateChatSummaries.isEmpty()) && (homeChatRooms == null || homeChatRooms.isEmpty())}">
+                                표시할 채팅방 소식이 없습니다.
+                            </div>
+                        </article>
+
+                        <article class="home-update-card">
+                            <div class="home-section-head home-update-card-head">
+                                <div>
+                                    <p class="home-kicker">BOARD</p>
+                                    <h2 class="home-update-title">최신 게시판 소식</h2>
+                                </div>
+                            </div>
+
+                            <div class="home-update-list" th:if="${homeLatestBoards != null && !homeLatestBoards.isEmpty()}">
+                                <a th:each="board : ${homeLatestBoards}"
+                                   th:href="@{/board/{id}(id=${board.id})}"
+                                   class="home-update-item">
+                                    <div>
+                                        <strong th:text="${board.title}">게시글 제목</strong>
+                                        <span th:text="|${board.category} · ${board.author}|">익명 게시판 · 익명</span>
+                                    </div>
+                                    <em th:text="${#temporals.format(board.regDate, 'MM.dd')}">05.28</em>
+                                </a>
+                            </div>
+
+                            <div class="home-update-empty" th:if="${homeLatestBoards == null || homeLatestBoards.isEmpty()}">
+                                아직 등록된 게시글이 없습니다.
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="home-youtube-section" aria-label="대학 컨텐츠 추천">
+                        <div class="home-section-head">
+                            <div>
+                                <p class="home-kicker">CONTENTS RECOMMENDATION</p>
+                                <h2 class="home-stream-title">대학 컨텐츠 추천</h2>
+                            </div>
+                        </div>
+
+                        <div class="home-youtube-grid home-youtube-embed-grid" th:if="${homeYoutubeVideos != null && !homeYoutubeVideos.isEmpty()}">
+                            <div th:each="video : ${homeYoutubeVideos}" class="home-youtube-embed-unit">
+                                <div class="home-youtube-embed-wrap">
+                                    <iframe th:src="${video.url()}"
+                                            th:title="${video.title()}"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowfullscreen
+                                            loading="lazy"></iframe>
+                                </div>
+                                <strong th:text="${video.title()}">대학 컨텐츠 영상 제목</strong>
+                            </div>
+                        </div>
+
+                        <div class="home-youtube-grid home-youtube-embed-grid" th:if="${homeYoutubeVideos == null || homeYoutubeVideos.isEmpty()}">
+                            <div class="home-youtube-embed-unit">
+                                <div class="home-youtube-embed-wrap">
+                                    <iframe src="https://www.youtube.com/embed?listType=search&amp;list=%EC%A0%84%EA%B3%BC%EC%9E%90%20%EB%8C%80%ED%95%99"
+                                            title="대학 컨텐츠 추천"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowfullscreen
+                                            loading="lazy"></iframe>
+                                </div>
+                                <strong>대학 컨텐츠 추천 영상을 불러오는 중입니다.</strong>
+                            </div>
+                        </div>
+                    </section>
+                </article>
             </section>
         </div>
     </div>

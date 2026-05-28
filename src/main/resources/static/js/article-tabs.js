@@ -22,6 +22,35 @@ document.addEventListener("DOMContentLoaded", () => {
     const featureSub2Category = document.getElementById("featureSub2Category");
     const featureSub2Title = document.getElementById("featureSub2Title");
 
+
+    const fetchPopup = document.querySelector(".article-alert-popup");
+    if (fetchPopup) {
+        const message = fetchPopup.dataset.fetchMessage || fetchPopup.textContent || "article-fetch-failed";
+        const storageKey = `campuson.article.fetchPopup.hidden.${message.trim()}`;
+        const closeButton = fetchPopup.querySelector(".article-alert-close");
+
+        if (window.localStorage.getItem(storageKey) === "true") {
+            fetchPopup.classList.add("is-hidden");
+        }
+
+        function closeFetchPopup() {
+            fetchPopup.classList.add("is-hidden");
+            window.localStorage.setItem(storageKey, "true");
+        }
+
+        closeButton?.addEventListener("click", closeFetchPopup);
+        fetchPopup.addEventListener("click", (event) => {
+            if (event.target === fetchPopup) {
+                closeFetchPopup();
+            }
+        });
+        window.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !fetchPopup.classList.contains("is-hidden")) {
+                closeFetchPopup();
+            }
+        });
+    }
+
     const PAGE_SIZE = 5;
     const PAGE_BUTTONS_PER_GROUP = 5;
     const PLACEHOLDER_IMAGE = "/images/article-placeholder.svg";

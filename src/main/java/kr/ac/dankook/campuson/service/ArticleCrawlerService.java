@@ -79,7 +79,7 @@ public class ArticleCrawlerService {
 
         for (SeedArticle seed : seeds) {
             FetchOutcome outcome = fetchArticle(seed);
-            if (outcome.article() != null) {
+            if (outcome.article() != null && isArticleAllowedForFeed(outcome.article())) {
                 unique.putIfAbsent(outcome.article().articleUrl(), outcome.article());
             }
             if (!outcome.success()) {
@@ -88,7 +88,8 @@ public class ArticleCrawlerService {
         }
 
         List<CrawledArticle> articles = unique.values().stream()
-                .sorted(Comparator.comparing(CrawledArticle::categoryLabel).thenComparing(CrawledArticle::publishedAt).reversed())
+                .filter(ArticleCrawlerService::isArticleAllowedForFeed)
+                .sorted(Comparator.comparing(ArticleCrawlerService::publicationSortKey).reversed())
                 .toList();
 
         Map<String, Long> counts = categoryCounts(articles);
@@ -155,29 +156,10 @@ public class ArticleCrawlerService {
                 }
             }
 
-            if (articles.isEmpty()) {
-                articles.add(fallbackSourceArticle(sourcePage));
-                return new SourceCrawlOutcome(articles, false);
-            }
-
-            return new SourceCrawlOutcome(articles, true);
+            return new SourceCrawlOutcome(articles, !articles.isEmpty());
         } catch (Exception ignored) {
-            articles.add(fallbackSourceArticle(sourcePage));
             return new SourceCrawlOutcome(articles, false);
         }
-    }
-
-    private CrawledArticle fallbackSourceArticle(SourcePage sourcePage) {
-        return new CrawledArticle(
-                sourcePage.categoryKey(),
-                sourcePage.categoryLabel(),
-                sourcePage.sourceName(),
-                sourcePage.fallbackTitle(),
-                sourcePage.sourceUrl(),
-                sourcePage.fallbackThumbnail(),
-                sourcePage.fallbackSummary(),
-                "상시 업데이트"
-        );
     }
 
     private boolean isUsefulArticleLink(SourcePage sourcePage, String articleUrl, String linkText) {
@@ -206,8 +188,23 @@ public class ArticleCrawlerService {
 
         String lowerText = linkText.toLowerCase();
         String lowerUrl = articleUrl.toLowerCase();
-        if (lowerText.contains("로그인") || lowerText.contains("회원가입") || lowerText.contains("검색") || lowerText.contains("이전") || lowerText.contains("다음")) {
+        if (lowerText.contains("로그인") || lowerText.contains("회원가입") || lowerText.contains("검색") || lowerText.contains("이전") || lowerText.contains("다음")
+                || lowerText.contains("사업단소개") || lowerText.contains("참여학과") || lowerText.contains("사이트맵") || lowerText.contains("개인정보처리방침")) {
             return false;
+        }
+
+        if (lowerUrl.contains("swcu.dankook.ac.kr")) {
+            return linkText.contains("공지")
+                    || linkText.contains("모집")
+                    || linkText.contains("안내")
+                    || linkText.contains("대회")
+                    || linkText.contains("행사")
+                    || linkText.contains("공모")
+                    || linkText.contains("채용")
+                    || linkText.contains("창업")
+                    || linkText.contains("AI")
+                    || linkText.contains("SW")
+                    || linkText.contains("소프트웨어");
         }
 
         return lowerUrl.contains("view")
@@ -225,6 +222,69 @@ public class ArticleCrawlerService {
                 || lowerText.contains("취업")
                 || lowerText.contains("인턴")
                 || lowerText.contains("모집");
+    }
+
+    private static boolean isArticleAllowedForFeed(CrawledArticle article) {
+        if (article == null) {
+            return false;
+        }
+
+        if (isListingPageArticle(article)) {
+            return false;
+        }
+
+        if (("career".equals(article.categoryKey()) || "취창업".equals(article.categoryLabel()))
+                && !hasUsableRemoteThumbnail(article.thumbnailUrl())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean isListingPageArticle(CrawledArticle article) {
+        String url = article.articleUrl() == null ? "" : article.articleUrl().toLowerCase();
+        String title = article.title() == null ? "" : article.title().trim();
+
+        if (url.isBlank()) {
+            return true;
+        }
+
+        if (url.contains("k-startup.go.kr/web/main/mainsection")
+                || url.matches(".*k-startup\\.go\\.kr/web/?$")
+                || url.contains("/list/")
+                || url.contains("/contest/catefield")
+                || url.contains("/events")
+                || url.contains("/search?")
+                || url.contains("/event/main")) {
+            return true;
+        }
+
+        return title.contains("목록")
+                || title.contains("리스트")
+                || title.contains("검색")
+                || title.contains("분야별")
+                || title.contains("통합 정보")
+                || title.contains("모아볼 수")
+                || title.contains("확인할 수 있는 페이지");
+    }
+
+    private static boolean hasUsableRemoteThumbnail(String thumbnailUrl) {
+        if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
+            return false;
+        }
+
+        String lower = thumbnailUrl.toLowerCase();
+        if (!(lower.startsWith("http://") || lower.startsWith("https://"))) {
+            return false;
+        }
+
+        return !lower.endsWith(".svg")
+                && !lower.contains("article-placeholder")
+                && !lower.contains("dku-news")
+                && !lower.contains("blank")
+                && !lower.contains("default")
+                && !lower.contains("noimage")
+                && !lower.contains("no-image");
     }
 
     private String normalizeUrl(String url) {
@@ -256,9 +316,7 @@ public class ArticleCrawlerService {
                     seed.fallbackSummary()
             ), 160);
 
-            String image = isDkuCampusSource(seed)
-                    ? DKU_NEWS_IMAGE
-                    : firstNonBlank(
+            String image = firstNonBlank(
                     absMeta(document, "property", "og:image"),
                     absMeta(document, "name", "twitter:image"),
                     firstImage(document),
@@ -300,6 +358,32 @@ public class ArticleCrawlerService {
         }
     }
 
+    private static String publicationSortKey(CrawledArticle article) {
+        if (article == null || article.publishedAt() == null || article.publishedAt().isBlank()) {
+            return "0000-00-00";
+        }
+        String value = article.publishedAt().trim();
+        java.util.regex.Matcher dateMatcher = java.util.regex.Pattern
+                .compile("(\\d{4})[.\\-/년 ]+(\\d{1,2})[.\\-/월 ]+(\\d{1,2})")
+                .matcher(value);
+        if (dateMatcher.find()) {
+            return String.format("%04d-%02d-%02d",
+                    Integer.parseInt(dateMatcher.group(1)),
+                    Integer.parseInt(dateMatcher.group(2)),
+                    Integer.parseInt(dateMatcher.group(3)));
+        }
+        java.util.regex.Matcher compactMatcher = java.util.regex.Pattern
+                .compile("(\\d{4})(\\d{2})(\\d{2})")
+                .matcher(value);
+        if (compactMatcher.find()) {
+            return compactMatcher.group(1) + "-" + compactMatcher.group(2) + "-" + compactMatcher.group(3);
+        }
+        if (value.contains("상시")) {
+            return "0001-00-00";
+        }
+        return value;
+    }
+
     private List<SourcePage> sourcePages() {
         List<SourcePage> sources = new ArrayList<>();
 
@@ -310,6 +394,39 @@ public class ArticleCrawlerService {
                 "https://cms.dankook.ac.kr/web/ace/-39",
                 "단국대학교 공모전·프로그램 공지",
                 "단국대학교 홈페이지에서 제공하는 공모전, 비교과 프로그램, 학생 참여형 공지입니다.",
+                DKU_NEWS_IMAGE,
+                8
+        ));
+
+        sources.add(new SourcePage(
+                "school",
+                "학교 소식",
+                "단국대학교 SW중심대학사업단 공지사항",
+                "https://swcu.dankook.ac.kr/-5",
+                "SW중심대학사업단 공지사항",
+                "단국대학교 SW중심대학사업단의 공지사항과 학생 참여 안내를 수집합니다.",
+                DKU_NEWS_IMAGE,
+                8
+        ));
+
+        sources.add(new SourcePage(
+                "contest",
+                "공모전",
+                "단국대학교 SW중심대학사업단 행사정보",
+                "https://swcu.dankook.ac.kr/-2024-",
+                "SW대회/행사 정보",
+                "단국대학교 SW중심대학사업단의 SW대회, 행사, 경진대회 정보를 수집합니다.",
+                DKU_NEWS_IMAGE,
+                8
+        ));
+
+        sources.add(new SourcePage(
+                "support",
+                "기술개발 지원",
+                "단국대학교 SW중심대학사업단 외부소식",
+                "https://swcu.dankook.ac.kr/-24",
+                "SW중심대학사업단 외부소식",
+                "외부 교육, 기술 트렌드, 창업·지원사업 관련 소식을 수집합니다.",
                 DKU_NEWS_IMAGE,
                 8
         ));

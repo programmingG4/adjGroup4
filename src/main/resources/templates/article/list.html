@@ -23,12 +23,16 @@
                         <h1 class="article-main-title">우리 대학교 소식</h1>
                         <p class="article-main-desc">학교, IT, 취창업, 기술개발 지원, 공모전, 해커톤 소식을 한 번에 모아보세요. 메인 화면과 같은 톤으로 기사 대표 사진과 미리보기 목록을 이어서 볼 수 있습니다.</p>
                     </div>
-                    <a class="article-main-link" href="/home">메인으로 돌아가기</a>
                 </section>
 
-                <div class="article-alert" th:if="${fetchFailed}">
-                    <strong>불러오기 안내</strong>
-                    <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
+                <div class="article-alert-popup"
+                     th:if="${fetchFailed}"
+                     th:attr="data-fetch-message=${fetchMessage}">
+                    <div class="article-alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="articleAlertTitle">
+                        <button class="article-alert-close" type="button" aria-label="불러오기 안내 닫기">×</button>
+                        <strong id="articleAlertTitle">불러오기 안내</strong>
+                        <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
+                    </div>
                 </div>
 
                 <section class="article-category-strip" aria-label="기사 카테고리">
