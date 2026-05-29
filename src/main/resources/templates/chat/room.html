@@ -15,6 +15,7 @@
             background: rgba(255, 252, 247, 0.42);
             border-radius: 28px;
             overflow: visible;
+            position: relative;
         }
 
         .chat-room-header {
@@ -367,6 +368,22 @@
             color: #b26f49;
             font-weight: bold;
         }
+
+        .drag-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(189,123,77,0.12);
+            border: 2px dashed #cb8458;
+            border-radius: 28px;
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #cb8458;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -379,6 +396,7 @@
 
             <section class="subtab-content">
                 <div class="chat-room-wrap">
+                    <div class="drag-overlay" id="dragOverlay">📎 파일을 여기에 드롭하세요</div>
                     <div class="chat-room-header">
                         <a href="/chat" class="chat-room-back">←</a>
                         <h2 class="chat-room-title" th:text="${displayRoomName}">채팅방</h2>
@@ -409,10 +427,20 @@
                     </div>
 
                     <div th:if="${room.type.name() == 'GROUP'}" class="group-invite-bar">
-                        <form th:action="@{/chat/{id}/invite(id=${room.id})}" method="post">
-                            <input type="text" name="studentId" placeholder="초대할 학번 입력" class="chat-input"
-                                   style="font-size:13px; padding:7px 12px;" maxlength="20" />
-                            <button type="submit" class="chat-send-btn" style="font-size:13px; padding:7px 14px; white-space:nowrap;">초대</button>
+                        <form th:action="@{/chat/{id}/invite(id=${room.id})}" method="post" style="flex-direction:column; gap:6px; align-items:stretch;">
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <div style="flex:1; position:relative;">
+                                    <input type="text" id="inviteSearchInput" placeholder="학번 또는 이름으로 멤버 검색"
+                                           class="chat-input" autocomplete="off"
+                                           style="width:100%; font-size:13px; padding:7px 12px; box-sizing:border-box;" />
+                                    <ul id="inviteSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
+                                        background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-top:4px;
+                                        box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
+                                        max-height:160px; overflow-y:auto;"></ul>
+                                </div>
+                                <input type="hidden" name="studentId" id="inviteTargetId" />
+                                <button type="submit" class="chat-send-btn" style="font-size:13px; padding:7px 14px; white-space:nowrap;">초대</button>
+                            </div>
                         </form>
                         <div th:if="${inviteError}" class="group-invite-error" th:text="${inviteError}"></div>
                     </div>
@@ -769,6 +797,79 @@
         list.style.display = isVisible ? 'none' : 'block';
         btn.textContent = isVisible ? '▾' : '▴';
     }
+
+    // 드래그앤드롭 파일 업로드
+    (function() {
+        const wrap = document.querySelector('.chat-room-wrap');
+        const overlay = document.getElementById('dragOverlay');
+        if (!wrap || !overlay) return;
+
+        wrap.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            overlay.style.display = 'flex';
+        });
+        wrap.addEventListener('dragleave', function(e) {
+            if (!wrap.contains(e.relatedTarget)) overlay.style.display = 'none';
+        });
+        wrap.addEventListener('drop', function(e) {
+            e.preventDefault();
+            overlay.style.display = 'none';
+            const file = e.dataTransfer.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            fetch('/chat/' + roomId + '/upload', { method: 'POST', body: formData })
+                .then(function(res) { if (!res.ok) throw new Error(); return res.json(); })
+                .then(function(data) {
+                    stompClient.send('/app/chat/' + roomId, {}, JSON.stringify({
+                        content: '', mediaUrl: data.url, mediaType: data.type, fileName: data.fileName
+                    }));
+                })
+                .catch(function() { alert('파일 업로드에 실패했습니다.'); });
+        });
+    })();
+
+    // 그룹 초대 멤버 검색
+    (function() {
+        const input = document.getElementById('inviteSearchInput');
+        const hidden = document.getElementById('inviteTargetId');
+        if (!input) return;
+        let timer = null;
+        input.addEventListener('input', function() {
+            hidden.value = '';
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                const q = input.value.trim();
+                if (!q) { document.getElementById('inviteSearchResults').style.display = 'none'; return; }
+                fetch('/chat/members/search?q=' + encodeURIComponent(q))
+                    .then(function(r) { return r.json(); })
+                    .then(function(results) {
+                        const ul = document.getElementById('inviteSearchResults');
+                        ul.innerHTML = '';
+                        if (!results.length) { ul.style.display = 'none'; return; }
+                        ul.style.display = 'block';
+                        results.forEach(function(m) {
+                            const li = document.createElement('li');
+                            li.style.cssText = 'padding:9px 12px; cursor:pointer; font-size:13px; color:#5d4633; border-bottom:1px solid #faf0e6;';
+                            li.textContent = m.name + ' (' + m.studentId + ', ' + m.grade + '학년)';
+                            li.addEventListener('mouseenter', function() { this.style.background = '#fdf5eb'; });
+                            li.addEventListener('mouseleave', function() { this.style.background = ''; });
+                            li.addEventListener('click', function() {
+                                input.value = m.name + ' (' + m.studentId + ')';
+                                hidden.value = m.studentId;
+                                ul.style.display = 'none';
+                            });
+                            ul.appendChild(li);
+                        });
+                    })
+                    .catch(function() {});
+            }, 300);
+        });
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target))
+                document.getElementById('inviteSearchResults').style.display = 'none';
+        });
+    })();
 </script>
 </body>
 </html>

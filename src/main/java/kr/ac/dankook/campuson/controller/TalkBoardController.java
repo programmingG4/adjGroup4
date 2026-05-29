@@ -74,6 +74,7 @@ public class TalkBoardController {
         } else {
             model.addAttribute("loginMemberName", "");
         }
+        model.addAttribute("member", loginMember);
         return "talkboard/list";
     }
 
@@ -99,6 +100,7 @@ public class TalkBoardController {
         } else {
             model.addAttribute("backUrl", "/talkboard?roomKey=" + roomKey);
         }
+        model.addAttribute("member", loginMember);
         return "talkboard/write";
     }
 
@@ -246,6 +248,7 @@ public class TalkBoardController {
         }
 
         model.addAttribute("fromCategory", category != null ? category : "공지");
+        model.addAttribute("member", loginMember);
         return "talkboard/detail";
     }
 
@@ -260,6 +263,7 @@ public class TalkBoardController {
             return "redirect:/talkboard";
         }
         model.addAttribute("post", post);
+        model.addAttribute("member", loginMember);
         return "talkboard/edit";
     }
 

@@ -57,6 +57,7 @@ public class BoardController {
 
         Member loginMember = getLoginMember(userDetails);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
+        model.addAttribute("member", loginMember);
         return "board/list";
     }
 
@@ -67,13 +68,12 @@ public class BoardController {
         // 로그인 유저 이름_학번 형식으로 전달
         Member loginMember = getLoginMember(userDetails);
         if (loginMember != null) {
-            // 학번 3,4번째 숫자 추출 (index 2,3)
             String year = loginMember.getStudentId().substring(2, 4);
-            String memberName = loginMember.getName() + "_" + year; // 예: OOO_24
-            model.addAttribute("loginMemberName", memberName);
+            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
         } else {
             model.addAttribute("loginMemberName", "");
         }
+        model.addAttribute("member", loginMember);
         return "board/write";
     }
 
@@ -148,6 +148,7 @@ public class BoardController {
         model.addAttribute("chatRoomName", getChatRoomName());
         model.addAttribute("loginMemberId", loginMemberId);
         model.addAttribute("fromCategory", category != null ? category : post.getCategory());
+        model.addAttribute("member", loginMember);
 
         return "board/detail";
     }
@@ -176,6 +177,7 @@ public class BoardController {
         }
         model.addAttribute("post", post);
         model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
+        model.addAttribute("member", loginMember);
         return "board/edit";
     }
 
@@ -259,9 +261,10 @@ public class BoardController {
         model.addAttribute("chatRoomName", getChatRoomName());
         Member loginMember = getLoginMember(userDetails);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
+        model.addAttribute("member", loginMember);
         return "board/list";
     }
-    
+
     @GetMapping("/board/{id}/chat")
     public String startChatWithSeller(@PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {

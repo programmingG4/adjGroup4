@@ -32,9 +32,15 @@ public class AuthController {
         @RequestParam String name,
         @RequestParam String studentId,
         @RequestParam String password,
+        @RequestParam String passwordConfirm,
         @RequestParam int grade,
         @RequestParam MultipartFile image,
         Model model) {
+
+        if (!password.equals(passwordConfirm)) {
+            model.addAttribute("error", "비밀번호가 일치하지 않습니다.");
+            return "register";
+        }
 
         try {
             memberService.register(name, studentId, password, grade, image);

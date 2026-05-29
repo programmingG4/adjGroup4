@@ -16,6 +16,7 @@ import java.io.File;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -143,6 +144,35 @@ public class ChatController {
             redirectAttributes.addFlashAttribute("inviteError", "이미 채팅방에 참여 중인 멤버입니다.");
         }
         return "redirect:/chat/" + id;
+    }
+
+    @GetMapping("/members/search")
+    @ResponseBody
+    public List<Map<String, Object>> searchMembers(
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) Integer grade,
+            Principal principal) {
+        String myId = principal.getName();
+        List<Member> results;
+
+        if (grade != null && !q.isBlank()) {
+            results = memberRepository.searchByKeyword(q, myId)
+                    .stream().filter(m -> m.getGrade() == grade).toList();
+        } else if (grade != null) {
+            results = memberRepository.findByGradeAndStudentIdNot(grade, myId);
+        } else if (!q.isBlank()) {
+            results = memberRepository.searchByKeyword(q, myId);
+        } else {
+            return List.of();
+        }
+
+        return results.stream().limit(10).map(m -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("studentId", m.getStudentId());
+            map.put("name", m.getName());
+            map.put("grade", m.getGrade());
+            return map;
+        }).toList();
     }
 
     @GetMapping("/private")

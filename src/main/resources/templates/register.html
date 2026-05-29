@@ -52,7 +52,9 @@
                         <option value="4">4학년</option>
                     </select>
                     <p style="margin:0; font-size:12px; color:var(--text-soft); padding-left:4px;">학년은 가입 후 수정이 불가합니다.</p>
-                    <input type="password" name="password" placeholder="비밀번호" required />
+                    <input type="password" id="password" name="password" placeholder="비밀번호" required />
+                    <input type="password" id="passwordConfirm" name="passwordConfirm" placeholder="비밀번호 확인" required />
+                    <p id="pwMatchError" style="display:none; margin:0; font-size:12px; color:#e53e3e; padding-left:4px;">비밀번호가 일치하지 않습니다.</p>
                 </div>
 
                 <div class="upload-box" onclick="document.getElementById('imageInput').click()">
@@ -65,7 +67,7 @@
 
                 <p id="imageError" class="image-error-msg">단국대 앱 캡쳐 이미지를 업로드해주세요.</p>
 
-                <button type="submit" class="btn-primary" onclick="return checkImage()">가입하기</button>
+                <button type="submit" class="btn-primary" onclick="return validateForm()">가입하기</button>
             </form>
 
             <div class="auth-link">
@@ -76,14 +78,24 @@
 </div>
 
 <script>
-    function checkImage() {
-        const image = document.getElementById('imageInput');
-        const error = document.getElementById('imageError');
-        if (!image.files || image.files.length === 0) {
-            error.style.display = 'block';
+    function validateForm() {
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('passwordConfirm').value;
+        const pwError = document.getElementById('pwMatchError');
+        if (password !== confirm) {
+            pwError.style.display = 'block';
+            document.getElementById('passwordConfirm').focus();
             return false;
         }
-        error.style.display = 'none';
+        pwError.style.display = 'none';
+
+        const image = document.getElementById('imageInput');
+        const imgError = document.getElementById('imageError');
+        if (!image.files || image.files.length === 0) {
+            imgError.style.display = 'block';
+            return false;
+        }
+        imgError.style.display = 'none';
         return true;
     }
 </script>
