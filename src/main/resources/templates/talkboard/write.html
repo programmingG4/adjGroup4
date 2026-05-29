@@ -84,6 +84,25 @@
             margin-bottom: 0;
         }
 
+        .board-drop-zone {
+            border: 2px dashed #eadbc9;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            color: #9f8773;
+            cursor: default;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fffaf4;
+            font-size: 13px;
+            margin-top: 8px;
+            user-select: none;
+        }
+
+        .board-drop-zone.drag-over {
+            border-color: #cb8458;
+            background: #f6eadb;
+            color: #b26f49;
+        }
     </style>
 </head>
 
@@ -92,13 +111,12 @@
         <div class="subtab-wrap">
             <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
             <div class="subtab-layout">
-                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board')}"></aside>
+                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', '')}"></aside>
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
                         <section class="board-write-card">
                             <div class="board-write-merged-head">
-                                <a href="/talkboard" class="btn-secondary board-write-back-small">목록으로</a>
                                 <p class="board-eyebrow">TALK BOARD WRITE</p>
                                 <h1 class="subpage-title">새 글 작성</h1>
                             </div>
@@ -160,6 +178,14 @@
                                     <input type="checkbox" name="pinned" id="pinned-check" value="true" hidden onchange="togglePinStyle(this.checked)">
                                 </div>
 
+                                <!-- 드래그앤드롭 존 -->
+                                <div id="main-drop-zone" class="board-drop-zone"
+                                     ondragover="onDragOver(event)"
+                                     ondragleave="onDragLeave(event)"
+                                     ondrop="onDrop(event)">
+                                    📁 파일을 끌어다 놓으세요 (이미지 / 동영상 / 파일 자동 분류)
+                                </div>
+
                                 <!-- 이미지 미리보기 -->
                                 <div id="image-preview" style="display:none;
                                  display:grid; grid-template-columns:repeat(auto-fill, minmax(100px,1fr));
@@ -186,8 +212,12 @@
                                                 onclick="removeVote(this)">✕</button>
                                         </div>
                                     </div>
-                                    <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목
-                                        추가</button>
+                                    <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목 추가</button>
+                                    <div style="margin-top:10px;">
+                                        <label class="board-label" style="font-size:13px;">투표 종료 시간 (선택)</label>
+                                        <input type="datetime-local" name="voteDeadline" class="board-input"
+                                               style="max-width:240px;">
+                                    </div>
                                 </div>
 
                                 <button type="submit" id="submit-btn" class="btn-primary board-submit-button" style="margin-top:16px;"
@@ -283,6 +313,38 @@
             } else {
                 preview.style.display = 'none';
             }
+        }
+
+        // 드래그앤드롭
+        function onDragOver(event) {
+            event.preventDefault();
+            document.getElementById('main-drop-zone').classList.add('drag-over');
+        }
+
+        function onDragLeave(event) {
+            document.getElementById('main-drop-zone').classList.remove('drag-over');
+        }
+
+        function onDrop(event) {
+            event.preventDefault();
+            document.getElementById('main-drop-zone').classList.remove('drag-over');
+            const files = Array.from(event.dataTransfer.files);
+            const images = files.filter(f => f.type.startsWith('image/'));
+            const videos = files.filter(f => f.type.startsWith('video/'));
+            const others = files.filter(f => !f.type.startsWith('image/') && !f.type.startsWith('video/'));
+
+            if (images.length > 0) mergeAndPreview('image-input', images, previewImages);
+            if (videos.length > 0) mergeAndPreview('video-input', videos, previewVideos);
+            if (others.length > 0) mergeAndPreview('file-input', others, previewFiles);
+        }
+
+        function mergeAndPreview(inputId, newFiles, previewFn) {
+            const input = document.getElementById(inputId);
+            const dt = new DataTransfer();
+            Array.from(input.files || []).forEach(f => dt.items.add(f));
+            newFiles.forEach(f => dt.items.add(f));
+            input.files = dt.files;
+            previewFn(input);
         }
 
         function showLoading() {
