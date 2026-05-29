@@ -1,5 +1,7 @@
 package kr.ac.dankook.campuson.dto;
 
+import java.util.List;
+
 public record CrawledArticle(
         String categoryKey,
         String categoryLabel,
@@ -8,6 +10,19 @@ public record CrawledArticle(
         String articleUrl,
         String thumbnailUrl,
         String summary,
-        String publishedAt
+        String publishedAt,
+        List<String> tags
 ) {
+    public CrawledArticle(
+            String categoryKey,
+            String categoryLabel,
+            String sourceName,
+            String title,
+            String articleUrl,
+            String thumbnailUrl,
+            String summary,
+            String publishedAt
+    ) {
+        this(categoryKey, categoryLabel, sourceName, title, articleUrl, thumbnailUrl, summary, publishedAt, List.of());
+    }
 }

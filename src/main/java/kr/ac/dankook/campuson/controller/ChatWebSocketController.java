@@ -88,6 +88,14 @@ public class ChatWebSocketController {
                     }
                 });
             }
+            case TRADE -> {
+                ChatNotificationDto notif = new ChatNotificationDto(room.getId(), room.getName(), sender.getName(), preview, true);
+                String[] keys = room.getRoomKey().replaceFirst("^trade_", "").split("_");
+                if (keys.length == 2) {
+                    String otherStudentId = keys[0].equals(sender.getStudentId()) ? keys[1] : keys[0];
+                    messagingTemplate.convertAndSendToUser(otherStudentId, "/queue/notifications", notif);
+                }
+            }
         }
     }
 

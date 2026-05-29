@@ -21,65 +21,63 @@
                     <div>
                         <p class="article-kicker">ARTICLE</p>
                         <h1 class="article-main-title">우리 대학교 소식</h1>
-                        <p class="article-main-desc">학교, IT, 취창업, 기술개발 지원, 공모전, 해커톤 소식을 한 번에 모아보세요. 메인 화면과 같은 톤으로 기사 대표 사진과 미리보기 목록을 이어서 볼 수 있습니다.</p>
+                        <p class="article-main-desc">국내 IT 뉴스, 단국대학교 뉴스, 부트캠프, 공모전, 취창업 정보를 썸네일이 있는 게시글 중심으로 모아 보여줍니다.</p>
                     </div>
-                    <a class="article-main-link" href="/home">메인으로 돌아가기</a>
                 </section>
 
-                <div class="article-alert" th:if="${fetchFailed}">
-                    <strong>불러오기 안내</strong>
-                    <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
+                <div class="article-alert-popup is-hidden"
+                     th:if="${fetchFailed}"
+                     th:attr="data-fetch-message=${fetchMessage}">
+                    <div class="article-alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="articleAlertTitle">
+                        <button class="article-alert-close" type="button" aria-label="불러오기 안내 닫기">×</button>
+                        <strong id="articleAlertTitle">불러오기 안내</strong>
+                        <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
+                    </div>
                 </div>
-
-                <section class="article-category-strip" aria-label="기사 카테고리">
-                    <button class="article-category-chip active" type="button" data-category="all">전체</button>
-                    <button class="article-category-chip" type="button" data-category="news">뉴스</button>
-                    <button class="article-category-chip" type="button" data-category="it">최신 IT정보</button>
-                    <button class="article-category-chip" type="button" data-category="career">취창업</button>
-                    <button class="article-category-chip" type="button" data-category="support">기술개발 지원</button>
-                    <button class="article-category-chip" type="button" data-category="contest">공모전</button>
-                    <button class="article-category-chip" type="button" data-category="hackathon">해커톤</button>
-                    <button class="article-category-chip" type="button" data-category="school">학교 소식</button>
-                </section>
-
-                <section class="article-feature-layout" id="articleFeatureLayout">
-                    <a class="article-feature-main article-feature-card" id="featureMain" href="#" target="_blank" rel="noopener noreferrer">
-                        <img id="featureMainImage" src="/images/article-placeholder.svg" alt="대표 기사 이미지">
-                        <div class="article-feature-overlay">
-                            <span class="article-feature-label" id="featureMainCategory">주요 기사</span>
-                            <h2 id="featureMainTitle">표시할 기사가 없습니다.</h2>
-                            <p id="featureMainSummary">카테고리를 바꾸면 관련 기사가 이 영역에 표시됩니다.</p>
-                        </div>
-                    </a>
-
-                    <div class="article-feature-side">
-                        <a class="article-feature-card article-feature-mini" id="featureSub1" href="#" target="_blank" rel="noopener noreferrer">
-                            <img id="featureSub1Image" src="/images/article-placeholder.svg" alt="보조 기사 이미지 1">
-                            <div class="article-feature-overlay compact">
-                                <span class="article-feature-label" id="featureSub1Category">추천 기사</span>
-                                <h3 id="featureSub1Title">기사를 불러오는 중입니다.</h3>
-                            </div>
-                        </a>
-                        <a class="article-feature-card article-feature-mini" id="featureSub2" href="#" target="_blank" rel="noopener noreferrer">
-                            <img id="featureSub2Image" src="/images/article-placeholder.svg" alt="보조 기사 이미지 2">
-                            <div class="article-feature-overlay compact">
-                                <span class="article-feature-label" id="featureSub2Category">추천 기사</span>
-                                <h3 id="featureSub2Title">기사를 불러오는 중입니다.</h3>
-                            </div>
-                        </a>
-                    </div>
-                </section>
 
                 <section class="article-list-shell">
                     <div class="article-list-head">
                         <div>
-                            <h2 class="article-list-title">기사 미리보기</h2>
-                            <p class="article-list-subtitle">한 페이지에 5개씩 보여주고, 페이지를 넘기면 새로운 기사 묶음을 확인할 수 있어요.</p>
+                            <h2 class="article-list-title">소식 통합 카드</h2>
+                            <p class="article-list-subtitle">수집된 게시글에는 자동 카테고리와 태그가 부여됩니다. 검색 범위와 카테고리를 함께 사용해 필요한 정보만 볼 수 있습니다.</p>
                         </div>
                         <p class="article-list-page-status" id="articlePageStatus">1 / 1</p>
                     </div>
 
-                    <div class="article-list-rows" id="articleListRows">
+                    <form class="article-filter-bar" id="articleSearchForm" role="search">
+                        <label class="article-filter-field article-search-field" for="articleSearchInput">
+                            <span>검색어</span>
+                            <input id="articleSearchInput" type="search" placeholder="검색어를 입력하세요">
+                        </label>
+
+                        <label class="article-filter-field" for="articleSearchType">
+                            <span>검색 범위</span>
+                            <select id="articleSearchType">
+                                <option value="title">제목</option>
+                                <option value="title-summary" selected>제목 + 내용</option>
+                                <option value="summary">내용</option>
+                            </select>
+                        </label>
+
+                        <label class="article-filter-field" for="articleCategorySelect">
+                            <span>카테고리</span>
+                            <select id="articleCategorySelect">
+                                <option value="all">전체</option>
+                                <option value="it">최신 IT정보</option>
+                                <option value="school">학교소식</option>
+                                <option value="career">취창업</option>
+                                <option value="contest">공모전</option>
+                                <option value="bootcamp">부트캠프/AI교육</option>
+                            </select>
+                        </label>
+
+                        <button class="article-search-button" type="submit">검색</button>
+                    </form>
+
+                    <div class="article-result-summary" id="articleResultSummary">전체 소식을 확인하는 중입니다.</div>
+
+                    <div class="article-list-rows" id="articleListRows"
+                         th:attr="data-initial-page=${currentPage},data-has-more=${hasMore}">
                         <a class="article-row"
                            th:each="article : ${articles}"
                            th:attr="data-category=${article.categoryKey()},
@@ -87,7 +85,9 @@
                                     data-source=${article.sourceName()},
                                     data-title=${article.title()},
                                     data-summary=${article.summary()},
+                                    data-tags=${article.tags()},
                                     data-image=@{/articles/image(url=${article.thumbnailUrl()})},
+                                    data-raw-image=${article.thumbnailUrl()},
                                     data-published=${article.publishedAt()}"
                            th:href="${article.articleUrl()}"
                            target="_blank"
@@ -105,19 +105,39 @@
                                 </div>
                                 <h3 class="article-row-title" th:text="${article.title()}">기사 제목</h3>
                                 <p class="article-row-summary" th:text="${article.summary()}">기사 요약</p>
+                                <div class="article-row-tags" th:if="${article.tags() != null and !#lists.isEmpty(article.tags())}">
+                                    <span th:each="tag : ${article.tags()}" th:text="${tag}">#태그</span>
+                                </div>
                             </div>
                             <span class="article-row-arrow">→</span>
                         </a>
                     </div>
 
+                    <div class="article-empty-state" id="articleEmptyState">
+                        <strong>검색 결과가 없습니다.</strong>
+                        <p>검색어 또는 카테고리 조건을 다시 조정해 주세요.</p>
+                    </div>
+
                     <nav class="article-pagination" aria-label="기사 페이지 이동">
                         <button class="article-page-button" id="pagePrev" type="button">이전</button>
-                        <div class="article-page-numbers" id="pageNumbers"></div>
+                        <div class="article-page-numbers" id="pageNumbers"><span class="article-page-current">1</span></div>
                         <button class="article-page-button" id="pageNext" type="button">다음</button>
                     </nav>
                 </section>
             </section>
         </div>
+    </div>
+</div>
+
+<div class="article-loading-page article-inline-loading is-hidden" id="articleInlineLoading" aria-live="polite">
+    <div class="article-loading-card">
+        <div class="article-loading-spinner" aria-hidden="true"></div>
+        <p class="article-loading-kicker">ARTICLE LOADING</p>
+        <h1>페이지를 불러오고 있어요..</h1>
+        <div class="article-loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="articleInlineProgress">
+            <div class="article-loading-progress-bar" id="articleInlineLoadingBar"></div>
+        </div>
+        <div class="article-loading-percent" id="articleInlineLoadingPercent">0%</div>
     </div>
 </div>
 

@@ -1,36 +1,52 @@
 package kr.ac.dankook.campuson.controller;
 
 import kr.ac.dankook.campuson.domain.Member;
-import kr.ac.dankook.campuson.dto.CrawledArticle;
 import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatRoom;
+import kr.ac.dankook.campuson.repository.BoardRepository;
 import kr.ac.dankook.campuson.repository.MemberRepository;
-import kr.ac.dankook.campuson.service.ArticleCrawlerService;
-import kr.ac.dankook.campuson.service.ArticleCrawlerService.ArticleFetchResult;
 import kr.ac.dankook.campuson.service.ChatService;
+import kr.ac.dankook.campuson.service.YoutubeContentService;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.net.URI;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Controller
 public class HomeController {
 
-    private final MemberRepository memberRepository;
-    private final ArticleCrawlerService articleCrawlerService;
-    private final ChatService chatService;
+    private static final Duration LINK_THUMBNAIL_CACHE_TTL = Duration.ofHours(6);
+    private static final int LINK_THUMBNAIL_TIMEOUT_MS = 1500;
+    private static final Map<String, CachedThumbnail> LINK_THUMBNAIL_CACHE = new ConcurrentHashMap<>();
 
-    public HomeController(MemberRepository memberRepository, ArticleCrawlerService articleCrawlerService, ChatService chatService) {
+    private final MemberRepository memberRepository;
+    private final BoardRepository boardRepository;
+    private final ChatService chatService;
+    private final YoutubeContentService youtubeContentService;
+
+    public HomeController(MemberRepository memberRepository,
+                          BoardRepository boardRepository,
+                          ChatService chatService,
+                          YoutubeContentService youtubeContentService) {
         this.memberRepository = memberRepository;
-        this.articleCrawlerService = articleCrawlerService;
+        this.boardRepository = boardRepository;
         this.chatService = chatService;
+        this.youtubeContentService = youtubeContentService;
     }
 
     @GetMapping("/home")
@@ -40,11 +56,6 @@ public class HomeController {
             member = memberRepository.findByStudentId(principal.getName());
             model.addAttribute("member", member);
         }
-
-        ArticleFetchResult articleResult = fetchArticleFeedWithWarmupWait();
-        List<CrawledArticle> articles = articleResult.articles();
-        boolean fetchFailed = articleResult.failed();
-        String fetchMessage = articleResult.message();
 
         List<ChatRoom> homeChatRooms;
         if (member != null && member.getGrade() > 0) {
@@ -56,113 +67,164 @@ public class HomeController {
         Map<Long, ChatMessage> homeChatLastMessages = chatService.getLastMessages(chatRoomIds);
 
         model.addAttribute("activeMenu", "home");
-        model.addAttribute("homeItArticles", selectRandomItArticlesFromFirstThreePages(articles));
-        model.addAttribute("articleFetchFailed", fetchFailed);
-        model.addAttribute("articleFetchMessage", fetchMessage);
+        model.addAttribute("homeQuickLinks", homeQuickLinks());
         model.addAttribute("homeChatRooms", homeChatRooms);
         model.addAttribute("homeChatLastMessages", homeChatLastMessages);
         model.addAttribute("homePrivateChatSummaries", member == null
                 ? List.of()
                 : chatService.getUnreadPrivateChatSummaries(member.getStudentId()));
+        model.addAttribute("homeLatestBoards", boardRepository.findTop5ByOrderByRegDateDesc());
+        model.addAttribute("homeYoutubeVideos", youtubeContentService.fetchJeongwajaVideos());
 
         return "home/index";
     }
 
-    private ArticleFetchResult fetchArticleFeedWithWarmupWait() {
-        ArticleFetchResult result = new ArticleFetchResult(List.of(), Map.of(), false, null);
-
-        for (int attempt = 0; attempt < 6; attempt++) {
-            try {
-                result = articleCrawlerService.fetchArticleFeed();
-                if (result.articles() != null && !result.articles().isEmpty()) {
-                    return result;
-                }
-                Thread.sleep(350);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return new ArticleFetchResult(List.of(), Map.of(), true, "기사를 불러오는 중 요청이 중단되었습니다.");
-            } catch (Exception e) {
-                return new ArticleFetchResult(List.of(), Map.of(), true, "기사를 불러올 수 없습니다.");
-            }
-        }
-
-        return result;
+    @GetMapping("/home/link-thumbnail")
+    public ResponseEntity<Void> linkThumbnail(@RequestParam(required = false) String target) {
+        return findHomeQuickLink(target)
+                .flatMap(this::resolveCachedThumbnail)
+                .map(imageUrl -> ResponseEntity.status(HttpStatus.FOUND)
+                        .location(URI.create(imageUrl))
+                        .<Void>build())
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
-    private List<CrawledArticle> selectRandomItArticlesFromFirstThreePages(List<CrawledArticle> articles) {
-        final int articlePageSize = 5;
-        final int targetPageCount = 3;
-        final int pickCount = 3;
-
-        List<CrawledArticle> candidates = new ArrayList<>(articles.stream()
-                .filter(this::isItArticle)
-                .limit(articlePageSize * targetPageCount)
-                .toList());
-
-        if (candidates.isEmpty()) {
-            candidates.addAll(fallbackItArticles());
-        }
-
-        Collections.shuffle(candidates);
-
-        return candidates.stream()
-                .limit(pickCount)
-                .toList();
-    }
-
-    private boolean isItArticle(CrawledArticle article) {
-        return article != null
-                && ("it".equals(article.categoryKey()) || "최신 IT정보".equals(article.categoryLabel()));
-    }
-
-    private List<CrawledArticle> fallbackItArticles() {
+    private List<HomeQuickLink> homeQuickLinks() {
         return List.of(
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "2025년 회고와 2026년 개발 트렌드 전망", "", "", "", "2025-12-10"),
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "2026년 프론트엔드 트렌드 총정리", "", "", "", "2025-12-24"),
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "사랑받는 AI의 비밀", "", "", "", "2026-03-05"),
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "리드 개발자 마인드셋 기사", "", "", "", "2026-04-10"),
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "AI 검색 서비스 관련 기사", "", "", "", "2026-03-26"),
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "개발자 생산성 관련 기사", "", "", "", "2026-03-17"),
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "AI보다 나은 취향에 대한 기사", "", "", "", "2026-03-25"),
-                new CrawledArticle("it", "최신 IT정보", "요즘IT", "2026년 UI·UX 트렌드 기사", "", "", "", "2025-11-11")
+                new HomeQuickLink(
+                        "portal",
+                        "단국대 포털",
+                        "학사·수업·성적·학교 행정 바로가기",
+                        "https://portal.dankook.ac.kr/",
+                        "https://www.dankook.ac.kr/web/kor",
+                        "PORTAL",
+                        "home-quick-portal"
+                ),
+                new HomeQuickLink(
+                        "dev-event",
+                        "Dev Event",
+                        "개발자 행사·해커톤·컨퍼런스 모아보기",
+                        "https://dev-event.vercel.app/events",
+                        "https://dev-event.vercel.app/events",
+                        "EVENT",
+                        "home-quick-dev"
+                ),
+                new HomeQuickLink(
+                        "yozm",
+                        "요즘IT",
+                        "개발·기획·디자인 실무 트렌드 아티클",
+                        "https://yozm.wishket.com/magazine/",
+                        "https://yozm.wishket.com/magazine/",
+                        "YOZM",
+                        "home-quick-yozm"
+                ),
+                new HomeQuickLink(
+                        "brunch",
+                        "브런치",
+                        "IT·개발·커리어 인사이트를 읽는 글 플랫폼",
+                        "https://brunch.co.kr/",
+                        "https://brunch.co.kr/",
+                        "BRUNCH",
+                        "home-quick-brunch"
+                ),
+                new HomeQuickLink(
+                        "bloter",
+                        "블로터",
+                        "국내 IT·테크 산업 뉴스 바로가기",
+                        "https://www.bloter.net/",
+                        "https://www.bloter.net/",
+                        "BLOTER",
+                        "home-quick-bloter"
+                )
         );
     }
 
-    private List<CrawledArticle> selectTopicArticles(List<CrawledArticle> articles) {
-        List<CrawledArticle> selected = new ArrayList<>();
-        Set<String> usedUrls = new LinkedHashSet<>();
-
-        addFirstByCategory(selected, usedUrls, articles, "news", "it", "school");
-        addFirstByCategory(selected, usedUrls, articles, "hackathon");
-        addFirstByCategory(selected, usedUrls, articles, "contest");
-
-        for (CrawledArticle article : articles) {
-            if (selected.size() >= 3) {
-                break;
-            }
-            if (usedUrls.add(article.articleUrl())) {
-                selected.add(article);
-            }
+    private Optional<HomeQuickLink> findHomeQuickLink(String target) {
+        if (target == null || target.isBlank()) {
+            return Optional.empty();
         }
-
-        return selected;
+        String normalized = target.trim().toLowerCase(Locale.ROOT);
+        return homeQuickLinks().stream()
+                .filter(link -> link.key().equals(normalized))
+                .findFirst();
     }
 
-    private void addFirstByCategory(List<CrawledArticle> selected,
-                                    Set<String> usedUrls,
-                                    List<CrawledArticle> articles,
-                                    String... categoryKeys) {
-        if (selected.size() >= 3) {
-            return;
+    private Optional<String> resolveCachedThumbnail(HomeQuickLink link) {
+        CachedThumbnail cached = LINK_THUMBNAIL_CACHE.get(link.key());
+        if (cached != null && !cached.isExpired()) {
+            return Optional.ofNullable(cached.imageUrl());
         }
 
-        for (String categoryKey : categoryKeys) {
-            for (CrawledArticle article : articles) {
-                if (categoryKey.equals(article.categoryKey()) && usedUrls.add(article.articleUrl())) {
-                    selected.add(article);
-                    return;
-                }
+        Optional<String> imageUrl = fetchOpenGraphImage(link.thumbnailSourceUrl());
+        LINK_THUMBNAIL_CACHE.put(link.key(), new CachedThumbnail(imageUrl.orElse(null), Instant.now().plus(LINK_THUMBNAIL_CACHE_TTL)));
+        return imageUrl;
+    }
+
+    private Optional<String> fetchOpenGraphImage(String url) {
+        try {
+            Document document = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 CampusON/1.0")
+                    .timeout(LINK_THUMBNAIL_TIMEOUT_MS)
+                    .followRedirects(true)
+                    .get();
+
+            return firstPresent(
+                    document.select("meta[property=og:image]").attr("content"),
+                    document.select("meta[name=twitter:image]").attr("content"),
+                    document.select("meta[property=twitter:image]").attr("content"),
+                    firstMeaningfulImage(document)
+            ).map(imageUrl -> document.baseUri().isBlank() ? imageUrl : URI.create(document.baseUri()).resolve(imageUrl).toString())
+             .filter(this::isUsableThumbnailUrl);
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
+    }
+
+    private String firstMeaningfulImage(Document document) {
+        for (Element image : document.select("main img[src], .contents img[src], .visual img[src], .main img[src], img[src]")) {
+            String src = image.absUrl("src");
+            if (isUsableThumbnailUrl(src)) {
+                return src;
             }
+        }
+        return null;
+    }
+
+    private boolean isUsableThumbnailUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return false;
+        }
+        String lower = imageUrl.toLowerCase(Locale.ROOT);
+        return (lower.startsWith("http://") || lower.startsWith("https://"))
+                && !lower.endsWith(".svg")
+                && !lower.contains("logo")
+                && !lower.contains("favicon")
+                && !lower.contains("icon");
+    }
+
+    private Optional<String> firstPresent(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return Optional.of(value.trim());
+            }
+        }
+        return Optional.empty();
+    }
+
+    public record HomeQuickLink(
+            String key,
+            String title,
+            String description,
+            String url,
+            String thumbnailSourceUrl,
+            String badge,
+            String styleClass
+    ) {
+    }
+
+    private record CachedThumbnail(String imageUrl, Instant expiresAt) {
+        boolean isExpired() {
+            return Instant.now().isAfter(expiresAt);
         }
     }
 }

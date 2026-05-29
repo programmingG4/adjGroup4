@@ -36,12 +36,16 @@
         <a th:href="@{/mypage}" class="home-side-link">마이페이지 바로가기</a>
     </div>
 
+
     <nav class="home-shortcut-list" aria-label="바로가기">
         <a th:href="@{/chat}" class="home-shortcut-item" th:classappend="${active == 'chat'} ? ' is-active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}">
             <span class="home-shortcut-icon">💬</span><span class="home-shortcut-copy"><strong>채팅</strong><small>대화와 팀 소통 확인</small></span>
         </a>
         <a th:href="@{/articles}" class="home-shortcut-item" th:classappend="${active == 'articles'} ? ' is-active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}">
             <span class="home-shortcut-icon">📰</span><span class="home-shortcut-copy"><strong>기사</strong><small>최신 기사와 헤드라인</small></span>
+        </a>
+        <a th:href="@{/calendar}" class="home-shortcut-item" th:classappend="${active == 'calendar'} ? ' is-active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}">
+            <span class="home-shortcut-icon">📅</span><span class="home-shortcut-copy"><strong>일정</strong><small>학사 일정과 내 메모</small></span>
         </a>
         <a th:href="@{/board}" class="home-shortcut-item" th:classappend="${active == 'board'} ? ' is-active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}">
             <span class="home-shortcut-icon">📌</span><span class="home-shortcut-copy"><strong>게시판</strong><small>익명 소통과 거래 공간</small></span>
@@ -62,6 +66,7 @@
     <nav class="home-shortcut-list article-shortcut-list" aria-label="바로가기">
         <a th:href="@{/chat}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'chat'} ? ' is-active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}"><span class="home-shortcut-icon">💬</span><span class="home-shortcut-copy"><strong>채팅</strong><small>대화와 팀 소통 확인</small></span></a>
         <a th:href="@{/articles}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'articles'} ? ' is-active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}"><span class="home-shortcut-icon">📰</span><span class="home-shortcut-copy"><strong>기사</strong><small>최신 기사와 헤드라인</small></span></a>
+        <a th:href="@{/calendar}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'calendar'} ? ' is-active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}"><span class="home-shortcut-icon">📅</span><span class="home-shortcut-copy"><strong>일정</strong><small>학사 일정과 내 메모</small></span></a>
         <a th:href="@{/board}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'board'} ? ' is-active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}"><span class="home-shortcut-icon">📌</span><span class="home-shortcut-copy"><strong>게시판</strong><small>익명 소통과 거래 공간</small></span></a>
         <a th:href="@{/mypage}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'mypage'} ? ' is-active' : ''" th:attr="aria-current=${active == 'mypage' ? 'page' : null}"><span class="home-shortcut-icon">👤</span><span class="home-shortcut-copy"><strong>MY</strong><small>내 정보와 활동 관리</small></span></a>
     </nav>
@@ -78,6 +83,7 @@
         <nav class="subtab-shortcuts" aria-label="공통 사이드바 메뉴">
             <a th:href="@{/chat}" class="subtab-shortcut" th:classappend="${active == 'chat'} ? ' active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}"><span class="subtab-shortcut-icon">💬</span><span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span></a>
             <a th:href="@{/articles}" class="subtab-shortcut" th:classappend="${active == 'articles'} ? ' active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}"><span class="subtab-shortcut-icon">📰</span><span><strong class="subtab-shortcut-title">기사</strong><span class="subtab-shortcut-desc">기사와 헤드라인 보기</span></span></a>
+            <a th:href="@{/calendar}" class="subtab-shortcut" th:classappend="${active == 'calendar'} ? ' active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}"><span class="subtab-shortcut-icon">📅</span><span><strong class="subtab-shortcut-title">일정</strong><span class="subtab-shortcut-desc">학사 일정과 내 메모</span></span></a>
             <a th:href="@{/board}" class="subtab-shortcut" th:classappend="${active == 'board'} ? ' active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}"><span class="subtab-shortcut-icon">📌</span><span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">익명 소통과 거래 공간</span></span></a>
             <a th:href="@{/mypage}" class="subtab-shortcut" th:classappend="${active == 'mypage'} ? ' active' : ''" th:attr="aria-current=${active == 'mypage' ? 'page' : null}"><span class="subtab-shortcut-icon">👤</span><span><strong class="subtab-shortcut-title">마이페이지</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span></a>
             <a th:if="${active != 'home'}" th:href="@{/home}" class="subtab-shortcut" th:classappend="${active == 'home'} ? ' active' : ''" th:attr="aria-current=${active == 'home' ? 'page' : null}"><span class="subtab-shortcut-icon">⌂</span><span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span></a>

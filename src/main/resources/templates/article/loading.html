@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusON 기사 불러오는 중</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+    <link rel="stylesheet" href="/css/article-page.css">
+</head>
+<body>
+<div class="article-loading-page" aria-live="polite">
+    <div class="article-loading-card">
+        <div class="article-loading-spinner" aria-hidden="true"></div>
+        <p class="article-loading-kicker">ARTICLE LOADING</p>
+        <h1>페이지를 불러오고 있어요..</h1>
+        <div class="article-loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="article-loading-progress-bar" id="articleLoadingBar"></div>
+        </div>
+        <div class="article-loading-percent" id="articleLoadingPercent">0%</div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const bar = document.getElementById("articleLoadingBar");
+    const percentText = document.getElementById("articleLoadingPercent");
+    const progressWrap = document.querySelector(".article-loading-progress");
+    let progress = 0;
+    let finished = false;
+
+    function setProgress(value) {
+        progress = Math.max(0, Math.min(100, Math.round(value)));
+        if (bar) {
+            bar.style.width = `${progress}%`;
+        }
+        if (percentText) {
+            percentText.textContent = `${progress}%`;
+        }
+        if (progressWrap) {
+            progressWrap.setAttribute("aria-valuenow", String(progress));
+        }
+    }
+
+    const timer = window.setInterval(() => {
+        if (finished) {
+            return;
+        }
+        const next = progress < 55 ? progress + 4 : progress < 82 ? progress + 2 : progress + 1;
+        setProgress(Math.min(next, 92));
+    }, 140);
+
+    async function loadInitialPage() {
+        try {
+            const response = await fetch(`/articles/initial`, {
+                headers: {"Accept": "application/json"}
+            });
+            if (!response.ok) {
+                throw new Error("article loading failed");
+            }
+            const result = await response.json();
+            sessionStorage.setItem("campusonArticleInitialPage", JSON.stringify(result));
+        } catch (error) {
+            sessionStorage.setItem("campusonArticleInitialPage", JSON.stringify({
+                page: 1,
+                articles: [],
+                categoryCounts: {},
+                failed: true,
+                message: "소식을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
+                hasMore: false
+            }));
+        } finally {
+            finished = true;
+            window.clearInterval(timer);
+            setProgress(100);
+            window.setTimeout(() => {
+                window.location.replace("/articles?ready=true");
+            }, 360);
+        }
+    }
+
+    setProgress(0);
+    loadInitialPage();
+})();
+</script>
+<div th:replace="~{fragments/app-layout :: chatNotifications}"></div>
+</body>
+</html>
