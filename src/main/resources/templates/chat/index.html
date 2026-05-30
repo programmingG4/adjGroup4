@@ -60,7 +60,7 @@
                     <div class="subtab-title-row">
                         <div>
                             <p class="subtab-eyebrow">CHAT</p>
-                            <h2 class="subtab-title">전체 / 카테고리 채팅방</h2>
+                            <h2 class="subtab-title">전체 / 학년 채팅방</h2>
                         </div>
                     </div>
 
@@ -104,18 +104,8 @@
                             <input type="text" name="name" placeholder="그룹 채팅방 이름"
                                    style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" maxlength="40" required />
                             <div style="position:relative;">
-                                <div style="display:flex; gap:6px;">
-                                    <input type="text" id="groupMemberSearch" placeholder="멤버 검색 (학번 또는 이름)" autocomplete="off"
-                                           style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" />
-                                    <select id="groupGradeFilter"
-                                            style="padding:10px 8px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px; cursor:pointer;">
-                                        <option value="">학년</option>
-                                        <option value="1">1학년</option>
-                                        <option value="2">2학년</option>
-                                        <option value="3">3학년</option>
-                                        <option value="4">4학년</option>
-                                    </select>
-                                </div>
+                                <input type="text" id="groupMemberSearch" placeholder="멤버 검색 (학번, 이름, 학년)" autocomplete="off"
+                                       style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px; box-sizing:border-box;" />
                                 <ul id="groupMemberResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
                                     background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-top:4px;
                                     box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
@@ -161,10 +151,30 @@
                     <div class="subtab-title-row">
                         <div>
                             <p class="subtab-eyebrow">MY CHAT</p>
-                            <h2 class="subtab-title">내 채팅방</h2>
+                            <h2 class="subtab-title">내 채팅</h2>
                         </div>
                     </div>
-                
+
+                    <form th:action="@{/chat/private}" method="get"
+                          style="margin-bottom:16px; display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; gap:6px; position:relative;">
+                            <div style="flex:1; position:relative;">
+                                <input type="text" id="privateSearchInput" placeholder="멤버 검색 (학번, 이름, 학년)"
+                                       autocomplete="off"
+                                       style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+                                              background:var(--surface); color:var(--text); font-size:14px; box-sizing:border-box;" />
+                                <ul id="privateSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
+                                    background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-top:4px;
+                                    box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
+                                    max-height:180px; overflow-y:auto;"></ul>
+                            </div>
+                            <input type="hidden" name="targetStudentId" id="privateTargetId" />
+                            <button type="submit" class="subtab-button primary" style="margin:0; flex-shrink:0;">시작</button>
+                        </div>
+                        <div id="privateSelectedDisplay" style="display:none; font-size:13px; color:#6a503d; padding-left:2px;"></div>
+                        <div th:if="${errorMsg}" class="error-msg" th:text="${errorMsg}"></div>
+                    </form>
+
                     <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px;">
                         <article th:if="${#lists.isEmpty(privateRooms) and #lists.isEmpty(tradeRooms)}" class="chat-theme-card" style="grid-column:1/-1;">
                             <div>
@@ -214,33 +224,6 @@
                         </a>
                     </div>
 
-                    <form th:action="@{/chat/private}" method="get"
-                          style="margin-top:16px; display:flex; flex-direction:column; gap:10px;">
-                        <div style="display:flex; gap:6px; position:relative;">
-                            <div style="flex:1; position:relative;">
-                                <input type="text" id="privateSearchInput" placeholder="학번, 이름, 학년으로 멤버 검색"
-                                       autocomplete="off"
-                                       style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border);
-                                              background:var(--surface); color:var(--text); font-size:14px; box-sizing:border-box;" />
-                                <ul id="privateSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
-                                    background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-top:4px;
-                                    box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
-                                    max-height:180px; overflow-y:auto;"></ul>
-                            </div>
-                            <select id="privateGradeFilter"
-                                    style="padding:10px 8px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px; cursor:pointer; flex-shrink:0;">
-                                <option value="">학년</option>
-                                <option value="1">1학년</option>
-                                <option value="2">2학년</option>
-                                <option value="3">3학년</option>
-                                <option value="4">4학년</option>
-                            </select>
-                            <input type="hidden" name="targetStudentId" id="privateTargetId" />
-                            <button type="submit" class="subtab-button primary" style="margin:0; flex-shrink:0;">시작</button>
-                        </div>
-                        <div id="privateSelectedDisplay" style="display:none; font-size:13px; color:#6a503d; padding-left:2px;"></div>
-                        <div th:if="${errorMsg}" class="error-msg" th:text="${errorMsg}"></div>
-                    </form>
                 </section>
                 </div>
             </section>
@@ -283,16 +266,14 @@
     // 1:1 채팅 검색
     (function() {
         const input = document.getElementById('privateSearchInput');
-        const gradeSelect = document.getElementById('privateGradeFilter');
         const hiddenInput = document.getElementById('privateTargetId');
         const display = document.getElementById('privateSelectedDisplay');
         if (!input) return;
         let timer = null;
         function doSearch() {
             const q = input.value.trim();
-            const grade = gradeSelect.value;
-            if (!q && !grade) { document.getElementById('privateSearchResults').style.display = 'none'; return; }
-            fetchMembers(q, grade, function(results) {
+            if (!q) { document.getElementById('privateSearchResults').style.display = 'none'; return; }
+            fetchMembers(q, '', function(results) {
                 renderDropdown('privateSearchResults', results, function(m) {
                     hiddenInput.value = m.studentId;
                     input.value = m.name + ' (' + m.studentId + ')';
@@ -307,9 +288,8 @@
             clearTimeout(timer);
             timer = setTimeout(doSearch, 300);
         });
-        gradeSelect.addEventListener('change', doSearch);
         document.addEventListener('click', function(e) {
-            if (!input.contains(e.target) && !gradeSelect.contains(e.target))
+            if (!input.contains(e.target))
                 document.getElementById('privateSearchResults').style.display = 'none';
         });
     })();
@@ -352,21 +332,18 @@
 
     (function() {
         const input = document.getElementById('groupMemberSearch');
-        const gradeSelect = document.getElementById('groupGradeFilter');
         if (!input) return;
         let timer = null;
         function doSearch() {
             const q = input.value.trim();
-            const grade = gradeSelect.value;
-            if (!q && !grade) { document.getElementById('groupMemberResults').style.display = 'none'; return; }
-            fetchMembers(q, grade, function(results) {
+            if (!q) { document.getElementById('groupMemberResults').style.display = 'none'; return; }
+            fetchMembers(q, '', function(results) {
                 renderDropdown('groupMemberResults', results, addGroupMember);
             });
         }
         input.addEventListener('input', function() { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
-        gradeSelect.addEventListener('change', doSearch);
         document.addEventListener('click', function(e) {
-            if (!input.contains(e.target) && !gradeSelect.contains(e.target))
+            if (!input.contains(e.target))
                 document.getElementById('groupMemberResults').style.display = 'none';
         });
     })();

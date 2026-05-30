@@ -88,13 +88,22 @@
             <a th:if="${subAction == 'back'}" href="javascript:history.back()" class="subtab-profile-link">← 목록으로 돌아가기</a>
         </section>
         <nav class="subtab-shortcuts" aria-label="공통 사이드바 메뉴">
-            <a th:href="@{/chat}" class="subtab-shortcut" th:classappend="${active == 'chat'} ? ' active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}"><span class="subtab-shortcut-icon">💬</span><span><strong class="subtab-shortcut-title">채팅</strong><span class="subtab-shortcut-desc">팀 소통과 알림 확인</span></span></a>
-            <a th:href="@{/articles}" class="subtab-shortcut" th:classappend="${active == 'articles'} ? ' active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}"><span class="subtab-shortcut-icon">📰</span><span><strong class="subtab-shortcut-title">기사</strong><span class="subtab-shortcut-desc">기사와 헤드라인 보기</span></span></a>
-            <a th:href="@{/calendar}" class="subtab-shortcut" th:classappend="${active == 'calendar'} ? ' active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}"><span class="subtab-shortcut-icon">📅</span><span><strong class="subtab-shortcut-title">일정</strong><span class="subtab-shortcut-desc">학사 일정과 내 메모</span></span></a>
-            <a th:href="@{/board}" class="subtab-shortcut" th:classappend="${active == 'board'} ? ' active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}"><span class="subtab-shortcut-icon">📌</span><span><strong class="subtab-shortcut-title">게시판</strong><span class="subtab-shortcut-desc">익명 소통과 거래 공간</span></span></a>
-            <a th:href="@{/mypage}" class="subtab-shortcut" th:classappend="${active == 'mypage'} ? ' active' : ''" th:attr="aria-current=${active == 'mypage' ? 'page' : null}"><span class="subtab-shortcut-icon">👤</span><span><strong class="subtab-shortcut-title">마이페이지</strong><span class="subtab-shortcut-desc">내 정보와 활동 관리</span></span></a>
-            <a th:if="${active != 'home'}" th:href="@{/home}" class="subtab-shortcut" th:classappend="${active == 'home'} ? ' active' : ''" th:attr="aria-current=${active == 'home' ? 'page' : null}"><span class="subtab-shortcut-icon">⌂</span><span><strong class="subtab-shortcut-title">메인</strong><span class="subtab-shortcut-desc">캠퍼스온 홈으로 이동</span></span></a>
+            <a th:href="@{/chat}" class="subtab-shortcut" th:classappend="${active == 'chat'} ? ' active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}"><span class="subtab-shortcut-icon">💬</span><span><strong class="subtab-shortcut-title">채팅</strong></span></a>
+            <a th:href="@{/articles}" class="subtab-shortcut" th:classappend="${active == 'articles'} ? ' active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}"><span class="subtab-shortcut-icon">📰</span><span><strong class="subtab-shortcut-title">기사</strong></span></a>
+            <a th:href="@{/calendar}" class="subtab-shortcut" th:classappend="${active == 'calendar'} ? ' active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}"><span class="subtab-shortcut-icon">📅</span><span><strong class="subtab-shortcut-title">일정</strong></span></a>
+            <a th:href="@{/board}" class="subtab-shortcut" th:classappend="${active == 'board'} ? ' active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}"><span class="subtab-shortcut-icon">📌</span><span><strong class="subtab-shortcut-title">게시판</strong></span></a>
+            <a th:href="@{/mypage}" class="subtab-shortcut" th:classappend="${active == 'mypage'} ? ' active' : ''" th:attr="aria-current=${active == 'mypage' ? 'page' : null}"><span class="subtab-shortcut-icon">👤</span><span><strong class="subtab-shortcut-title">마이페이지</strong></span></a>
+            <a th:if="${active != 'home'}" th:href="@{/home}" class="subtab-shortcut" th:classappend="${active == 'home'} ? ' active' : ''" th:attr="aria-current=${active == 'home' ? 'page' : null}"><span class="subtab-shortcut-icon">⌂</span><span><strong class="subtab-shortcut-title">메인</strong></span></a>
         </nav>
+        <form th:action="@{/logout}" method="post" style="margin-top:12px;">
+            <button type="submit"
+                    style="width:100%; padding:14px 0; border-radius:12px; border:none;
+                           background:#cb8458; color:#fff; font-size:13px; font-weight:700;
+                           cursor:pointer; transition:opacity 0.15s;"
+                    onmouseenter="this.style.opacity='0.85'" onmouseleave="this.style.opacity='1'">
+                로그아웃
+            </button>
+        </form>
     </div>
 </aside>
 

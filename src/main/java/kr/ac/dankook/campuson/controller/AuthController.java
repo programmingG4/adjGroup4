@@ -52,11 +52,16 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String login(@RequestParam(required = false) String error, Model model) {
+    public String login(@RequestParam(required = false) String error,
+                        @RequestParam(required = false) String logout,
+                        Model model) {
         if ("notfound".equals(error)) {
             model.addAttribute("errorMsg", "존재하지 않는 학번입니다.");
         } else if ("wrongpw".equals(error)) {
             model.addAttribute("errorMsg", "비밀번호가 올바르지 않습니다.");
+        }
+        if (logout != null) {
+            model.addAttribute("logoutMsg", "로그아웃 되었습니다.");
         }
         return "login";
     }

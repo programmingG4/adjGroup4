@@ -100,14 +100,17 @@
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
-                        <section class="board-page-head board-write-head">
+                        <div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">
+                            <a onclick="history.back(); return false;" href="#"
+                               style="display:inline-flex; align-items:center; justify-content:center;
+                                      width:36px; height:36px; border-radius:12px; flex-shrink:0;
+                                      background:rgba(242,231,217,0.92); color:#8f6d4c;
+                                      font-size:18px; text-decoration:none;">←</a>
                             <div>
                                 <p class="board-eyebrow">WRITE POST</p>
                                 <h1 class="subpage-title">새 게시글 작성</h1>
-                                <p class="subpage-desc">제목, 내용, 사진과 투표까지 한번에 작성할 수 있어요.</p>
                             </div>
-                            <a href="/board" class="btn-secondary board-write-back">목록으로</a>
-                        </section>
+                        </div>
                     </section>
 
                     <section class="subtab-section">
@@ -178,7 +181,7 @@
                                         📷 사진을 끌어다 놓거나 클릭해서 선택하세요
                                     </div>
                                     <input type="file" id="image-input" name="images" accept="image/*"
-                                        onchange="previewImages(this)" hidden multiple>
+                                        onchange="onImageChange(this)" hidden multiple>
                                     <div id="image-preview" class="board-image-preview" style="display:none; margin-top:8px;"></div>
                                 </div>
 
@@ -271,27 +274,55 @@
             if (rows.length > 2) btn.parentElement.remove();
         }
 
-        // 이미지 여러장 미리보기
-        function previewImages(input) {
+        // 누적 이미지 파일 목록
+        let _imageFiles = [];
+
+        function onImageChange(input) {
+            const newFiles = Array.from(input.files);
+            newFiles.forEach(file => {
+                const dup = _imageFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!dup) _imageFiles.push(file);
+            });
+            syncImageInput();
+        }
+
+        function syncImageInput() {
+            const input = document.getElementById('image-input');
+            const dt = new DataTransfer();
+            _imageFiles.forEach(f => dt.items.add(f));
+            input.files = dt.files;
+            renderImagePreview();
+        }
+
+        function renderImagePreview() {
             const preview = document.getElementById('image-preview');
             preview.innerHTML = '';
-            if (input.files && input.files.length > 0) {
-                preview.style.display = 'grid';
-                preview.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px,1fr))';
-                preview.style.gap = '8px';
-                Array.from(input.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.cssText = 'width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid #eadbc9;';
-                        preview.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            } else {
-                preview.style.display = 'none';
-            }
+            if (_imageFiles.length === 0) { preview.style.display = 'none'; return; }
+            preview.style.display = 'grid';
+            preview.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px,1fr))';
+            preview.style.gap = '8px';
+            _imageFiles.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'position:relative;';
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid #eadbc9;';
+                    const del = document.createElement('button');
+                    del.type = 'button';
+                    del.textContent = '✕';
+                    del.style.cssText = 'position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:11px; cursor:pointer; line-height:1;';
+                    del.addEventListener('click', function() {
+                        _imageFiles.splice(idx, 1);
+                        syncImageInput();
+                    });
+                    wrap.appendChild(img);
+                    wrap.appendChild(del);
+                    preview.appendChild(wrap);
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         // 드래그앤드롭
@@ -308,13 +339,11 @@
             event.preventDefault();
             document.getElementById('image-drop-zone').classList.remove('drag-over');
             const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-            if (files.length === 0) return;
-            const input = document.getElementById('image-input');
-            const dt = new DataTransfer();
-            Array.from(input.files || []).forEach(f => dt.items.add(f));
-            files.forEach(f => dt.items.add(f));
-            input.files = dt.files;
-            previewImages(input);
+            files.forEach(file => {
+                const dup = _imageFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!dup) _imageFiles.push(file);
+            });
+            syncImageInput();
         }
 
         function showLoading() {

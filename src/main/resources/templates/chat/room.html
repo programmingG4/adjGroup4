@@ -10,7 +10,7 @@
         .chat-room-wrap {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 200px);
+            height: calc(100vh - 180px);
             min-height: 480px;
             background: rgba(255, 252, 247, 0.42);
             border-radius: 28px;
@@ -27,6 +27,7 @@
             background: rgba(255, 250, 243, 0.76);
             flex-shrink: 0;
             position: relative;
+            border-radius: 28px 28px 0 0;
         }
 
         .chat-room-back {
@@ -130,14 +131,14 @@
             word-break: break-word;
             background: rgba(255, 250, 243, 0.9);
             color: #5d4633;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 6px;
         }
 
         .msg-row.mine .msg-bubble {
             background: var(--subtab-accent);
             color: #fff;
             border-bottom-left-radius: 18px;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 6px;
         }
 
         .msg-time {
@@ -163,6 +164,7 @@
             border-top: 1px solid rgba(188, 153, 118, 0.22);
             background: rgba(255, 250, 243, 0.76);
             flex-shrink: 0;
+            border-radius: 0 0 28px 28px;
         }
 
         .chat-input-form {
@@ -251,17 +253,6 @@
             color: #b09078;
         }
 
-        .group-invite-bar {
-            padding: 8px 20px;
-            border-bottom: 1px solid rgba(188, 153, 118, 0.15);
-            background: rgba(255, 252, 247, 0.6);
-            flex-shrink: 0;
-        }
-        .group-invite-bar form {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
         .group-invite-error {
             font-size: 12px;
             color: #e05c5c;
@@ -311,6 +302,54 @@
         .msg-file-link:hover {
             background: rgba(189,123,77,0.18);
         }
+
+        .chat-search-bar {
+            display: none;
+            padding: 8px 20px;
+            border-bottom: 1px solid rgba(188,153,118,0.2);
+            background: rgba(255,250,243,0.76);
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .chat-search-bar.open { display: flex; }
+        .chat-search-input {
+            flex: 1;
+            padding: 7px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+        }
+        .chat-search-results {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0; right: 0;
+            background: #fff;
+            border: 1px solid #f0e4d7;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+            z-index: 300;
+            max-height: 260px;
+            overflow-y: auto;
+            list-style: none;
+            padding: 4px 0;
+        }
+        .chat-search-result-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #faf0e6;
+            font-size: 13px;
+            color: #5d4633;
+        }
+        .chat-search-result-item:hover { background: #fdf5eb; }
+        .chat-search-result-item .result-sender { font-weight: 700; margin-bottom: 2px; }
+        .chat-search-result-item .result-time { font-size: 11px; color: #b09078; margin-left: 6px; }
+        .chat-search-result-item .result-content { color: #7a5c42; }
+        .msg-highlight { background: rgba(203,132,88,0.25); border-radius: 6px; }
 
         .chat-menu-wrap {
             position: relative;
@@ -369,6 +408,86 @@
             font-weight: bold;
         }
 
+        .member-count-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(189,123,77,0.12);
+            color: #9a6340;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .member-count-btn:hover { background: rgba(189,123,77,0.22); }
+
+        .member-panel {
+            display: none;
+            position: absolute;
+            top: 0; right: 0;
+            width: 260px;
+            height: 100%;
+            background: rgba(255,252,247,0.97);
+            border-left: 1px solid rgba(188,153,118,0.22);
+            border-radius: 0 28px 28px 0;
+            z-index: 200;
+            flex-direction: column;
+            box-shadow: -4px 0 16px rgba(93,70,51,0.07);
+        }
+        .member-panel.open { display: flex; }
+        .member-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px 12px;
+            border-bottom: 1px solid rgba(188,153,118,0.18);
+        }
+        .member-panel-title { font-size: 15px; font-weight: 800; color: #6a503d; }
+        .member-panel-close {
+            background: none; border: none; cursor: pointer;
+            font-size: 18px; color: #9a7e64; padding: 2px 6px;
+            border-radius: 8px;
+        }
+        .member-panel-search {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(188,153,118,0.12);
+        }
+        .member-panel-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .member-panel-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .member-panel-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+        }
+        .member-panel-avatar {
+            width: 34px; height: 34px;
+            border-radius: 12px;
+            background: rgba(242,231,217,0.92);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #8e6f53;
+            flex-shrink: 0;
+        }
+        .member-panel-name { font-size: 14px; font-weight: 700; color: #5d4633; }
+        .member-panel-meta { font-size: 12px; color: #9a7e64; margin-top: 2px; }
+
         .drag-overlay {
             display: none;
             position: absolute;
@@ -397,6 +516,56 @@
             <section class="subtab-content">
                 <div class="chat-room-wrap">
                     <div class="drag-overlay" id="dragOverlay">📎 파일을 여기에 드롭하세요</div>
+
+                    <!-- 그룹 멤버 패널 -->
+                    <div class="member-panel" id="memberPanel" th:if="${room.type.name() == 'GROUP' and groupMembers != null}">
+                        <div class="member-panel-head">
+                            <span class="member-panel-title">멤버
+                                <span style="color:#cb8458;" th:text="'(' + ${#lists.size(groupMembers)} + '명)'"></span>
+                            </span>
+                            <button class="member-panel-close" onclick="toggleMemberPanel()">✕</button>
+                        </div>
+                        <div class="member-panel-search">
+                            <input type="text" id="memberPanelSearch" placeholder="이름 또는 학번 검색..." autocomplete="off" />
+                        </div>
+                        <div class="member-panel-list" id="memberPanelList">
+                            <div th:each="gm : ${groupMembers}" class="member-panel-item"
+                                 th:attr="data-name=${gm.name}, data-id=${gm.studentId}">
+                                <div class="member-panel-avatar" th:text="${#strings.substring(gm.name, 0, 1)}"></div>
+                                <div>
+                                    <div class="member-panel-name">
+                                        <span th:text="${gm.name}"></span>
+                                        <span th:if="${gm.studentId == member.studentId}"
+                                              style="font-size:10px; color:#cb8458; font-weight:700; margin-left:4px;">나</span>
+                                    </div>
+                                    <div class="member-panel-meta" th:text="${gm.grade + '학년 · ' + gm.studentId}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 초대 -->
+                        <div style="padding:12px 14px; border-top:1px solid rgba(188,153,118,0.18);">
+                            <div th:if="${inviteError}" class="group-invite-error" style="margin-bottom:6px;" th:text="${inviteError}"></div>
+                            <form th:action="@{/chat/{id}/invite(id=${room.id})}" method="post">
+                                <div style="position:relative; margin-bottom:8px;">
+                                    <input type="text" id="inviteSearchInput" placeholder="이름 또는 학번으로 초대"
+                                           autocomplete="off"
+                                           style="width:100%; padding:8px 12px; border-radius:12px;
+                                                  border:1px solid var(--border); background:var(--surface);
+                                                  color:var(--text); font-size:13px; box-sizing:border-box; outline:none;" />
+                                    <ul id="inviteSearchResults" style="display:none; position:absolute; bottom:100%; left:0; right:0; z-index:300;
+                                        background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-bottom:4px;
+                                        box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
+                                        max-height:150px; overflow-y:auto;"></ul>
+                                </div>
+                                <input type="hidden" name="studentId" id="inviteTargetId" />
+                                <button type="submit"
+                                        style="width:100%; padding:9px 0; border-radius:12px; border:none;
+                                               background:#cb8458; color:#fff; font-size:13px; font-weight:700; cursor:pointer;">
+                                    초대하기
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                     <div class="chat-room-header">
                         <a href="/chat" class="chat-room-back">←</a>
                         <h2 class="chat-room-title" th:text="${displayRoomName}">채팅방</h2>
@@ -404,14 +573,19 @@
                                        (room.type.name() == 'GRADE' ? '학년' :
                                        (room.type.name() == 'GROUP' ? '그룹' :
                                        (room.type.name() == 'TRADE' ? '중고거래' : '1:1')))}">전체</span>
+                        <!-- 그룹: 인원수 버튼 -->
+                        <button th:if="${room.type.name() == 'GROUP' and groupMembers != null}"
+                                class="member-count-btn" onclick="toggleMemberPanel()">
+                            👥 <span th:text="${#lists.size(groupMembers)} + '명'"></span>
+                        </button>
 
-                        <!-- 세줄 버튼: 전체/학년 채팅방일 때만 -->
-                        <div class="chat-menu-wrap" th:if="${room.type.name() == 'GLOBAL' or room.type.name() == 'GRADE'}">
+                        <!-- 검색 버튼 -->
+                        <button class="chat-menu-btn" onclick="toggleSearch()" title="메시지 검색" style="margin-left:auto;">🔍</button>
+
+                        <!-- 세줄 버튼: 전체/학년/그룹/1:1 채팅방 -->
+                        <div class="chat-menu-wrap" th:if="${room.type.name() != 'TRADE'}" style="margin-left:0;">
                             <button class="chat-menu-btn" onclick="toggleChatMenu(event)">☰</button>
                             <div id="chatMenuDropdown" class="chat-menu-dropdown">
-                                <a th:href="@{/talkboard/write(from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
-                                    class="chat-menu-item write">✏️ 공지글 작성하기</a>
-                                <div style="height:1px; background:#f0e4d7;"></div>
                                 <a th:href="@{/talkboard(category=공지, from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
                                     class="chat-menu-item">📢 공지</a>
                                 <a th:href="@{/talkboard(category=투표, from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
@@ -426,24 +600,17 @@
                         </div>
                     </div>
 
-                    <div th:if="${room.type.name() == 'GROUP'}" class="group-invite-bar">
-                        <form th:action="@{/chat/{id}/invite(id=${room.id})}" method="post" style="flex-direction:column; gap:6px; align-items:stretch;">
-                            <div style="display:flex; gap:8px; align-items:center;">
-                                <div style="flex:1; position:relative;">
-                                    <input type="text" id="inviteSearchInput" placeholder="학번 또는 이름으로 멤버 검색"
-                                           class="chat-input" autocomplete="off"
-                                           style="width:100%; font-size:13px; padding:7px 12px; box-sizing:border-box;" />
-                                    <ul id="inviteSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
-                                        background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-top:4px;
-                                        box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
-                                        max-height:160px; overflow-y:auto;"></ul>
-                                </div>
-                                <input type="hidden" name="studentId" id="inviteTargetId" />
-                                <button type="submit" class="chat-send-btn" style="font-size:13px; padding:7px 14px; white-space:nowrap;">초대</button>
-                            </div>
-                        </form>
-                        <div th:if="${inviteError}" class="group-invite-error" th:text="${inviteError}"></div>
+                    <!-- 검색창 -->
+                    <div class="chat-search-bar" id="chatSearchBar">
+                        <div style="flex:1; position:relative;">
+                            <input type="text" id="chatSearchInput" class="chat-search-input"
+                                   placeholder="메시지 검색..." autocomplete="off" />
+                            <ul id="chatSearchResults" class="chat-search-results"></ul>
+                        </div>
+                        <button type="button" onclick="toggleSearch()"
+                                style="background:none; border:none; cursor:pointer; font-size:16px; color:#9a7e64;">✕</button>
                     </div>
+
 
                     <!-- 공지 배너 -->
                     <div th:if="${pinnedNotice != null}"
@@ -493,7 +660,7 @@
                                 <div style="max-width:280px;">
                                     <span class="msg-sender" style="display:block; margin-bottom:4px;">공지</span>
                                     <div style="background:rgba(255,250,243,0.9); border:1px solid rgba(203,132,88,0.25);
-                                                border-radius:18px; border-bottom-left-radius:4px;
+                                                border-radius:18px; border-bottom-left-radius:6px;
                                                 overflow:hidden; box-shadow:0 2px 8px rgba(93,70,51,0.08);">
                                         <!-- 제목 영역 -->
                                         <div style="padding:12px 16px; font-size:13px; color:#5d4633; line-height:1.6; white-space:pre-line;"
@@ -641,7 +808,7 @@
         <div style="max-width:280px;">
             <span class="msg-sender" style="display:block; margin-bottom:4px;">공지</span>
             <div style="background:rgba(255,250,243,0.9); border:1px solid rgba(203,132,88,0.25);
-                        border-radius:18px; border-bottom-left-radius:4px;
+                        border-radius:18px; border-bottom-left-radius:6px;
                         overflow:hidden; box-shadow:0 2px 8px rgba(93,70,51,0.08);">
                 <div style="padding:12px 16px; font-size:13px; color:#5d4633; line-height:1.6;">${escHtml(text).replace(/\n/g, '<br>')}</div>
                 ${link ? `
@@ -788,6 +955,107 @@
     (function () {
         const c = document.getElementById('chatMessages');
         c.scrollTop = c.scrollHeight;
+    })();
+
+    // 채팅창 높이 동적 조정
+    function adjustChatHeight() {
+        const shell = document.querySelector('.subtab-shell');
+        const header = document.querySelector('.subtab-header');
+        const wrap = document.querySelector('.chat-room-wrap');
+        if (!shell || !header || !wrap) return;
+        const shellPadding = parseInt(getComputedStyle(shell).paddingTop) + parseInt(getComputedStyle(shell).paddingBottom);
+        const available = window.innerHeight - shellPadding - header.offsetHeight - 16;
+        wrap.style.height = Math.max(available, 480) + 'px';
+    }
+    adjustChatHeight();
+    window.addEventListener('resize', adjustChatHeight);
+
+    // 그룹 멤버 패널
+    function toggleMemberPanel() {
+        const panel = document.getElementById('memberPanel');
+        if (!panel) return;
+        panel.classList.toggle('open');
+        if (panel.classList.contains('open'))
+            document.getElementById('memberPanelSearch').focus();
+    }
+
+    (function() {
+        const input = document.getElementById('memberPanelSearch');
+        if (!input) return;
+        input.addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#memberPanelList .member-panel-item').forEach(function(item) {
+                const name = item.getAttribute('data-name').toLowerCase();
+                const id = item.getAttribute('data-id').toLowerCase();
+                item.style.display = (name.includes(q) || id.includes(q)) ? '' : 'none';
+            });
+        });
+    })();
+
+    // 메시지 검색
+    function toggleSearch() {
+        const bar = document.getElementById('chatSearchBar');
+        bar.classList.toggle('open');
+        if (bar.classList.contains('open')) {
+            document.getElementById('chatSearchInput').focus();
+        } else {
+            document.getElementById('chatSearchInput').value = '';
+            document.getElementById('chatSearchResults').style.display = 'none';
+        }
+    }
+
+    (function() {
+        const input = document.getElementById('chatSearchInput');
+        const results = document.getElementById('chatSearchResults');
+        let timer = null;
+        input.addEventListener('input', function() {
+            clearTimeout(timer);
+            const q = input.value.trim();
+            if (!q) { results.style.display = 'none'; return; }
+            timer = setTimeout(function() {
+                fetch('/chat/' + roomId + '/search?q=' + encodeURIComponent(q))
+                    .then(function(r) { return r.json(); })
+                    .then(function(items) {
+                        results.innerHTML = '';
+                        if (!items.length) {
+                            results.style.display = 'none';
+                            return;
+                        }
+                        results.style.display = 'block';
+                        items.forEach(function(item) {
+                            const li = document.createElement('li');
+                            li.className = 'chat-search-result-item';
+                            const q_esc = escHtml(q);
+                            const rawContent = (item.content || '');
+                            const displayContent = rawContent.includes('[LINK]')
+                                ? rawContent.substring(0, rawContent.indexOf('[LINK]')).trim()
+                                : rawContent;
+                            const content_esc = escHtml(displayContent).replace(
+                                new RegExp('(' + q_esc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'),
+                                '<span class="msg-highlight">$1</span>'
+                            );
+                            li.innerHTML = '<div class="result-sender">' + escHtml(item.senderName) +
+                                '<span class="result-time">' + escHtml(item.sentAt) + '</span></div>' +
+                                '<div class="result-content">' + content_esc + '</div>';
+                            li.addEventListener('click', function() {
+                                results.style.display = 'none';
+                                const target = document.querySelector('[data-msg-id="' + item.id + '"]');
+                                if (target) {
+                                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    target.style.transition = 'background 0.3s';
+                                    target.style.background = 'rgba(203,132,88,0.15)';
+                                    setTimeout(function() { target.style.background = ''; }, 1800);
+                                }
+                            });
+                            results.appendChild(li);
+                        });
+                    })
+                    .catch(function() {});
+            }, 300);
+        });
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target)) results.style.display = 'none';
+        });
     })();
 
     function togglePinnedList() {

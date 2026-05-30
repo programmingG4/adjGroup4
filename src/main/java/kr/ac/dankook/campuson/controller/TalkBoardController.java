@@ -62,6 +62,17 @@ public class TalkBoardController {
         model.addAttribute("posts", talkBoardService.getPostsByCategory(category, roomKey));
         model.addAttribute("roomKey", roomKey);
 
+        String chatRoomName = chatService.findByRoomKey(roomKey).map(r -> {
+            if (r.getType() == kr.ac.dankook.campuson.entity.ChatRoom.RoomType.PRIVATE && loginMember != null) {
+                String[] keys = r.getRoomKey().split("_");
+                String otherStudentId = keys[0].equals(loginMember.getStudentId()) ? keys[1] : keys[0];
+                Member other = memberRepository.findByStudentId(otherStudentId);
+                return other != null ? other.getName() : r.getName();
+            }
+            return r.getName();
+        }).orElse(null);
+        model.addAttribute("chatRoomName", chatRoomName);
+
         if ("chat".equals(from) && roomId != null) {
             model.addAttribute("backUrl", "/chat/" + roomId);
         } else {
@@ -72,7 +83,7 @@ public class TalkBoardController {
         model.addAttribute("loginMemberId", loginMemberId);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
@@ -90,7 +101,7 @@ public class TalkBoardController {
         Member loginMember = getLoginMember(userDetails);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
@@ -227,7 +238,11 @@ public class TalkBoardController {
             @RequestParam(required = false) String from,
             @RequestParam(required = false) Long roomId,
             @AuthenticationPrincipal UserDetails userDetails,
+            jakarta.servlet.http.HttpServletResponse response,
             Model model) {
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
 
         // 삭제된 글 처리
         java.util.Optional<TalkBoard> postOpt = talkBoardService.findByIdOptional(id);
@@ -260,7 +275,7 @@ public class TalkBoardController {
 
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
@@ -278,6 +293,19 @@ public class TalkBoardController {
 
         model.addAttribute("fromCategory", category != null ? category : "공지");
         model.addAttribute("member", loginMember);
+
+        // 이미 투표한 항목 ID
+        Long votedItemId = null;
+        if (loginMember != null && post.getVoteItems() != null) {
+            final Long memberId = loginMember.getId();
+            votedItemId = post.getVoteItems().stream()
+                    .filter(v -> v.getVotedMemberIds().contains(memberId))
+                    .findFirst()
+                    .map(v -> v.getId())
+                    .orElse(null);
+        }
+        model.addAttribute("votedItemId", votedItemId);
+
         return "talkboard/detail";
     }
 
@@ -417,7 +445,7 @@ public class TalkBoardController {
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         }
         return "talkboard/list";
     }

@@ -87,6 +87,15 @@ public class ChatController {
             model.addAttribute("messages", messages);
             model.addAttribute("member", member);
 
+            // 그룹 멤버 목록
+            if (room.getType() == ChatRoom.RoomType.GROUP) {
+                List<Member> groupMembers = chatService.getGroupRoomMemberIds(id).stream()
+                        .map(memberRepository::findByStudentId)
+                        .filter(m -> m != null)
+                        .toList();
+                model.addAttribute("groupMembers", groupMembers);
+            }
+
             // 공지 정보 추가
             model.addAttribute("pinnedNotice", room.getPinnedNotice());
             model.addAttribute("pinnedNoticeTitle", room.getPinnedNoticeTitle());
@@ -98,6 +107,21 @@ public class ChatController {
 
             return "chat/room";
         }).orElse("redirect:/chat");
+    }
+
+    @GetMapping("/{id}/search")
+    @ResponseBody
+    public List<Map<String, Object>> searchMessages(@PathVariable Long id,
+                                                    @RequestParam String q) {
+        if (q.isBlank()) return List.of();
+        return chatService.searchMessages(id, q).stream().map(msg -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", msg.getId());
+            map.put("senderName", msg.getSenderName());
+            map.put("content", msg.getContent());
+            map.put("sentAt", msg.getSentAt().format(java.time.format.DateTimeFormatter.ofPattern("MM/dd HH:mm")));
+            return map;
+        }).toList();
     }
 
     @PostMapping("/{id}/upload")

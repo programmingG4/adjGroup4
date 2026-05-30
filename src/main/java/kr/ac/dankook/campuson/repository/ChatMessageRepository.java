@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     List<ChatMessage> findByRoomIdOrderBySentAtAsc(Long roomId);
+    List<ChatMessage> findByRoomIdAndContentContainingOrderBySentAtAsc(Long roomId, String keyword);
     Optional<ChatMessage> findTopByRoomIdOrderBySentAtDesc(Long roomId);
     long countByRoomId(Long roomId);
     long countByRoomIdAndIdGreaterThan(Long roomId, Long messageId);

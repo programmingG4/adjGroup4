@@ -101,7 +101,9 @@
                                                     
                             <h1 class="board-detail-title" th:text="${post.title}"></h1>
                             <div class="board-detail-meta">
-                                <span th:text="${post.author}"></span>
+                                <th:block th:with="aName=${#strings.contains(post.author, '학번') ? #strings.substringBefore(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringBefore(post.author, '_') : post.author)}, aYear=${#strings.contains(post.author, '학번') ? #strings.substringAfter(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringAfter(post.author, '_') + '학번' : null)}">
+                                    <span th:text="${aName}"></span><span th:if="${aYear != null}" class="year-badge" th:text="${aYear}"></span>
+                                </th:block>
                                 <span class="board-meta-divider">•</span>
                                 <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}"></span>
                             </div>

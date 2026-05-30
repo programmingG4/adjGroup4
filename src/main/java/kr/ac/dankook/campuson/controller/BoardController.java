@@ -77,7 +77,7 @@ public class BoardController {
         Member loginMember = addLoginMemberToModel(userDetails, model);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
@@ -155,7 +155,7 @@ public class BoardController {
         Long loginMemberId = loginMember != null ? loginMember.getId() : null;
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "익명");
         }

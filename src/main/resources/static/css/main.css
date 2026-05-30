@@ -1547,6 +1547,18 @@ body {
 .board-vote-label { left: 14px; }
 .board-vote-count { right: 14px; color: var(--text-soft); font-size: 0.92rem; }
 
+.year-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #bd7b4d;
+    background: rgba(189, 123, 77, 0.12);
+    border-radius: 6px;
+    padding: 1px 6px;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
 .board-comment-head {
     display: flex;
     align-items: center;

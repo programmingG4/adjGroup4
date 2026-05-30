@@ -13,6 +13,7 @@
             <h1 class="auth-title">로그인</h1>
             <p class="auth-desc">캠퍼스온에 오신 것을 환영해요.</p>
 
+            <div th:if="${logoutMsg}" style="color:#6a9e6a; font-size:13px; font-weight:600; margin-bottom:8px;" th:text="${logoutMsg}"></div>
             <div th:if="${errorMsg}" class="error-msg" th:text="${errorMsg}"></div>
 
             <form th:action="@{/login}" method="post" id="loginForm">
