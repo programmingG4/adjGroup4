@@ -62,28 +62,30 @@
             border-color: #cb8458;
         }
 
-        /* 카테고리/작성자 한줄 정렬 */
-        .board-form-top-row {
+        .author-group {
             display: flex;
-            align-items: flex-end;
-            gap: 16px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        .board-form-top-row .board-form-group {
-            margin-bottom: 0;
-        }
-
-        .board-form-top-row .category-group {
-            flex: 1;
-            min-width: 160px;
-        }
-
-        .board-form-top-row .author-group {
-            display: flex;
-            align-items: flex-end;
+            align-items: center;
             gap: 8px;
+            white-space: nowrap;
+        }
+
+        .board-drop-zone {
+            border: 2px dashed #eadbc9;
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            color: #9f8773;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fffaf4;
+            font-size: 14px;
+            user-select: none;
+        }
+
+        .board-drop-zone.drag-over {
+            border-color: #cb8458;
+            background: #f6eadb;
+            color: #b26f49;
         }
     </style>
 </head>
@@ -94,18 +96,21 @@
             <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
             <div class="subtab-layout">
-                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board')}"></aside>
+                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', '')}"></aside>
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
-                        <section class="board-page-head board-write-head">
+                        <div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">
+                            <a onclick="history.back(); return false;" href="#"
+                               style="display:inline-flex; align-items:center; justify-content:center;
+                                      width:36px; height:36px; border-radius:12px; flex-shrink:0;
+                                      background:rgba(242,231,217,0.92); color:#8f6d4c;
+                                      font-size:18px; text-decoration:none;">←</a>
                             <div>
                                 <p class="board-eyebrow">WRITE POST</p>
                                 <h1 class="subpage-title">새 게시글 작성</h1>
-                                <p class="subpage-desc">제목, 내용, 사진과 투표까지 한번에 작성할 수 있어요.</p>
                             </div>
-                            <a href="/board" class="btn-secondary board-write-back">목록으로</a>
-                        </section>
+                        </div>
                     </section>
 
                     <section class="subtab-section">
@@ -113,24 +118,24 @@
                             <form th:action="@{/board/save}" method="post" enctype="multipart/form-data"
                                 class="board-write-form">
 
-                                <!-- 카테고리 + 익명 토글 한 줄 -->
-                                <div class="board-form-top-row">
-                                    <div class="board-form-group category-group">
-                                        <label class="board-label">카테고리</label>
-                                        <select name="category" id="category-select" class="board-select" required>
+                                <!-- 카테고리 + 익명 토글 -->
+                                <div class="board-form-group">
+                                    <label class="board-label">카테고리</label>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <select name="category" id="category-select" class="board-select" required style="flex:1;">
                                             <option value="익명 게시판">🎭 익명 게시판</option>
                                             <option value="중고거래 게시판">🤝 중고거래 게시판</option>
                                             <option value="📢 모집중">📢 모집중</option>
                                         </select>
-                                    </div>
-                                    <div class="author-group">
-                                        <label class="board-label" style="margin-bottom:8px;">작성자</label>
-                                        <!-- 익명 토글 버튼 -->
-                                        <label class="anon-toggle-btn" id="anon-toggle-label">
-                                            <input type="checkbox" id="anon-check"
-                                                onchange="toggleAuthor(this.checked)">
-                                            <span id="anon-toggle-text">익명</span>
-                                        </label>
+                                        <div class="author-group">
+                                            <span class="board-label" style="margin:0;">작성자</span>
+                                            <!-- 익명 토글 버튼 -->
+                                            <label class="anon-toggle-btn" id="anon-toggle-label">
+                                                <input type="checkbox" id="anon-check"
+                                                    onchange="toggleAuthor(this.checked)">
+                                                <span id="anon-toggle-text">익명</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -168,10 +173,16 @@
 
                                 <!-- 사진 첨부 섹션 -->
                                 <div class="board-form-group" id="photo-section" style="display:none;">
-                                    <label class="board-upload-box" for="image-input">📷 사진을 선택하세요</label>
+                                    <div id="image-drop-zone" class="board-drop-zone"
+                                         ondragover="onDragOver(event, 'image-drop-zone')"
+                                         ondragleave="onDragLeave('image-drop-zone')"
+                                         ondrop="onImageDrop(event)"
+                                         onclick="document.getElementById('image-input').click()">
+                                        📷 사진을 끌어다 놓거나 클릭해서 선택하세요
+                                    </div>
                                     <input type="file" id="image-input" name="images" accept="image/*"
-                                        onchange="previewImages(this)" hidden multiple>
-                                    <div id="image-preview" class="board-image-preview" style="display:none;"></div>
+                                        onchange="onImageChange(this)" hidden multiple>
+                                    <div id="image-preview" class="board-image-preview" style="display:none; margin-top:8px;"></div>
                                 </div>
 
                                 <!-- 투표 섹션 -->
@@ -189,8 +200,12 @@
                                                 onclick="removeVote(this)">✕</button>
                                         </div>
                                     </div>
-                                    <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목
-                                        추가</button>
+                                    <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목 추가</button>
+                                    <div style="margin-top:10px;">
+                                        <label class="board-label" style="font-size:13px;">투표 종료 시간 (선택)</label>
+                                        <input type="datetime-local" name="voteDeadline" class="board-input"
+                                               style="max-width:240px;">
+                                    </div>
                                 </div>
 
                                 <button type="submit" id="submit-btn" class="btn-primary board-submit-button" style="margin-top:16px;"
@@ -259,25 +274,76 @@
             if (rows.length > 2) btn.parentElement.remove();
         }
 
-        // 이미지 여러장 미리보기
-        function previewImages(input) {
+        // 누적 이미지 파일 목록
+        let _imageFiles = [];
+
+        function onImageChange(input) {
+            const newFiles = Array.from(input.files);
+            newFiles.forEach(file => {
+                const dup = _imageFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!dup) _imageFiles.push(file);
+            });
+            syncImageInput();
+        }
+
+        function syncImageInput() {
+            const input = document.getElementById('image-input');
+            const dt = new DataTransfer();
+            _imageFiles.forEach(f => dt.items.add(f));
+            input.files = dt.files;
+            renderImagePreview();
+        }
+
+        function renderImagePreview() {
             const preview = document.getElementById('image-preview');
             preview.innerHTML = '';
-            if (input.files && input.files.length > 0) {
-                preview.style.display = 'block';
-                Array.from(input.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.style.cssText = 'width:100%; border-radius:8px; margin-bottom:8px;';
-                        preview.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            } else {
-                preview.style.display = 'none';
-            }
+            if (_imageFiles.length === 0) { preview.style.display = 'none'; return; }
+            preview.style.display = 'grid';
+            preview.style.gridTemplateColumns = 'repeat(auto-fill, minmax(100px,1fr))';
+            preview.style.gap = '8px';
+            _imageFiles.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'position:relative;';
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid #eadbc9;';
+                    const del = document.createElement('button');
+                    del.type = 'button';
+                    del.textContent = '✕';
+                    del.style.cssText = 'position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:11px; cursor:pointer; line-height:1;';
+                    del.addEventListener('click', function() {
+                        _imageFiles.splice(idx, 1);
+                        syncImageInput();
+                    });
+                    wrap.appendChild(img);
+                    wrap.appendChild(del);
+                    preview.appendChild(wrap);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 드래그앤드롭
+        function onDragOver(event, zoneId) {
+            event.preventDefault();
+            document.getElementById(zoneId).classList.add('drag-over');
+        }
+
+        function onDragLeave(zoneId) {
+            document.getElementById(zoneId).classList.remove('drag-over');
+        }
+
+        function onImageDrop(event) {
+            event.preventDefault();
+            document.getElementById('image-drop-zone').classList.remove('drag-over');
+            const files = Array.from(event.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            files.forEach(file => {
+                const dup = _imageFiles.some(f => f.name === file.name && f.size === file.size);
+                if (!dup) _imageFiles.push(file);
+            });
+            syncImageInput();
         }
 
         function showLoading() {

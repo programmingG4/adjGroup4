@@ -25,7 +25,7 @@
             <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
             <div class="subtab-layout">
-                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board')}"></aside>
+                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', 'back')}"></aside>
 
                 <section class="subtab-content board-theme-list">
                     <section class="subtab-section">
@@ -101,7 +101,9 @@
                                                     
                             <h1 class="board-detail-title" th:text="${post.title}"></h1>
                             <div class="board-detail-meta">
-                                <span th:text="${post.author}"></span>
+                                <th:block th:with="aName=${#strings.contains(post.author, '학번') ? #strings.substringBefore(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringBefore(post.author, '_') : post.author)}, aYear=${#strings.contains(post.author, '학번') ? #strings.substringAfter(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringAfter(post.author, '_') + '학번' : null)}">
+                                    <span th:text="${aName}"></span><span th:if="${aYear != null}" class="year-badge" th:text="${aYear}"></span>
+                                </th:block>
                                 <span class="board-meta-divider">•</span>
                                 <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}"></span>
                             </div>
@@ -126,9 +128,17 @@
 
                             <!-- 투표 -->
                             <section class="board-vote-section" th:if="${not #lists.isEmpty(post.voteItems)}">
-                                <h2 class="board-section-title">투표</h2>
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <h2 class="board-section-title" style="margin:0;">투표</h2>
+                                    <span th:if="${voteEnded}"
+                                          style="background:#e57373; color:white; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600;">종료</span>
+                                    <span th:if="${not voteEnded and post.voteEndTime != null}"
+                                          th:text="'~ ' + ${#temporals.format(post.voteEndTime, 'MM/dd HH:mm')} + ' 까지'"
+                                          style="font-size:12px; color:#9f8773;"></span>
+                                </div>
                                 <div th:each="item : ${post.voteItems}" class="board-vote-item">
-                                    <form th:action="@{/vote/{id}(id=${item.id})}" method="post">
+                                    <!-- 진행중: 클릭 가능 -->
+                                    <form th:if="${not voteEnded}" th:action="@{/vote/{id}(id=${item.id})}" method="post">
                                         <input type="hidden" name="boardId" th:value="${post.id}">
                                         <button type="submit" class="board-vote-button">
                                             <div class="board-vote-track">
@@ -140,6 +150,17 @@
                                             </div>
                                         </button>
                                     </form>
+                                    <!-- 종료: 결과만 표시 -->
+                                    <div th:if="${voteEnded}" class="board-vote-button"
+                                         style="cursor:default; pointer-events:none; opacity:0.75;">
+                                        <div class="board-vote-track">
+                                            <div class="board-vote-fill"
+                                                th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
+                                            </div>
+                                            <span class="board-vote-label" th:text="${item.itemText}"></span>
+                                            <span class="board-vote-count" th:text="${item.voteCount} + '표'"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
 

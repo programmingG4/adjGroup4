@@ -26,6 +26,9 @@ public class TalkBoard {
     @Column(nullable = false)
     private String roomKey = "global"; // 기본값: 전체
 
+    @Column
+    private String category;
+
     @ElementCollection
     @CollectionTable(name = "talkboard_images", joinColumns = @JoinColumn(name = "talkboard_id"))
     @Column(name = "image_path")
@@ -60,6 +63,9 @@ public class TalkBoard {
     @CollectionTable(name = "talkboard_likes", joinColumns = @JoinColumn(name = "talkboard_id"))
     @Column(name = "member_id")
     private List<Long> likedMemberIds = new ArrayList<>(); // 좋아요한 멤버 ID
+
+    private LocalDateTime voteEndTime;
+    private boolean voteResultNotified = false; // 투표 종료 결과 알림 전송 여부
 
     // 필터링용 메서드
     public boolean hasVote() {

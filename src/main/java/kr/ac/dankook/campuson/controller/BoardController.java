@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -60,10 +62,10 @@ public class BoardController {
         model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
 
         model.addAttribute("posts", boardService.getPostsByCategory(category));
-        model.addAttribute("chatRoomName", getChatRoomName());
 
         Member loginMember = addLoginMemberToModel(userDetails, model);
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
+        model.addAttribute("member", loginMember);
         return "board/list";
     }
 
@@ -74,13 +76,12 @@ public class BoardController {
         // 로그인 유저 이름_학번 형식으로 전달
         Member loginMember = addLoginMemberToModel(userDetails, model);
         if (loginMember != null) {
-            // 학번 3,4번째 숫자 추출 (index 2,3)
             String year = loginMember.getStudentId().substring(2, 4);
-            String memberName = loginMember.getName() + "_" + year; // 예: OOO_24
-            model.addAttribute("loginMemberName", memberName);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
+        model.addAttribute("member", loginMember);
         return "board/write";
     }
 
@@ -88,6 +89,7 @@ public class BoardController {
     public String save(@ModelAttribute Board board,
             @RequestParam(value = "voteOption", required = false) List<String> voteItems,
             @RequestParam(value = "images", required = false) List<MultipartFile> images,
+            @RequestParam(value = "voteDeadline", required = false) String voteDeadline,
             @AuthenticationPrincipal UserDetails userDetails) throws Exception {
 
         Member loginMember = getLoginMember(userDetails);
@@ -115,6 +117,14 @@ public class BoardController {
             }
             if (!paths.isEmpty())
                 board.setImagePaths(paths);
+        }
+
+        // 투표 종료 시간 저장
+        if (voteDeadline != null && !voteDeadline.isBlank()) {
+            try {
+                board.setVoteEndTime(LocalDateTime.parse(voteDeadline,
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+            } catch (Exception ignored) {}
         }
 
         boardService.save(board);
@@ -145,16 +155,20 @@ public class BoardController {
         Long loginMemberId = loginMember != null ? loginMember.getId() : null;
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "익명");
         }
 
+        boolean voteEnded = post.getVoteEndTime() != null && post.getVoteEndTime().isBefore(LocalDateTime.now());
+
         model.addAttribute("post", post);
         model.addAttribute("totalVotes", totalVotes);
-        model.addAttribute("chatRoomName", getChatRoomName());
+
         model.addAttribute("loginMemberId", loginMemberId);
         model.addAttribute("fromCategory", category != null ? category : post.getCategory());
+        model.addAttribute("member", loginMember);
+        model.addAttribute("voteEnded", voteEnded);
 
         return "board/detail";
     }
@@ -183,6 +197,7 @@ public class BoardController {
         }
         model.addAttribute("post", post);
         model.addAttribute("categories", List.of("익명 게시판", "중고거래 게시판", "📢 모집중"));
+        model.addAttribute("member", loginMember);
         return "board/edit";
     }
 
@@ -268,7 +283,7 @@ public class BoardController {
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         return "board/list";
     }
-    
+
     @GetMapping("/board/{id}/chat")
     public String startChatWithSeller(@PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {

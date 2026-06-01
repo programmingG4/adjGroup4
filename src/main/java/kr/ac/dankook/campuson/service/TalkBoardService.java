@@ -10,6 +10,7 @@ import kr.ac.dankook.campuson.repository.TalkCommentRepository;
 import kr.ac.dankook.campuson.repository.VoteItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -75,6 +76,10 @@ public class TalkBoardService {
         return talkBoardRepository.findById(id).orElseThrow();
     }
 
+    public java.util.Optional<TalkBoard> findByIdOptional(Long id) {
+        return talkBoardRepository.findById(id);
+    }
+
     public boolean delete(Long id, Long memberId) {
         TalkBoard post = findById(id);
         if (post.getMemberId() != null && post.getMemberId().equals(memberId)) {
@@ -114,9 +119,24 @@ public class TalkBoardService {
         }
     }
 
+    public List<TalkBoard> findEndedVotesNotNotified() {
+        return talkBoardRepository.findEndedVotesNotNotified(LocalDateTime.now());
+    }
+
+    public void markVoteResultNotified(Long postId) {
+        talkBoardRepository.findById(postId).ifPresent(post -> {
+            post.setVoteResultNotified(true);
+            talkBoardRepository.save(post);
+        });
+    }
+
     public String vote(Long voteItemId, Long memberId) {
         VoteItem newItem = voteItemRepository.findById(voteItemId).orElseThrow();
         TalkBoard post = newItem.getTalkBoard();
+
+        if (post.getVoteEndTime() != null && post.getVoteEndTime().isBefore(LocalDateTime.now())) {
+            return "ended";
+        }
 
         VoteItem previousItem = post.getVoteItems().stream()
                 .filter(v -> v.getVotedMemberIds().contains(memberId))

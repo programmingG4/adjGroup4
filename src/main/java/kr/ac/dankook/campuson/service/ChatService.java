@@ -114,6 +114,10 @@ public class ChatService {
         return chatMessageRepository.findByRoomIdOrderBySentAtAsc(roomId);
     }
 
+    public List<ChatMessage> searchMessages(Long roomId, String keyword) {
+        return chatMessageRepository.findByRoomIdAndContentContainingOrderBySentAtAsc(roomId, keyword);
+    }
+
     @Transactional
     public ChatMessage saveMessage(ChatMessage message) {
         return chatMessageRepository.save(message);

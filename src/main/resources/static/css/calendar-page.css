@@ -13,7 +13,7 @@
 .calendar-side-card {
   background: rgba(255, 252, 247, 0.68);
   border: 1px solid rgba(188, 153, 118, 0.24);
-  border-radius: 6px;
+  border-radius: 24px;
   padding: 24px;
   box-shadow: 0 8px 20px rgba(99, 72, 45, 0.035);
 }
@@ -45,7 +45,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  border-radius: 4px;
+  border-radius: 14px;
   background: rgba(246, 234, 219, 0.72);
   border: 1px solid rgba(188, 153, 118, 0.22);
   color: #6a503d;
@@ -61,7 +61,7 @@
 .calendar-nav-btn {
   width: 32px;
   height: 32px;
-  border-radius: 2px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   background: rgba(255, 252, 247, 0.9);
@@ -146,7 +146,7 @@
 .calendar-event {
   display: block;
   padding: 4px 6px;
-  border-radius: 2px;
+  border-radius: 6px;
   font-size: 12px;
   line-height: 1.25;
   overflow: hidden;
@@ -201,7 +201,7 @@
 .calendar-memo-form input,
 .calendar-memo-form textarea {
   border: 1px solid rgba(188, 153, 118, 0.28);
-  border-radius: 3px;
+  border-radius: 12px;
   padding: 12px 13px;
   background: rgba(255, 250, 243, 0.94);
   color: #6a503d;
@@ -212,7 +212,7 @@
 .calendar-memo-form button,
 .calendar-memo-item button {
   border: none;
-  border-radius: 3px;
+  border-radius: 12px;
   padding: 11px 14px;
   background: #bd7b4d;
   color: #fffaf4;
@@ -232,7 +232,7 @@
   gap: 10px;
   align-items: flex-start;
   padding: 12px;
-  border-radius: 3px;
+  border-radius: 14px;
   background: rgba(255, 250, 243, 0.78);
   border: 1px solid rgba(188, 153, 118, 0.18);
 }
@@ -258,7 +258,7 @@
 
 .calendar-empty {
   padding: 16px;
-  border-radius: 3px;
+  border-radius: 14px;
   background: rgba(255, 250, 243, 0.66);
   border: 1px solid rgba(188, 153, 118, 0.16);
   color: #9c836a;
@@ -270,7 +270,7 @@
   display: flex;
   justify-content: center;
   padding: 13px 16px;
-  border-radius: 3px;
+  border-radius: 14px;
   background: rgba(246, 234, 219, 0.78);
   border: 1px solid rgba(188, 153, 118, 0.2);
   color: #9a6a45;

@@ -6,8 +6,10 @@ import kr.ac.dankook.campuson.dto.ChatNotificationDto;
 import kr.ac.dankook.campuson.dto.ReadNotificationDto;
 import kr.ac.dankook.campuson.entity.ChatMessage;
 import kr.ac.dankook.campuson.entity.ChatRoom;
+import kr.ac.dankook.campuson.entity.TalkBoard;
 import kr.ac.dankook.campuson.repository.MemberRepository;
 import kr.ac.dankook.campuson.service.ChatService;
+import kr.ac.dankook.campuson.service.TalkBoardService;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Controller
 public class ChatWebSocketController {
@@ -23,13 +26,16 @@ public class ChatWebSocketController {
     private final ChatService chatService;
     private final MemberRepository memberRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final TalkBoardService talkBoardService;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     public ChatWebSocketController(ChatService chatService, MemberRepository memberRepository,
-                                   SimpMessagingTemplate messagingTemplate) {
+                                   SimpMessagingTemplate messagingTemplate,
+                                   TalkBoardService talkBoardService) {
         this.chatService = chatService;
         this.memberRepository = memberRepository;
         this.messagingTemplate = messagingTemplate;
+        this.talkBoardService = talkBoardService;
     }
 
     @MessageMapping("/chat/{roomId}")
@@ -52,6 +58,27 @@ public class ChatWebSocketController {
             dto.setId(saved.getId());
             dto.setSentAt(saved.getSentAt().format(FORMATTER));
             chatService.markAsRead(sender.getStudentId(), roomId);
+
+            // 미디어 파일 → 채팅 게시판 자동 등록 (TRADE 제외)
+            if (dto.getMediaType() != null && room.getType() != ChatRoom.RoomType.TRADE) {
+                TalkBoard post = new TalkBoard();
+                post.setTitle(dto.getFileName() != null ? dto.getFileName() : "[미디어]");
+                post.setContent("");
+                post.setRoomKey(room.getRoomKey());
+                String year = sender.getStudentId().substring(2, 4);
+                post.setAuthor(sender.getName() + "_" + year);
+                post.setMemberId(sender.getId());
+                if ("image".equals(dto.getMediaType())) {
+                    post.setCategory("사진");
+                    post.setImagePaths(List.of(dto.getMediaUrl()));
+                } else {
+                    post.setCategory("파일");
+                    post.setFilePaths(List.of(dto.getMediaUrl()));
+                    if (dto.getFileName() != null)
+                        post.setFileNames(List.of(dto.getFileName()));
+                }
+                talkBoardService.save(post);
+            }
             String notifContent = dto.getMediaType() != null ? "[" + (dto.getMediaType().equals("image") ? "사진" : "파일") + "]" : dto.getContent();
             sendNotification(room, sender, notifContent);
         });

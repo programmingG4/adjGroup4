@@ -6,6 +6,70 @@
     <title>CampusOn | 게시판</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        @keyframes fadeUpIn {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .board-empty-state { opacity: 0; }
+        .board-empty-state.visible {
+            animation: fadeUpIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* 카테고리 + 검색 툴바 */
+        .board-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .board-category-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        /* 검색창 (아이콘 내장) */
+        .board-search-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .board-search-input {
+            padding: 7px 32px 7px 14px;
+            border: 1.5px solid #eadbc9;
+            border-radius: 20px;
+            font-size: 13px;
+            outline: none;
+            background: #fffaf4;
+            color: #555;
+            width: 150px;
+            transition: border-color 0.2s;
+        }
+
+        .board-search-input:focus {
+            border-color: #cb8458;
+        }
+
+        .board-search-icon-btn {
+            position: absolute;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1;
+            color: #9f8773;
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
 <div class="subtab-shell">
@@ -13,42 +77,45 @@
         <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
         <div class="subtab-layout">
-            <aside th:replace="~{fragments/app-layout :: subtabSidebar('board')}"></aside>
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', 'write')}"></aside>
 
             <section class="subtab-content board-theme-list">
                 <section class="subtab-section">
-                    <section class="board-page-head">
+                    <!-- 헤더: ← + 제목 + 글 작성하기 -->
+                    <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+                        <a onclick="history.back(); return false;" href="#"
+                           style="display:inline-flex; align-items:center; justify-content:center;
+                                  width:36px; height:36px; border-radius:12px; flex-shrink:0;
+                                  background:rgba(242,231,217,0.92); color:#8f6d4c;
+                                  font-size:18px; text-decoration:none;">←</a>
                         <div>
                             <p class="board-eyebrow">ANONYMOUS BOARD</p>
                             <h1 class="subpage-title">익명 게시판</h1>
-                            <p class="subpage-desc">익명 게시글, 중고거래 게시글, 스터디 모집글을 한곳에서 확인할 수 있어요.</p>
                         </div>
-                        <div class="board-room-chip">
-                            <img th:src="@{/images/dku_cse_logo.jpg}" alt="단국대 컴공 로고" class="board-room-logo">
-                            <span th:text="${chatRoomName}">채팅방 이름</span>
-                        </div>
-                    </section>
+                        <a th:href="@{/board/write}"
+                           style="margin-left:auto; padding:8px 16px; border-radius:12px;
+                                  background:var(--subtab-accent); color:#fff;
+                                  font-size:13px; font-weight:700; text-decoration:none;
+                                  white-space:nowrap;">✏️ 글 작성하기</a>
+                    </div>
 
-                    <section class="board-category-bar" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <!-- 돋보기 버튼 -->
-                        <button onclick="toggleSearch()" class="board-category-chip" style="display:flex; align-items:center; gap:4px;">
-                            🔍
-                        </button>
-                    
-                        <a th:each="cat : ${categories}" th:href="@{/board(category=${cat})}" class="board-category-chip"
-                            th:classappend="${cat == selectedCategory} ? ' active'" th:text="${cat}">카테고리</a>
-                    
-                        <!-- 검색창 -->
-                        <div id="search-bar" style="display:none; width:100%; margin-top:8px;">
-                            <form th:action="@{/board/search}" method="get" style="display:flex; gap:8px;">
-                                <input type="text" name="keyword" class="board-input" th:value="${keyword}" placeholder="제목 또는 내용 검색..."
-                                    style="flex:1; padding:10px 14px; border-radius:20px;
-                                              border:1px solid #eadbc9; background:#fffaf4;
-                                              font-size:14px; outline:none;">
-                                <button type="submit" class="board-category-chip active" style="padding:10px 16px;">검색</button>
-                            </form>
+                    <!-- 카테고리 + 검색 -->
+                    <div class="board-toolbar" style="margin-bottom:0;">
+                        <div class="board-category-group">
+                            <a th:each="cat : ${categories}"
+                               th:href="@{/board(category=${cat})}"
+                               th:text="${cat}"
+                               th:classappend="${cat == selectedCategory} ? ' active'"
+                               class="board-category-chip">카테고리</a>
                         </div>
-                    </section>
+                        <form th:action="@{/board/search}" method="get">
+                            <div class="board-search-wrap">
+                                <input type="text" name="keyword" class="board-search-input"
+                                       th:value="${keyword}" placeholder="검색...">
+                                <button type="submit" class="board-search-icon-btn">🔍</button>
+                            </div>
+                        </form>
+                    </div>
                 </section>
 
                 <section class="subtab-section">
@@ -66,33 +133,37 @@
                                 </div>
                                 <p class="board-post-content" th:text="${post.content}">내용</p>
                                 <div class="board-post-meta">
-                                    <span th:text="${post.author}">작성자</span>
+                                    <th:block th:with="aName=${#strings.contains(post.author, '학번') ? #strings.substringBefore(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringBefore(post.author, '_') : post.author)}, aYear=${#strings.contains(post.author, '학번') ? #strings.substringAfter(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringAfter(post.author, '_') + '학번' : null)}">
+                                        <span th:text="${aName}"></span><span th:if="${aYear != null}" class="year-badge" th:text="${aYear}"></span>
+                                    </th:block>
                                     <span class="board-meta-divider">•</span>
                                     <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}">날짜</span>
                                 </div>
                             </div>
-
                             <img th:if="${not #lists.isEmpty(post.imagePaths)}"
                                 th:src="${post.imagePaths[0]}"
                                 class="board-post-thumb"
                                 alt="썸네일">
                         </a>
-                  </section>
+                    </section>
                 </section>
             </section>
         </div>
     </div>
 </div>
-
 <script>
-    function toggleSearch() {
-        const bar = document.getElementById('search-bar');
-        bar.style.display = bar.style.display === 'none' ? 'block' : 'none';
-        if (bar.style.display === 'block') {
-            bar.querySelector('input').focus();
-        }
+    const emptyEl = document.querySelector('.board-empty-state');
+    if (emptyEl) {
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    emptyEl.classList.add('visible');
+                    observer.disconnect();
+                }
+            });
+        }, { threshold: 0.2 });
+        observer.observe(emptyEl);
     }
 </script>
-
 </body>
 </html>

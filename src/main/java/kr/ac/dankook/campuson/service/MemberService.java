@@ -49,6 +49,10 @@ public class MemberService {
             throw new IllegalArgumentException("이름이 단국대 앱 캡쳐와 일치하지 않습니다.");
         }
 
+        if (!detectedText.contains(studentId)) {
+            throw new IllegalArgumentException("학번이 단국대 앱 캡쳐와 일치하지 않습니다.");
+        }
+
         String imagePath = saveImage(image);
 
         Member member = new Member();

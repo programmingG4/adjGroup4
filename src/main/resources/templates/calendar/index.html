@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>학사 일정 | CampusON</title>
+    <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
     <link rel="stylesheet" href="/css/calendar-page.css">
 </head>
@@ -13,7 +14,7 @@
         <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
         <div class="subtab-layout calendar-layout">
-            <aside th:replace="~{fragments/app-layout :: subtabSidebar('calendar')}"></aside>
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('calendar', '')}"></aside>
 
             <main class="subtab-content calendar-content">
                 <section class="calendar-card">

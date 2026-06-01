@@ -52,7 +52,7 @@
         <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
 
         <div class="subtab-layout">
-            <aside th:replace="~{fragments/app-layout :: subtabSidebar('chat')}"></aside>
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('chat', '')}"></aside>
 
             <section class="subtab-content">
                 <!-- 전체 / 카테고리 채팅방 -->
@@ -60,32 +60,34 @@
                     <div class="subtab-title-row">
                         <div>
                             <p class="subtab-eyebrow">CHAT</p>
-                            <h2 class="subtab-title">전체 / 카테고리 채팅방</h2>
+                            <h2 class="subtab-title">전체 / 학년 채팅방</h2>
                         </div>
                     </div>
 
                     <div class="chat-theme-card-list">
-                        <article th:each="room : ${rooms}" class="chat-theme-card">
-                            <div style="flex:1; min-width:0;">
-                                <div class="chat-theme-card-title">
-                                    <span th:text="${room.name}"></span>
-                                    <!-- 1. 내 학년 배지 -->
-                                    <span th:if="${room.name == myGrade + '학년'}" class="my-grade-badge">내 학년</span>
-                                    <!-- 4. 읽지 않은 메시지 배지 -->
-                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
-                                          class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
+                        <a th:each="room : ${rooms}" th:href="@{/chat/{id}(id=${room.id})}"
+                           style="display:block; text-decoration:none; color:inherit;">
+                            <article class="chat-theme-card"
+                                     style="border-left:3px solid #cb8458; background:rgba(255,247,237,0.92); cursor:pointer;">
+                                <div style="flex:1; min-width:0;">
+                                    <div class="chat-theme-card-title">
+                                        <span style="margin-right:4px;">📌</span>
+                                        <span th:text="${room.name}"></span>
+                                        <span th:if="${room.name == myGrade + '학년'}" class="my-grade-badge">내 학년</span>
+                                        <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
+                                              class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
+                                    </div>
+                                    <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                         th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                    <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview"
+                                         th:text="${room.type.name() == 'GLOBAL'} ? '전체 학생 채팅방입니다.' : '학년별 채팅방입니다.'"></div>
                                 </div>
-                                <!-- 3. 마지막 메시지 미리보기 -->
-                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
-                                     th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
-                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview"
-                                     th:text="${room.type.name() == 'GLOBAL'} ? '전체 학생 채팅방입니다.' : '학년별 채팅방입니다.'"></div>
-                            </div>
-                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
-                        </article>
+                            </article>
+                        </a>
                     </div>
                 </section>
 
+                <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:20px; align-items:start; margin-top:20px;">
                 <!-- 그룹 채팅 -->
                 <section class="subtab-section">
                     <div class="subtab-title-row">
@@ -93,15 +95,24 @@
                             <p class="subtab-eyebrow">GROUP</p>
                             <h2 class="subtab-title">그룹 채팅</h2>
                         </div>
-                        <button type="button" class="subtab-chip" onclick="toggleGroupForm()" style="white-space:nowrap;">+ 새 그룹</button>
                     </div>
+                    <button type="button" class="subtab-chip" onclick="toggleGroupForm()"
+                            style="white-space:nowrap; margin-bottom:14px;">+ 새 그룹</button>
 
                     <div id="groupCreateForm" style="display:none; margin-bottom:16px; padding:16px; background:rgba(255,250,243,0.7); border-radius:14px; border:1px solid rgba(188,153,118,0.2);">
                         <form th:action="@{/chat/group/create}" method="post" style="display:flex; flex-direction:column; gap:10px;">
                             <input type="text" name="name" placeholder="그룹 채팅방 이름"
                                    style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" maxlength="40" required />
-                            <input type="text" name="memberIds" placeholder="초대할 학번 (쉼표로 구분, 선택)"
-                                   style="padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px;" />
+                            <div style="position:relative;">
+                                <input type="text" id="groupMemberSearch" placeholder="멤버 검색 (학번, 이름, 학년)" autocomplete="off"
+                                       style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:14px; box-sizing:border-box;" />
+                                <ul id="groupMemberResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
+                                    background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-top:4px;
+                                    box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
+                                    max-height:180px; overflow-y:auto;"></ul>
+                            </div>
+                            <div id="groupMemberChips" style="display:flex; flex-wrap:wrap; gap:6px; min-height:10px;"></div>
+                            <input type="hidden" name="memberIds" id="groupMemberIds" />
                             <div style="display:flex; gap:8px;">
                                 <button type="submit" class="subtab-button primary" style="margin:0;">만들기</button>
                                 <button type="button" class="subtab-button" style="margin:0;" onclick="toggleGroupForm()">취소</button>
@@ -110,97 +121,111 @@
                         <div th:if="${groupError}" class="error-msg" th:text="${groupError}"></div>
                     </div>
 
-                    <div class="chat-theme-card-list">
-                        <article th:if="${#lists.isEmpty(groupRooms)}" class="chat-theme-card">
+                    <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px;">
+                        <article th:if="${#lists.isEmpty(groupRooms)}" class="chat-theme-card" style="grid-column:1/-1;">
                             <div>
                                 <div class="chat-theme-card-title">참여 중인 그룹 채팅이 없어요.</div>
                                 <div class="chat-theme-card-sub" style="font-size:12px; color:var(--text-soft); margin-top:2px;">위에서 새 그룹 채팅방을 만들어보세요.</div>
                             </div>
                         </article>
-                        <article th:each="room : ${groupRooms}" class="chat-theme-card">
-                            <div style="flex:1; min-width:0;">
-                                <div class="chat-theme-card-title">
-                                    <span th:text="${room.name}"></span>
-                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
-                                          class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
+                        <a th:each="room : ${groupRooms}" th:href="@{/chat/{id}(id=${room.id})}"
+                           style="text-decoration:none; color:inherit; display:block;">
+                            <article class="chat-theme-card" style="cursor:pointer; height:100%; box-sizing:border-box;">
+                                <div style="flex:1; min-width:0;">
+                                    <div class="chat-theme-card-title">
+                                        <span th:text="${room.name}"></span>
+                                        <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}"
+                                              class="unread-badge" th:text="${unreadCounts[room.id]}"></span>
+                                    </div>
+                                    <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                         th:text="${lastMessages[room.id].senderName + ': ' + (lastMessages[room.id].mediaType != null ? '[미디어]' : lastMessages[room.id].content)}"></div>
+                                    <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
                                 </div>
-                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
-                                     th:text="${lastMessages[room.id].senderName + ': ' + (lastMessages[room.id].mediaType != null ? '[미디어]' : lastMessages[room.id].content)}"></div>
-                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
-                            </div>
-                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
-                        </article>
+                            </article>
+                        </a>
                     </div>
                 </section>
 
                 <!-- 1:1 / 모집 채팅 -->
-                <section class="subtab-section">
+                <section class="subtab-section" style="margin-top:0;">
                     <div class="subtab-title-row">
                         <div>
                             <p class="subtab-eyebrow">MY CHAT</p>
-                            <h2 class="subtab-title">내 채팅방</h2>
+                            <h2 class="subtab-title">내 채팅</h2>
                         </div>
                     </div>
-                
-                    <div class="chat-theme-card-list">
-                        <!-- 1:1 채팅 없을 때 -->
-                        <article th:if="${#lists.isEmpty(privateRooms) and #lists.isEmpty(groupRooms)}" class="chat-theme-card">
-                            <div>
-                                <div class="chat-theme-card-title">진행 중인 채팅이 없어요.</div>
-                                <div class="chat-theme-card-sub">아래에서 학번을 입력해 대화를 시작하세요.</div>
-                            </div>
-                        </article>
-                
-                        <!-- 1:1 채팅방 -->
-                        <article th:each="room : ${privateRooms}" class="chat-theme-card">
-                            <div style="flex:1; min-width:0;">
-                                <div class="chat-theme-card-title">
-                                    <span th:with="keyParts=${room.roomKey.split('_')}, nameParts=${room.name.split('/')}"
-                                        th:text="${keyParts[0] == member.studentId ? nameParts[1] : nameParts[0]}"></span>
-                                    <span style="font-size:11px; color:#9f8773; margin-left:6px;
-                                                 background:rgba(189,123,77,0.1); border-radius:6px;
-                                                 padding:1px 6px;">💬 1:1</span>
-                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}" class="unread-badge"
-                                        th:text="${unreadCounts[room.id]}"></span>
-                                </div>
-                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
-                                    th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
-                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
-                            </div>
-                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
-                        </article>
 
-                        <!-- 중고거래 채팅방 -->
-                        <article th:each="room : ${tradeRooms}" class="chat-theme-card">
-                            <div style="flex:1; min-width:0;">
-                                <div class="chat-theme-card-title">
-                                    <span th:with="nameParts=${room.name.split('/')}"
-                                        th:text="${nameParts[0] == member.name ? nameParts[1] : nameParts[0]}"></span>
-                                    <span style="font-size:11px; color:#9f8773; margin-left:6px;
-                                                 background:rgba(189,123,77,0.1); border-radius:6px;
-                                                 padding:1px 6px;">🛒 중고거래</span>
-                                    <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}" class="unread-badge"
-                                        th:text="${unreadCounts[room.id]}"></span>
-                                </div>
-                                <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
-                                    th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
-                                <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
-                            </div>
-                            <a th:href="@{/chat/{id}(id=${room.id})}" class="chat-theme-card-badge">입장 →</a>
-                        </article>
-                
-                    </div>
-                
                     <form th:action="@{/chat/private}" method="get"
-                        style="margin-top:16px; display:flex; gap:8px; flex-direction:column;">
-                        <div style="display:flex; gap:8px;">
-                            <input type="text" name="targetStudentId" placeholder="학번으로 1:1 채팅 시작" style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border);
-                                          background:var(--surface); color:var(--text); font-size:14px;" />
-                            <button type="submit" class="subtab-button primary" style="margin:0;">시작</button>
+                          style="margin-bottom:16px; display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; gap:6px; position:relative;">
+                            <div style="flex:1; position:relative;">
+                                <input type="text" id="privateSearchInput" placeholder="멤버 검색 (학번, 이름, 학년)"
+                                       autocomplete="off"
+                                       style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+                                              background:var(--surface); color:var(--text); font-size:14px; box-sizing:border-box;" />
+                                <ul id="privateSearchResults" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:200;
+                                    background:#fff; border:1px solid #f0e4d7; border-radius:10px; margin-top:4px;
+                                    box-shadow:0 4px 15px rgba(0,0,0,0.1); list-style:none; padding:4px 0;
+                                    max-height:180px; overflow-y:auto;"></ul>
+                            </div>
+                            <input type="hidden" name="targetStudentId" id="privateTargetId" />
+                            <button type="submit" class="subtab-button primary" style="margin:0; flex-shrink:0;">시작</button>
                         </div>
+                        <div id="privateSelectedDisplay" style="display:none; font-size:13px; color:#6a503d; padding-left:2px;"></div>
                         <div th:if="${errorMsg}" class="error-msg" th:text="${errorMsg}"></div>
                     </form>
+
+                    <div style="display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px;">
+                        <article th:if="${#lists.isEmpty(privateRooms) and #lists.isEmpty(tradeRooms)}" class="chat-theme-card" style="grid-column:1/-1;">
+                            <div>
+                                <div class="chat-theme-card-title">진행 중인 채팅이 없어요.</div>
+                                <div class="chat-theme-card-sub">아래에서 멤버를 검색해 대화를 시작하세요.</div>
+                            </div>
+                        </article>
+
+                        <a th:each="room : ${privateRooms}" th:href="@{/chat/{id}(id=${room.id})}"
+                           style="text-decoration:none; color:inherit; display:block;">
+                            <article class="chat-theme-card" style="cursor:pointer; height:100%; box-sizing:border-box;">
+                                <div style="flex:1; min-width:0;">
+                                    <div class="chat-theme-card-title">
+                                        <span th:with="keyParts=${room.roomKey.split('_')}, nameParts=${room.name.split('/')}"
+                                              th:text="${keyParts[0] == member.studentId ? nameParts[1] : nameParts[0]}"></span>
+                                        <span style="font-size:11px; color:#9f8773; margin-left:6px;
+                                                     background:rgba(189,123,77,0.1); border-radius:6px;
+                                                     padding:1px 6px;">💬 1:1</span>
+                                        <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}" class="unread-badge"
+                                              th:text="${unreadCounts[room.id]}"></span>
+                                    </div>
+                                    <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                         th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                    <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
+                                </div>
+                            </article>
+                        </a>
+
+                        <a th:each="room : ${tradeRooms}" th:href="@{/chat/{id}(id=${room.id})}"
+                           style="text-decoration:none; color:inherit; display:block;">
+                            <article class="chat-theme-card" style="cursor:pointer; height:100%; box-sizing:border-box;">
+                                <div style="flex:1; min-width:0;">
+                                    <div class="chat-theme-card-title">
+                                        <span th:with="nameParts=${room.name.split('/')}"
+                                              th:text="${nameParts[0] == member.name ? nameParts[1] : nameParts[0]}"></span>
+                                        <span style="font-size:11px; color:#9f8773; margin-left:6px;
+                                                     background:rgba(189,123,77,0.1); border-radius:6px;
+                                                     padding:1px 6px;">🛒 중고거래</span>
+                                        <span th:if="${unreadCounts[room.id] != null and unreadCounts[room.id] > 0}" class="unread-badge"
+                                              th:text="${unreadCounts[room.id]}"></span>
+                                    </div>
+                                    <div th:if="${lastMessages[room.id] != null}" class="last-msg-preview"
+                                         th:text="${lastMessages[room.id].senderName + ': ' + lastMessages[room.id].content}"></div>
+                                    <div th:if="${lastMessages[room.id] == null}" class="last-msg-preview">아직 메시지가 없어요.</div>
+                                </div>
+                            </article>
+                        </a>
+                    </div>
+
                 </section>
+                </div>
             </section>
         </div>
     </div>
@@ -210,10 +235,117 @@
         const form = document.getElementById('groupCreateForm');
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
     }
-    // groupError 있으면 폼 자동 열기
     (function () {
         const err = document.querySelector('#groupCreateForm .error-msg');
         if (err) document.getElementById('groupCreateForm').style.display = 'block';
+    })();
+
+    // 멤버 검색 공통 유틸
+    function fetchMembers(q, grade, callback) {
+        let url = '/chat/members/search?q=' + encodeURIComponent(q);
+        if (grade) url += '&grade=' + encodeURIComponent(grade);
+        fetch(url).then(function(r) { return r.json(); }).then(callback).catch(function() {});
+    }
+
+    function renderDropdown(listId, members, onSelect) {
+        const ul = document.getElementById(listId);
+        ul.innerHTML = '';
+        if (!members.length) { ul.style.display = 'none'; return; }
+        ul.style.display = 'block';
+        members.forEach(function(m) {
+            const li = document.createElement('li');
+            li.style.cssText = 'padding:10px 14px; cursor:pointer; font-size:14px; color:#5d4633; border-bottom:1px solid #faf0e6;';
+            li.textContent = m.name + ' (' + m.studentId + ', ' + m.grade + '학년)';
+            li.addEventListener('mouseenter', function() { this.style.background = '#fdf5eb'; });
+            li.addEventListener('mouseleave', function() { this.style.background = ''; });
+            li.addEventListener('click', function() { onSelect(m); ul.style.display = 'none'; });
+            ul.appendChild(li);
+        });
+    }
+
+    // 1:1 채팅 검색
+    (function() {
+        const input = document.getElementById('privateSearchInput');
+        const hiddenInput = document.getElementById('privateTargetId');
+        const display = document.getElementById('privateSelectedDisplay');
+        if (!input) return;
+        let timer = null;
+        function doSearch() {
+            const q = input.value.trim();
+            if (!q) { document.getElementById('privateSearchResults').style.display = 'none'; return; }
+            fetchMembers(q, '', function(results) {
+                renderDropdown('privateSearchResults', results, function(m) {
+                    hiddenInput.value = m.studentId;
+                    input.value = m.name + ' (' + m.studentId + ')';
+                    display.textContent = m.grade + '학년 ' + m.name + '님과 대화를 시작합니다.';
+                    display.style.display = 'block';
+                });
+            });
+        }
+        input.addEventListener('input', function() {
+            hiddenInput.value = '';
+            display.style.display = 'none';
+            clearTimeout(timer);
+            timer = setTimeout(doSearch, 300);
+        });
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target))
+                document.getElementById('privateSearchResults').style.display = 'none';
+        });
+    })();
+
+    // 그룹 멤버 검색 (다중 선택)
+    const groupSelected = new Map();
+
+    function addGroupMember(m) {
+        if (groupSelected.has(m.studentId)) return;
+        groupSelected.set(m.studentId, m);
+        document.getElementById('groupMemberIds').value = [...groupSelected.keys()].join(',');
+        document.getElementById('groupMemberSearch').value = '';
+        document.getElementById('groupMemberResults').style.display = 'none';
+        renderGroupChips();
+    }
+
+    function removeGroupMember(id) {
+        groupSelected.delete(id);
+        document.getElementById('groupMemberIds').value = [...groupSelected.keys()].join(',');
+        renderGroupChips();
+    }
+
+    function renderGroupChips() {
+        const container = document.getElementById('groupMemberChips');
+        container.innerHTML = '';
+        groupSelected.forEach(function(m, id) {
+            const chip = document.createElement('span');
+            chip.style.cssText = 'display:inline-flex; align-items:center; gap:4px; padding:4px 10px; background:rgba(189,123,77,0.12); border-radius:999px; font-size:13px; color:#6a503d;';
+            const nameNode = document.createTextNode(m.name + ' (' + m.grade + '학년) ');
+            chip.appendChild(nameNode);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = 'background:none; border:none; cursor:pointer; color:#9f8773; font-size:15px; padding:0; line-height:1;';
+            btn.textContent = '×';
+            btn.addEventListener('click', function() { removeGroupMember(id); });
+            chip.appendChild(btn);
+            container.appendChild(chip);
+        });
+    }
+
+    (function() {
+        const input = document.getElementById('groupMemberSearch');
+        if (!input) return;
+        let timer = null;
+        function doSearch() {
+            const q = input.value.trim();
+            if (!q) { document.getElementById('groupMemberResults').style.display = 'none'; return; }
+            fetchMembers(q, '', function(results) {
+                renderDropdown('groupMemberResults', results, addGroupMember);
+            });
+        }
+        input.addEventListener('input', function() { clearTimeout(timer); timer = setTimeout(doSearch, 300); });
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target))
+                document.getElementById('groupMemberResults').style.display = 'none';
+        });
     })();
 </script>
 </body>

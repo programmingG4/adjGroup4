@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -60,6 +62,17 @@ public class TalkBoardController {
         model.addAttribute("posts", talkBoardService.getPostsByCategory(category, roomKey));
         model.addAttribute("roomKey", roomKey);
 
+        String chatRoomName = chatService.findByRoomKey(roomKey).map(r -> {
+            if (r.getType() == kr.ac.dankook.campuson.entity.ChatRoom.RoomType.PRIVATE && loginMember != null) {
+                String[] keys = r.getRoomKey().split("_");
+                String otherStudentId = keys[0].equals(loginMember.getStudentId()) ? keys[1] : keys[0];
+                Member other = memberRepository.findByStudentId(otherStudentId);
+                return other != null ? other.getName() : r.getName();
+            }
+            return r.getName();
+        }).orElse(null);
+        model.addAttribute("chatRoomName", chatRoomName);
+
         if ("chat".equals(from) && roomId != null) {
             model.addAttribute("backUrl", "/chat/" + roomId);
         } else {
@@ -70,10 +83,11 @@ public class TalkBoardController {
         model.addAttribute("loginMemberId", loginMemberId);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
+        model.addAttribute("member", loginMember);
         return "talkboard/list";
     }
 
@@ -87,7 +101,7 @@ public class TalkBoardController {
         Member loginMember = getLoginMember(userDetails);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
@@ -99,6 +113,7 @@ public class TalkBoardController {
         } else {
             model.addAttribute("backUrl", "/talkboard?roomKey=" + roomKey);
         }
+        model.addAttribute("member", loginMember);
         return "talkboard/write";
     }
 
@@ -110,6 +125,7 @@ public class TalkBoardController {
             @RequestParam(required = false) Long roomId,
             @RequestParam(defaultValue = "global") String roomKey,
             @RequestParam(value = "voteOption", required = false) List<String> voteItems,
+            @RequestParam(value = "voteDeadline", required = false) String voteDeadline,
             @RequestParam(value = "images", required = false) List<MultipartFile> images,
             @RequestParam(value = "videos", required = false) List<MultipartFile> videos,
             @RequestParam(value = "files", required = false) List<MultipartFile> files,
@@ -171,6 +187,14 @@ public class TalkBoardController {
             }
         }
 
+        // 투표 종료 시간 저장
+        if (voteDeadline != null && !voteDeadline.isBlank()) {
+            try {
+                post.setVoteEndTime(LocalDateTime.parse(voteDeadline,
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
+            } catch (Exception ignored) {}
+        }
+
         post.setRoomKey(roomKey);
         post.setPinned(pinned);
         talkBoardService.save(post);
@@ -214,22 +238,44 @@ public class TalkBoardController {
             @RequestParam(required = false) String from,
             @RequestParam(required = false) Long roomId,
             @AuthenticationPrincipal UserDetails userDetails,
+            jakarta.servlet.http.HttpServletResponse response,
             Model model) {
-        TalkBoard post = talkBoardService.findById(id);
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+
+        // 삭제된 글 처리
+        java.util.Optional<TalkBoard> postOpt = talkBoardService.findByIdOptional(id);
+        if (postOpt.isEmpty()) {
+            model.addAttribute("deleted", true);
+            if ("chat".equals(from) && roomId != null) {
+                model.addAttribute("backUrl", "/chat/" + roomId);
+                model.addAttribute("backLabel", "← 채팅방으로 돌아가기");
+            } else {
+                model.addAttribute("backUrl", "/talkboard");
+                model.addAttribute("backLabel", "← 게시판으로 돌아가기");
+            }
+            return "talkboard/detail";
+        }
+
+        TalkBoard post = postOpt.get();
         int totalVotes = post.getVoteItems() == null ? 0
                 : post.getVoteItems().stream().mapToInt(VoteItem::getVoteCount).sum();
 
         Member loginMember = getLoginMember(userDetails);
         Long loginMemberId = loginMember != null ? loginMember.getId() : null;
+        boolean voteEnded = post.getVoteEndTime() != null && post.getVoteEndTime().isBefore(LocalDateTime.now());
 
+        model.addAttribute("deleted", false);
         model.addAttribute("post", post);
         model.addAttribute("totalVotes", totalVotes);
         model.addAttribute("loginMemberId", loginMemberId);
         model.addAttribute("fromCategory", category);
+        model.addAttribute("voteEnded", voteEnded);
 
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         } else {
             model.addAttribute("loginMemberName", "");
         }
@@ -246,6 +292,20 @@ public class TalkBoardController {
         }
 
         model.addAttribute("fromCategory", category != null ? category : "공지");
+        model.addAttribute("member", loginMember);
+
+        // 이미 투표한 항목 ID
+        Long votedItemId = null;
+        if (loginMember != null && post.getVoteItems() != null) {
+            final Long memberId = loginMember.getId();
+            votedItemId = post.getVoteItems().stream()
+                    .filter(v -> v.getVotedMemberIds().contains(memberId))
+                    .findFirst()
+                    .map(v -> v.getId())
+                    .orElse(null);
+        }
+        model.addAttribute("votedItemId", votedItemId);
+
         return "talkboard/detail";
     }
 
@@ -260,6 +320,7 @@ public class TalkBoardController {
             return "redirect:/talkboard";
         }
         model.addAttribute("post", post);
+        model.addAttribute("member", loginMember);
         return "talkboard/edit";
     }
 
@@ -384,7 +445,7 @@ public class TalkBoardController {
         model.addAttribute("loginMemberId", loginMember != null ? loginMember.getId() : null);
         if (loginMember != null) {
             String year = loginMember.getStudentId().substring(2, 4);
-            model.addAttribute("loginMemberName", loginMember.getName() + "_" + year);
+            model.addAttribute("loginMemberName", loginMember.getName() + " " + year + "학번");
         }
         return "talkboard/list";
     }
