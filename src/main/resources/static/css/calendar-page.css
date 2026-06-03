@@ -82,7 +82,7 @@
 }
 
 .calendar-weekday {
-  padding: 11px 0;
+  padding: 9px 0;
   text-align: center;
   color: #9a7f66;
   font-size: 13px;
@@ -101,8 +101,8 @@
 }
 
 .calendar-day {
-  min-height: 136px;
-  padding: 9px;
+  min-height: 112px;
+  padding: 8px;
   border-radius: 0;
   background: rgba(255, 250, 243, 0.92);
   border: 0;
@@ -129,7 +129,7 @@
   font-weight: 900;
   color: #6a503d;
   background: transparent;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 14px;
 }
 
@@ -266,18 +266,6 @@
   line-height: 1.5;
 }
 
-.calendar-source-link {
-  display: flex;
-  justify-content: center;
-  padding: 13px 16px;
-  border-radius: 14px;
-  background: rgba(246, 234, 219, 0.78);
-  border: 1px solid rgba(188, 153, 118, 0.2);
-  color: #9a6a45;
-  font-weight: 800;
-  text-decoration: none;
-}
-
 @media (max-width: 1180px) {
   .calendar-content {
     grid-template-columns: 1fr;
@@ -285,6 +273,10 @@
 
   .calendar-side-card {
     position: static;
+  }
+
+  .calendar-schedule-list {
+    max-height: 300px;
   }
 }
 
@@ -295,11 +287,267 @@
   }
 
   .calendar-day {
-    min-height: 104px;
-    padding: 7px;
+    min-height: 92px;
+    padding: 6px;
   }
 
   .calendar-event {
     font-size: 11px;
+  }
+}
+
+.calendar-schedule-list-panel h3 {
+  margin: 0 0 14px;
+  color: #6a503d;
+  font-size: 20px;
+}
+
+.calendar-schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+
+.calendar-schedule-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.calendar-schedule-list::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(188, 153, 118, 0.12);
+}
+
+.calendar-schedule-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(189, 123, 77, 0.42);
+}
+
+.calendar-schedule-list-panel {
+  min-width: 0;
+}
+
+.calendar-schedule-item {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 250, 243, 0.82);
+  border: 1px solid rgba(188, 153, 118, 0.2);
+  color: #765c45;
+  text-decoration: none;
+}
+
+.calendar-schedule-item strong {
+  color: #6a503d;
+  font-size: 12px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.calendar-schedule-item span {
+  color: #765c45;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.calendar-schedule-item:hover {
+  border-color: rgba(189, 123, 77, 0.38);
+  background: rgba(255, 246, 235, 0.95);
+}
+
+/* Compact DKU schedule panel and popup view */
+.calendar-schedule-list {
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.calendar-schedule-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.calendar-schedule-item strong,
+.calendar-schedule-item span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.calendar-schedule-popup-wrap {
+  margin-top: 12px;
+}
+
+.schedule-popup-check {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.schedule-popup-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  border-radius: 14px;
+  background: #bd7b4d;
+  color: #fffaf4;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 8px 16px rgba(189, 123, 77, 0.14);
+}
+
+.calendar-schedule-popup {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.schedule-popup-check:checked ~ .calendar-schedule-popup {
+  display: flex;
+}
+
+.schedule-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(50, 36, 25, 0.38);
+  cursor: pointer;
+}
+
+.schedule-popup-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(720px, 92vw);
+  max-height: min(78vh, 760px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  background: #fffaf4;
+  border: 1px solid rgba(188, 153, 118, 0.28);
+  box-shadow: 0 24px 70px rgba(70, 45, 24, 0.24);
+  padding: 24px;
+  overflow: hidden;
+}
+
+.schedule-popup-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.schedule-popup-head h3 {
+  margin: 0;
+  color: #6a503d;
+  font-size: 22px;
+}
+
+.schedule-popup-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(246, 234, 219, 0.78);
+  border: 1px solid rgba(188, 153, 118, 0.24);
+  color: #8a6241;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.schedule-popup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+}
+
+.schedule-popup-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.schedule-popup-list::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(188, 153, 118, 0.12);
+}
+
+.schedule-popup-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(189, 123, 77, 0.42);
+}
+
+.schedule-popup-item {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 250, 243, 0.86);
+  border: 1px solid rgba(188, 153, 118, 0.22);
+  color: #765c45;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.schedule-popup-item strong {
+  color: #6a503d;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.schedule-popup-item span {
+  color: #765c45;
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.schedule-popup-item:hover {
+  border-color: rgba(189, 123, 77, 0.42);
+  background: rgba(255, 246, 235, 0.96);
+}
+
+@media (max-width: 620px) {
+  .calendar-schedule-popup {
+    padding: 14px;
+  }
+
+  .schedule-popup-dialog {
+    padding: 18px;
+    max-height: 82vh;
+  }
+
+  .schedule-popup-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 }
