@@ -32,6 +32,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const pageCache = new Map();
     const hasMoreCache = new Map();
 
+    function cacheKey(page = currentPage, category = currentCategory) {
+        return `${category || "all"}:${page}`;
+    }
+
+    function currentPageArticles() {
+        return pageCache.get(cacheKey()) || [];
+    }
+
+    function hasMoreForCurrentPage() {
+        return Boolean(hasMoreCache.get(cacheKey()));
+    }
 
     function readStoredInitialPage() {
         try {
@@ -88,12 +99,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (storedInitialPage && Number(storedInitialPage.page || 1) === 1) {
         currentPage = 1;
-        pageCache.set(1, Array.isArray(storedInitialPage.articles) ? storedInitialPage.articles : []);
-        hasMoreCache.set(1, Boolean(storedInitialPage.hasMore));
+        pageCache.set(cacheKey(1, "all"), Array.isArray(storedInitialPage.articles) ? storedInitialPage.articles : []);
+        hasMoreCache.set(cacheKey(1, "all"), Boolean(storedInitialPage.hasMore));
         sessionStorage.removeItem("campusonArticleInitialPage");
     } else {
-        pageCache.set(currentPage, initialArticles);
-        hasMoreCache.set(currentPage, rowsContainer.dataset.hasMore === "true");
+        pageCache.set(cacheKey(currentPage, "all"), initialArticles);
+        hasMoreCache.set(cacheKey(currentPage, "all"), rowsContainer.dataset.hasMore === "true");
     }
 
     function escapeHtml(value) {
@@ -182,8 +193,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function filteredArticles() {
-        const articles = pageCache.get(currentPage) || [];
-        return articles.filter(article => matchesCategory(article) && matchesSearch(article));
+        const articles = currentPageArticles();
+        return articles
+            .filter(article => matchesCategory(article) && matchesSearch(article))
+            .slice(0, PAGE_SIZE);
     }
 
     function setInlineProgress(value) {
@@ -228,14 +241,14 @@ document.addEventListener("DOMContentLoaded", () => {
             stopInlineLoading();
         }
         if (nextButton) {
-            nextButton.disabled = loading || !hasMoreCache.get(currentPage);
+            nextButton.disabled = loading || !hasMoreForCurrentPage();
             nextButton.textContent = loading ? "불러오는 중..." : "다음";
         }
         if (prevButton) {
             prevButton.disabled = loading || currentPage <= 1;
         }
         if (resultSummary && loading) {
-            resultSummary.textContent = `${currentPage + 1}페이지 소식을 추가로 불러오는 중입니다.`;
+            resultSummary.textContent = `${currentPage + 1}페이지의 더 이전 게시글을 불러오는 중입니다.`;
         }
     }
 
@@ -243,9 +256,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!resultSummary) {
             return;
         }
-        const total = (pageCache.get(currentPage) || []).length;
+        const total = Math.min(currentPageArticles().length, PAGE_SIZE);
         const suffix = currentKeyword || currentCategory !== "all" ? ` / 조건 일치 ${count}개` : "";
-        resultSummary.textContent = `${currentPage}페이지에서 원본 게시글 ${total}개를 불러왔습니다${suffix}.`;
+        resultSummary.textContent = `${currentPage}페이지에서 최신순 게시글 ${total}개를 표시합니다${suffix}.`;
     }
 
     function renderPageMarker() {
@@ -259,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
             prevButton.disabled = loading || currentPage <= 1;
         }
         if (nextButton) {
-            nextButton.disabled = loading || !hasMoreCache.get(currentPage);
+            nextButton.disabled = loading || !hasMoreForCurrentPage();
         }
     }
 
@@ -276,7 +289,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function fetchInitialPage(force = false) {
-        if (!force && pageCache.has(1) && (pageCache.get(1) || []).length > 0) {
+        const key = cacheKey(1, "all");
+        if (!force && pageCache.has(key) && (pageCache.get(key) || []).length > 0) {
             return;
         }
 
@@ -289,11 +303,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("initial fetch failed");
             }
             const result = await response.json();
-            pageCache.set(1, Array.isArray(result.articles) ? result.articles : []);
-            hasMoreCache.set(1, Boolean(result.hasMore));
+            pageCache.set(key, Array.isArray(result.articles) ? result.articles : []);
+            hasMoreCache.set(key, Boolean(result.hasMore));
         } catch (error) {
-            pageCache.set(1, []);
-            hasMoreCache.set(1, false);
+            pageCache.set(key, []);
+            hasMoreCache.set(key, false);
             if (resultSummary) {
                 resultSummary.textContent = "소식을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
             }
@@ -302,25 +316,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function fetchPage(page, force = false) {
-        if (!force && pageCache.has(page)) {
+    async function fetchPage(page, force = false, category = currentCategory) {
+        const key = cacheKey(page, category);
+        if (!force && pageCache.has(key)) {
             return;
         }
 
         setLoading(true);
         try {
-            const response = await fetch(`/articles/page?page=${page}&size=${PAGE_SIZE}`, {
+            const query = new URLSearchParams({
+                page: String(page),
+                size: String(PAGE_SIZE),
+                category: category || "all"
+            });
+            const response = await fetch(`/articles/page?${query.toString()}`, {
                 headers: {"Accept": "application/json"}
             });
             if (!response.ok) {
                 throw new Error("page fetch failed");
             }
             const result = await response.json();
-            pageCache.set(page, Array.isArray(result.articles) ? result.articles : []);
-            hasMoreCache.set(page, Boolean(result.hasMore));
+            pageCache.set(key, Array.isArray(result.articles) ? result.articles : []);
+            hasMoreCache.set(key, Boolean(result.hasMore));
         } catch (error) {
-            pageCache.set(page, []);
-            hasMoreCache.set(page, false);
+            pageCache.set(key, []);
+            hasMoreCache.set(key, false);
             if (resultSummary) {
                 resultSummary.textContent = "추가 소식을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
             }
@@ -329,10 +349,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function applyFilters() {
+    async function applyFilters() {
+        const nextCategory = categorySelect?.value || "all";
         currentKeyword = searchInput?.value || "";
         currentSearchType = searchType?.value || "title-summary";
-        currentCategory = categorySelect?.value || "all";
+        if (nextCategory !== currentCategory) {
+            currentCategory = nextCategory;
+            currentPage = 1;
+            if (currentCategory !== "all") {
+                await fetchPage(1, false, currentCategory);
+            } else if (!pageCache.has(cacheKey(1, "all"))) {
+                await fetchInitialPage(false);
+            }
+        }
         renderRows();
     }
 
@@ -359,20 +388,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     nextButton?.addEventListener("click", async () => {
-        if (loading || !hasMoreCache.get(currentPage)) {
+        if (loading || !hasMoreForCurrentPage()) {
             return;
         }
         const nextPage = currentPage + 1;
-        await fetchPage(nextPage);
+        await fetchPage(nextPage, false, currentCategory);
         currentPage = nextPage;
         renderRows();
     });
 
     async function initializeArticlePage() {
-        if (currentPage === 1 && (!pageCache.has(1) || (pageCache.get(1) || []).length === 0)) {
+        const key = cacheKey(currentPage, currentCategory);
+        if (currentCategory === "all" && currentPage === 1 && (!pageCache.has(key) || (pageCache.get(key) || []).length === 0)) {
             await fetchInitialPage(true);
-        } else if (!pageCache.has(currentPage) || (pageCache.get(currentPage) || []).length === 0) {
-            await fetchPage(currentPage, true);
+        } else if (!pageCache.has(key) || (pageCache.get(key) || []).length === 0) {
+            await fetchPage(currentPage, true, currentCategory);
         }
         renderRows();
     }

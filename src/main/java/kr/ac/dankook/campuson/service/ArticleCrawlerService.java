@@ -29,8 +29,8 @@ public class ArticleCrawlerService {
     private static final int REQUEST_TIMEOUT_MILLIS = 4_500;
     private static final int PAGE_TOTAL_TIMEOUT_MILLIS = 12_000;
     private static final int INITIAL_TOTAL_TIMEOUT_MILLIS = 30_000;
-    private static final int ARTICLES_PER_PAGE = 8;
-    private static final int ARTICLES_PER_CATEGORY = 8;
+    private static final int ARTICLES_PER_PAGE = 6;
+    private static final int ARTICLES_PER_CATEGORY = 6;
     private static final int PAGE_CANDIDATES_PER_TARGET = 10;
     private static final int INITIAL_CANDIDATES_PER_TARGET = 18;
     private static final Duration CACHE_TTL = Duration.ofMinutes(10);
@@ -40,7 +40,7 @@ public class ArticleCrawlerService {
             "(?i)(로그인|회원가입|구독|검색|메뉴|전체보기|바로가기|더보기|목록|뉴스홈|고객센터|이용약관|개인정보|제보|언론사|사이트맵)"
     );
 
-    private final Map<Integer, ArticleCacheEntry> pageCache = new ConcurrentHashMap<>();
+    private final Map<String, ArticleCacheEntry> pageCache = new ConcurrentHashMap<>();
     private volatile ArticleCacheEntry initialCache;
 
     public ArticleFetchResult fetchArticleFeed() {
@@ -52,8 +52,6 @@ public class ArticleCrawlerService {
     }
 
     public ArticleFetchResult fetchInitialCategoryFeed(boolean refresh) {
-        long requestStart = System.nanoTime();
-
         if (!refresh) {
             ArticleCacheEntry cached = initialCache;
             if (cached != null && !cached.isExpired()) {
@@ -63,84 +61,45 @@ public class ArticleCrawlerService {
             initialCache = null;
         }
 
-        Map<String, List<CrawlTarget>> targetsByCategory = targetsByCategory();
-        List<CrawledArticle> articles = new ArrayList<>();
-        Set<String> seenUrls = new LinkedHashSet<>();
-        long deadlineNanos = System.nanoTime() + Duration.ofMillis(INITIAL_TOTAL_TIMEOUT_MILLIS).toNanos();
-        boolean totalTimeout = false;
-
-        for (Map.Entry<String, List<CrawlTarget>> entry : targetsByCategory.entrySet()) {
-            if (System.nanoTime() >= deadlineNanos) {
-                totalTimeout = true;
-                break;
-            }
-
-            List<CrawledArticle> categoryArticles = new ArrayList<>();
-            for (CrawlTarget target : entry.getValue()) {
-                if (categoryArticles.size() >= ARTICLES_PER_CATEGORY) {
-                    break;
-                }
-                if (System.nanoTime() >= deadlineNanos) {
-                    totalTimeout = true;
-                    break;
-                }
-
-                SiteCrawlOutcome outcome = crawlTarget(
-                        target,
-                        seenUrls,
-                        deadlineNanos,
-                        ARTICLES_PER_CATEGORY - categoryArticles.size(),
-                        INITIAL_CANDIDATES_PER_TARGET
-                );
-                categoryArticles.addAll(outcome.articles());
-            }
-            articles.addAll(categoryArticles);
-        }
-
-        boolean failed = articles.isEmpty();
-        String message = failed
-                ? "기사 수집에 실패했거나 수집 조건에 맞는 썸네일 포함 게시글이 없습니다."
-                : totalTimeout
-                ? "일부 사이트가 느려 전체 제한 시간 내에서 수집 가능한 기사만 표시합니다."
-                : null;
-
-        ArticleFetchResult result = new ArticleFetchResult(
-                Collections.unmodifiableList(articles),
-                categoryCounts(articles),
-                failed,
-                message,
-                1,
-                elapsedMillis(requestStart),
-                totalTimeout,
-                !articles.isEmpty() && !totalTimeout
-        );
-
+        ArticleFetchResult result = fetchArticlePage(1, "all", refresh);
         initialCache = new ArticleCacheEntry(result, System.currentTimeMillis());
         return result;
     }
 
     public ArticleFetchResult fetchArticlePage(int page) {
-        return fetchArticlePage(page, false);
+        return fetchArticlePage(page, "all", false);
     }
 
     public ArticleFetchResult fetchArticlePage(int page, boolean refresh) {
+        return fetchArticlePage(page, "all", refresh);
+    }
+
+    public ArticleFetchResult fetchArticlePage(int page, String categoryKey, boolean refresh) {
         int normalizedPage = Math.max(1, page);
+        String normalizedCategory = normalizeCategoryKey(categoryKey);
+        String cacheKey = normalizedCategory + ":" + normalizedPage;
         long requestStart = System.nanoTime();
 
         if (!refresh) {
-            ArticleCacheEntry cached = pageCache.get(normalizedPage);
+            ArticleCacheEntry cached = pageCache.get(cacheKey);
             if (cached != null && !cached.isExpired()) {
                 return cached.result();
             }
         } else {
-            pageCache.remove(normalizedPage);
+            pageCache.remove(cacheKey);
+            if (normalizedPage == 1 && "all".equals(normalizedCategory)) {
+                initialCache = null;
+            }
         }
 
-        List<CrawlTarget> targets = targetsForPage(normalizedPage);
-        List<CrawledArticle> articles = new ArrayList<>();
+        List<CrawlTarget> targets = targetsForCategory(normalizedCategory);
+        List<CrawledArticle> collectedArticles = new ArrayList<>();
         Set<String> seenUrls = new LinkedHashSet<>();
         long deadlineNanos = System.nanoTime() + Duration.ofMillis(PAGE_TOTAL_TIMEOUT_MILLIS).toNanos();
         boolean totalTimeout = false;
+
+        int requiredArticleCount = normalizedPage * ARTICLES_PER_PAGE + 1;
+        int perTargetCandidateLimit = Math.max(PAGE_CANDIDATES_PER_TARGET, requiredArticleCount + 8);
 
         for (CrawlTarget target : targets) {
             if (System.nanoTime() >= deadlineNanos) {
@@ -152,39 +111,47 @@ public class ArticleCrawlerService {
                     target,
                     seenUrls,
                     deadlineNanos,
-                    ARTICLES_PER_PAGE - articles.size(),
-                    PAGE_CANDIDATES_PER_TARGET
+                    requiredArticleCount,
+                    perTargetCandidateLimit
             );
-            articles.addAll(outcome.articles());
-
-            if (articles.size() >= ARTICLES_PER_PAGE) {
-                break;
-            }
+            collectedArticles.addAll(outcome.articles());
         }
 
-        if (articles.size() > ARTICLES_PER_PAGE) {
-            articles = new ArrayList<>(articles.subList(0, ARTICLES_PER_PAGE));
+        if (System.nanoTime() >= deadlineNanos) {
+            totalTimeout = true;
         }
 
-        boolean failed = articles.isEmpty();
+        sortArticlesNewestFirst(collectedArticles);
+
+        int startIndex = Math.max(0, (normalizedPage - 1) * ARTICLES_PER_PAGE);
+        int endIndex = Math.min(collectedArticles.size(), startIndex + ARTICLES_PER_PAGE);
+        List<CrawledArticle> pageArticles = startIndex < collectedArticles.size()
+                ? new ArrayList<>(collectedArticles.subList(startIndex, endIndex))
+                : new ArrayList<>();
+
+        boolean failed = pageArticles.isEmpty();
         String message = failed
-                ? "기사 수집에 실패했거나 수집 조건에 맞는 썸네일 포함 게시글이 없습니다."
+                ? "기사 수집에 실패했거나 수집 조건에 맞는 게시글이 없습니다."
                 : totalTimeout
                 ? "일부 사이트가 느려 전체 제한 시간 내에서 수집 가능한 기사만 표시합니다."
                 : null;
 
+        boolean hasMore = collectedArticles.size() > endIndex || (totalTimeout && !pageArticles.isEmpty());
         ArticleFetchResult result = new ArticleFetchResult(
-                Collections.unmodifiableList(articles),
-                categoryCounts(articles),
+                Collections.unmodifiableList(pageArticles),
+                categoryCounts(pageArticles),
                 failed,
                 message,
                 normalizedPage,
                 elapsedMillis(requestStart),
                 totalTimeout,
-                !articles.isEmpty() && !totalTimeout
+                hasMore
         );
 
-        pageCache.put(normalizedPage, new ArticleCacheEntry(result, System.currentTimeMillis()));
+        pageCache.put(cacheKey, new ArticleCacheEntry(result, System.currentTimeMillis()));
+        if (normalizedPage == 1 && "all".equals(normalizedCategory)) {
+            initialCache = new ArticleCacheEntry(result, System.currentTimeMillis());
+        }
         return result;
     }
 
@@ -260,15 +227,99 @@ public class ArticleCrawlerService {
                     continue;
                 }
                 if (seen.add(href)) {
-                    candidates.add(new ArticleCandidate(title, href));
+                    candidates.add(new ArticleCandidate(title, href, null, null, null));
                 }
             }
+        }
+
+        if (target.listPageOnly() && candidates.size() < candidateLimit) {
+            candidates.addAll(extractBoardTextCandidates(target, document, candidateLimit - candidates.size(), seen));
         }
 
         return candidates;
     }
 
+    private List<ArticleCandidate> extractBoardTextCandidates(
+            CrawlTarget target,
+            Document document,
+            int remainingLimit,
+            Set<String> seen
+    ) {
+        List<ArticleCandidate> candidates = new ArrayList<>();
+        if (remainingLimit <= 0) {
+            return candidates;
+        }
+
+        for (Element titleElement : document.select(".title, .subject, .bbs-title, .board-title, td a[href], h3, h4, h5")) {
+            if (candidates.size() >= remainingLimit) {
+                break;
+            }
+
+            String title = cleanBoardTitle(titleElement.text());
+            if (!isUsefulCandidateTitle(title)) {
+                continue;
+            }
+
+            String summary = extractNearbySummary(titleElement);
+            String publishedAt = firstDate(titleElement.parent() != null ? titleElement.parent().text() : "");
+            if (publishedAt == null) {
+                publishedAt = firstDate(summary);
+            }
+
+            String href = titleElement.hasAttr("href") ? titleElement.absUrl("href") : "";
+            if (href == null || href.isBlank() || !isUsefulArticleUrl(href)) {
+                href = target.url();
+            }
+            href = href + "#" + Math.abs((title + publishedAt).hashCode());
+
+            if (seen.add(href)) {
+                candidates.add(new ArticleCandidate(title, href, summary, publishedAt, null));
+            }
+        }
+
+        if (candidates.isEmpty()) {
+            candidates.addAll(extractBoardTextCandidatesFromLines(target, document, remainingLimit, seen));
+        }
+        return candidates;
+    }
+
+    private List<ArticleCandidate> extractBoardTextCandidatesFromLines(
+            CrawlTarget target,
+            Document document,
+            int remainingLimit,
+            Set<String> seen
+    ) {
+        List<ArticleCandidate> candidates = new ArrayList<>();
+        String[] lines = document.text().split("(?=\\d{4}\\.\\d{2}\\.\\d{2})|(?=\\d{4}\\.\\d{1,2}\\.\\d{1,2})");
+        for (String line : lines) {
+            if (candidates.size() >= remainingLimit) {
+                break;
+            }
+            String normalized = normalize(line);
+            if (normalized.length() < 20) {
+                continue;
+            }
+
+            String publishedAt = firstDate(normalized);
+            String withoutDate = publishedAt == null ? normalized : normalized.replace(publishedAt, "").trim();
+            String title = cleanBoardTitle(withoutDate.length() > 80 ? withoutDate.substring(0, 80) : withoutDate);
+            if (!isUsefulCandidateTitle(title)) {
+                continue;
+            }
+
+            String href = target.url() + "#" + Math.abs((title + publishedAt).hashCode());
+            if (seen.add(href)) {
+                candidates.add(new ArticleCandidate(title, href, limitText(withoutDate, 180), publishedAt, null));
+            }
+        }
+        return candidates;
+    }
+
     private CrawledArticle buildArticleFromCandidate(CrawlTarget target, ArticleCandidate candidate) throws IOException {
+        if (target.listPageOnly()) {
+            return buildArticleFromListCandidate(target, candidate);
+        }
+
         Document articleDocument = fetchDocument(candidate.url());
 
         String title = firstNonBlank(
@@ -283,6 +334,7 @@ public class ArticleCrawlerService {
                 meta(articleDocument, "meta[property=og:description]", "content"),
                 meta(articleDocument, "meta[name=description]", "content"),
                 meta(articleDocument, "meta[name=twitter:description]", "content"),
+                candidate.summary(),
                 "본문 요약을 제공하지 않는 게시글입니다. 제목과 원문 링크를 확인하세요."
         );
         summary = limitText(cleanTitle(summary), 180);
@@ -294,7 +346,8 @@ public class ArticleCrawlerService {
         String image = firstNonBlank(
                 meta(articleDocument, "meta[property=og:image]", "content"),
                 meta(articleDocument, "meta[name=twitter:image]", "content"),
-                firstImage(articleDocument)
+                firstImage(articleDocument),
+                candidate.thumbnailUrl()
         );
 
         if (!isUsableImage(image)) {
@@ -306,6 +359,7 @@ public class ArticleCrawlerService {
                 meta(articleDocument, "meta[name=date]", "content"),
                 meta(articleDocument, "meta[name=pubdate]", "content"),
                 meta(articleDocument, "time[datetime]", "datetime"),
+                candidate.publishedAt(),
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         );
         publishedAt = normalizeDate(publishedAt);
@@ -323,6 +377,79 @@ public class ArticleCrawlerService {
         );
     }
 
+    private CrawledArticle buildArticleFromListCandidate(CrawlTarget target, ArticleCandidate candidate) {
+        String title = cleanTitle(firstNonBlank(candidate.title(), target.name()));
+        String summary = limitText(firstNonBlank(
+                candidate.summary(),
+                "원문 게시판에서 상세 내용을 확인할 수 있는 SW중심대학사업단 소식입니다."
+        ), 180);
+
+        if (!matchesTargetContent(target, title, summary)) {
+            throw new IllegalStateException("target-keyword-mismatch");
+        }
+
+        String image = isUsableImage(candidate.thumbnailUrl()) ? candidate.thumbnailUrl() : "";
+        String publishedAt = normalizeDate(firstNonBlank(
+                candidate.publishedAt(),
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        ));
+
+        ArticleCategory articleCategory = inferArticleCategory(target, title, summary);
+
+        return new CrawledArticle(
+                articleCategory.key(),
+                articleCategory.label(),
+                target.sourceName(),
+                title,
+                candidate.url(),
+                image,
+                summary,
+                publishedAt,
+                mergeTags(target.tags(), articleCategory.tag())
+        );
+    }
+
+    private ArticleCategory inferArticleCategory(CrawlTarget target, String title, String summary) {
+        if (!target.listPageOnly() || target.url().contains("swcu.dankook.ac.kr")) {
+            return new ArticleCategory(target.categoryKey(), target.categoryLabel(), null);
+        }
+
+        String text = normalize(title + " " + summary).toLowerCase(Locale.ROOT);
+        if (containsAny(text, "채용", "취업", "인턴", "커리어", "면접", "자기소개서", "창업")) {
+            return new ArticleCategory("career", "취창업", "#취창업");
+        }
+        if (containsAny(text, "부트캠프", "아카데미", "교육", "강의", "훈련", "국비", "topcit", "특강", "마이크로디그리")) {
+            return new ArticleCategory("bootcamp", "부트캠프/AI교육", "#AI교육");
+        }
+        if (containsAny(text, "공모전", "경진대회", "대회", "챌린지", "contest", "페스티벌", "행사")) {
+            return new ArticleCategory("contest", "공모전", "#공모전");
+        }
+        if (containsAny(text, "단국", "캠퍼스", "재학생", "학과", "사업단", "sw중심대학")) {
+            return new ArticleCategory("school", "학교소식", "#학교소식");
+        }
+        return new ArticleCategory("it", "최신 IT정보", "#IT");
+    }
+
+    private boolean containsAny(String text, String... keywords) {
+        for (String keyword : keywords) {
+            if (text.contains(keyword.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<String> mergeTags(List<String> baseTags, String extraTag) {
+        if (extraTag == null || extraTag.isBlank()) {
+            return baseTags;
+        }
+        List<String> merged = new ArrayList<>(baseTags);
+        if (!merged.contains(extraTag)) {
+            merged.add(extraTag);
+        }
+        return merged;
+    }
+
     private Map<String, List<CrawlTarget>> targetsByCategory() {
         Map<String, List<CrawlTarget>> grouped = new LinkedHashMap<>();
         for (CrawlTarget target : allTargets()) {
@@ -331,14 +458,40 @@ public class ArticleCrawlerService {
         return grouped;
     }
 
-    private List<CrawlTarget> targetsForPage(int page) {
-        List<CrawlTarget> targets = allTargets();
+    private List<CrawlTarget> targetsForPage(int page, String categoryKey) {
+        List<CrawlTarget> targets = targetsForCategory(categoryKey);
         int start = Math.max(0, (page - 1) * 3);
         if (start >= targets.size()) {
-            return targets;
+            return List.of();
         }
         int end = Math.min(targets.size(), start + 4);
         return targets.subList(start, end);
+    }
+
+    private List<CrawlTarget> targetsForCategory(String categoryKey) {
+        String normalizedCategory = normalizeCategoryKey(categoryKey);
+        if ("all".equals(normalizedCategory)) {
+            return allTargets();
+        }
+        List<CrawlTarget> filtered = new ArrayList<>();
+        for (CrawlTarget target : allTargets()) {
+            if (normalizedCategory.equals(target.categoryKey())) {
+                filtered.add(target);
+            }
+        }
+        return filtered;
+    }
+
+    private String normalizeCategoryKey(String categoryKey) {
+        if (categoryKey == null || categoryKey.isBlank()) {
+            return "all";
+        }
+        String normalized = categoryKey.trim().toLowerCase(Locale.ROOT);
+        return Set.of("all", "it", "school", "career", "contest", "bootcamp").contains(normalized) ? normalized : "all";
+    }
+
+    private void sortArticlesNewestFirst(List<CrawledArticle> articles) {
+        articles.sort((left, right) -> normalize(right.publishedAt()).compareTo(normalize(left.publishedAt())));
     }
 
     private List<CrawlTarget> allTargets() {
@@ -410,6 +563,33 @@ public class ArticleCrawlerService {
                 null,
                 List.of("공모전", "경진대회", "대학생", "모집", "참가", "AI", "소프트웨어", "IT"),
                 List.of("연예", "스포츠", "정치", "부고")
+        ));
+
+        targets.add(new CrawlTarget(
+                "단국대 SW중심대학 SW대회/행사",
+                "https://swcu.dankook.ac.kr/ko/-2024-",
+                "school",
+                "학교소식",
+                "DKU SW중심대학사업단",
+                List.of("#단국대", "#SW중심대학", "#학교소식", "#공모전", "#행사"),
+                List.of(".bbs a[href]", ".board a[href]", ".title a[href]", "a[href*='_dku_bbs_web_BbsPortlet']", "td a[href]", "h3", "h4", "h5"),
+                "swcu.dankook.ac.kr",
+                List.of("공모전", "경진대회", "대회", "행사", "특강", "세미나", "SW", "AI", "소프트웨어", "프로그램", "모집", "참여", "TOPCIT", "창업"),
+                List.of("로그인", "개인정보", "사이트맵", "작성일", "수정일", "검색"),
+                true
+        ));
+        targets.add(new CrawlTarget(
+                "단국대 SW중심대학 외부소식",
+                "https://swcu.dankook.ac.kr/ko/-24",
+                "school",
+                "학교소식",
+                "DKU SW중심대학사업단",
+                List.of("#단국대", "#SW중심대학", "#학교소식", "#외부소식"),
+                List.of(".bbs a[href]", ".board a[href]", ".title a[href]", "a[href*='_dku_bbs_web_BbsPortlet']", "td a[href]", "h3", "h4", "h5"),
+                "swcu.dankook.ac.kr",
+                List.of("AI", "인공지능", "소프트웨어", "SW", "IT", "데이터", "개발", "기술", "취업", "채용", "인턴", "창업", "공모전", "대회", "교육", "부트캠프", "특강", "행사"),
+                List.of("로그인", "개인정보", "사이트맵", "작성일", "수정일", "검색"),
+                true
         ));
         targets.add(new CrawlTarget(
                 "단국대학교 뉴스",
@@ -562,6 +742,56 @@ public class ArticleCrawlerService {
         return value == null ? "" : value.replace('\u00A0', ' ').replaceAll("\\s+", " ").trim();
     }
 
+    private String cleanBoardTitle(String value) {
+        String title = cleanTitle(value)
+                .replaceAll("^\\[[^\\]]+\\]\\s*", "")
+                .replaceAll("\\s+H$", "")
+                .trim();
+        return limitText(title, 90);
+    }
+
+    private String extractNearbySummary(Element titleElement) {
+        Element parent = titleElement.parent();
+        StringBuilder builder = new StringBuilder();
+
+        if (parent != null) {
+            String parentText = normalize(parent.text().replace(titleElement.text(), " "));
+            if (!parentText.isBlank()) {
+                builder.append(parentText);
+            }
+
+            Element sibling = parent.nextElementSibling();
+            int count = 0;
+            while (sibling != null && count < 3) {
+                String siblingText = normalize(sibling.text());
+                if (!siblingText.isBlank() && !BAD_TITLE_PATTERN.matcher(siblingText).find()) {
+                    if (builder.length() > 0) {
+                        builder.append(' ');
+                    }
+                    builder.append(siblingText);
+                }
+                sibling = sibling.nextElementSibling();
+                count++;
+            }
+        }
+
+        String summary = normalize(builder.toString());
+        return summary.isBlank() ? null : limitText(summary, 180);
+    }
+
+    private String firstDate(String value) {
+        if (value == null) {
+            return null;
+        }
+        java.util.regex.Matcher matcher = Pattern.compile("(20\\d{2})[.-](\\d{1,2})[.-](\\d{1,2})").matcher(value);
+        if (!matcher.find()) {
+            return null;
+        }
+        return matcher.group(1) + "-"
+                + String.format("%02d", Integer.parseInt(matcher.group(2))) + "-"
+                + String.format("%02d", Integer.parseInt(matcher.group(3)));
+    }
+
     private String cleanTitle(String value) {
         String normalized = normalize(value);
         return normalized
@@ -632,11 +862,35 @@ public class ArticleCrawlerService {
             List<String> selectors,
             String requiredHostKeyword,
             List<String> includeKeywords,
-            List<String> excludeKeywords
+            List<String> excludeKeywords,
+            boolean listPageOnly
+    ) {
+        private CrawlTarget(
+                String name,
+                String url,
+                String categoryKey,
+                String categoryLabel,
+                String sourceName,
+                List<String> tags,
+                List<String> selectors,
+                String requiredHostKeyword,
+                List<String> includeKeywords,
+                List<String> excludeKeywords
+        ) {
+            this(name, url, categoryKey, categoryLabel, sourceName, tags, selectors, requiredHostKeyword, includeKeywords, excludeKeywords, false);
+        }
+    }
+
+    private record ArticleCandidate(
+            String title,
+            String url,
+            String summary,
+            String publishedAt,
+            String thumbnailUrl
     ) {
     }
 
-    private record ArticleCandidate(String title, String url) {
+    private record ArticleCategory(String key, String label, String tag) {
     }
 
     private record SiteCrawlOutcome(List<CrawledArticle> articles) {
