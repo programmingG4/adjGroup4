@@ -3212,3 +3212,94 @@ body {
 .home-quick-thumb-image {
     filter: saturate(0.98) contrast(0.99) !important;
 }
+
+
+/* bloter quick link: use the submitted BLOTER logo as the thumbnail background while keeping the normal slider UI tone */
+.home-quick-bloter .home-quick-thumb,
+.home-quick-bloter .home-quick-thumb.is-fallback,
+.home-quick-bloter .home-quick-thumb.has-image {
+    background: #ffffff !important;
+    background-image: none !important;
+    isolation: isolate;
+}
+
+.home-quick-bloter .home-quick-logo-card {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: inherit;
+    background: #ffffff !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+.home-quick-bloter .home-quick-logo-card::before {
+    content: "";
+    display: block;
+    width: min(48%, 380px);
+    aspect-ratio: 292 / 86;
+    background: url('/images/bloter-logo@4x.png') center center / contain no-repeat;
+    filter: none !important;
+    transform: translateZ(0);
+}
+
+.home-quick-bloter-logo {
+    display: none !important;
+}
+
+.home-quick-bloter .home-quick-thumb::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+    display: block !important;
+    pointer-events: none !important;
+    background:
+        radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.14), transparent 28%),
+        linear-gradient(90deg, rgba(38, 27, 21, 0.34), rgba(38, 27, 21, 0.08) 48%, rgba(38, 27, 21, 0.14)),
+        linear-gradient(180deg, rgba(38, 27, 21, 0.03), rgba(38, 27, 21, 0.38)) !important;
+}
+
+.home-quick-bloter .home-quick-overlay-title,
+.home-quick-bloter .home-quick-copy,
+.home-quick-bloter .home-news-slider-dots {
+    z-index: 3 !important;
+}
+
+.home-quick-bloter .home-quick-badge {
+    display: none !important;
+}
+
+.home-quick-bloter .home-quick-overlay-title .home-kicker {
+    color: rgba(255, 250, 244, 0.82) !important;
+    text-shadow: 0 2px 8px rgba(37, 25, 17, 0.22) !important;
+}
+
+.home-quick-bloter .home-quick-overlay-title .home-stream-title,
+.home-quick-bloter .home-quick-copy span {
+    color: #fffaf4 !important;
+    text-shadow: 0 2px 8px rgba(37, 25, 17, 0.22) !important;
+}
+
+.home-quick-bloter .home-quick-copy strong {
+    color: rgba(255, 250, 244, 0.72) !important;
+    text-shadow: 0 2px 8px rgba(37, 25, 17, 0.22) !important;
+}
+
+@media (max-width: 720px) {
+    .home-quick-bloter .home-quick-logo-card::before {
+        width: min(64%, 320px);
+    }
+}
+
+/* bloter quick link: remove the excessive fuzzy text shadow on the white-logo thumbnail */
+.home-quick-bloter .home-quick-overlay-title .home-kicker,
+.home-quick-bloter .home-quick-overlay-title .home-stream-title,
+.home-quick-bloter .home-quick-copy span,
+.home-quick-bloter .home-quick-copy strong {
+    text-shadow: none !important;
+}

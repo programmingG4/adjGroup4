@@ -22,48 +22,90 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentIndex = 0;
     let timerId = null;
-    let isResetting = false;
+    let isAnimating = false;
+    let pendingResetToFirst = false;
+
+    function getVisibleIndex(index) {
+        return index >= slideCount ? 0 : index;
+    }
 
     function setActiveDot(index) {
-        const visibleIndex = index >= slideCount ? 0 : index;
+        const visibleIndex = getVisibleIndex(index);
         dots.forEach((dot, dotIndex) => {
             dot.classList.toggle("is-active", dotIndex === visibleIndex);
             dot.setAttribute("aria-current", dotIndex === visibleIndex ? "true" : "false");
         });
     }
 
-    function moveTo(index, withTransition = true) {
-        currentIndex = index;
+    function setTrackPosition(index, withTransition = true) {
         track.style.transition = withTransition ? "" : "none";
         track.style.transform = `translateX(-${index * 100}%)`;
+    }
+
+    function moveTo(index, withTransition = true) {
+        if (isAnimating && withTransition) {
+            return;
+        }
+
+        currentIndex = index;
+        isAnimating = withTransition;
+        setTrackPosition(index, withTransition);
         setActiveDot(index);
+    }
+
+    function jumpToRealFirst() {
+        currentIndex = 0;
+        pendingResetToFirst = false;
+        isAnimating = false;
+        setTrackPosition(0, false);
+
+        // Force the browser to apply the non-transition jump before restoring CSS transition.
+        track.offsetHeight;
+        window.requestAnimationFrame(() => {
+            track.style.transition = "";
+        });
+    }
+
+    function moveNext() {
+        moveTo(currentIndex + 1, true);
+    }
+
+    function moveToDotIndex(targetIndex) {
+        const safeTargetIndex = Number.isNaN(targetIndex) ? 0 : targetIndex;
+        const visibleIndex = getVisibleIndex(currentIndex);
+
+        // From the last real slide to the first slide, keep the same forward direction by
+        // moving to the cloned first slide, then silently reset to the real first slide.
+        if (visibleIndex === slideCount - 1 && safeTargetIndex === 0) {
+            pendingResetToFirst = true;
+            moveTo(slideCount, true);
+            return;
+        }
+
+        moveTo(safeTargetIndex, true);
     }
 
     function restartTimer() {
         window.clearInterval(timerId);
-        timerId = window.setInterval(() => {
-            moveTo(currentIndex + 1, true);
-        }, SLIDE_DELAY);
+        timerId = window.setInterval(moveNext, SLIDE_DELAY);
     }
 
-    track.addEventListener("transitionend", () => {
-        if (currentIndex !== slideCount || isResetting) {
+    track.addEventListener("transitionend", (event) => {
+        if (event.target !== track || event.propertyName !== "transform") {
             return;
         }
 
-        isResetting = true;
-        moveTo(0, false);
-        track.offsetHeight;
-        window.requestAnimationFrame(() => {
-            track.style.transition = "";
-            isResetting = false;
-        });
+        isAnimating = false;
+
+        if (currentIndex === slideCount || pendingResetToFirst) {
+            jumpToRealFirst();
+        }
     });
 
     dots.forEach((dot) => {
         dot.addEventListener("click", () => {
             const index = Number.parseInt(dot.dataset.slideIndex || "0", 10);
-            moveTo(Number.isNaN(index) ? 0 : index, true);
+            moveToDotIndex(index);
             restartTimer();
         });
     });
@@ -71,6 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
     slider.addEventListener("mouseenter", () => window.clearInterval(timerId));
     slider.addEventListener("mouseleave", restartTimer);
 
-    moveTo(0, false);
+    setTrackPosition(0, false);
+    setActiveDot(0);
     restartTimer();
 });
