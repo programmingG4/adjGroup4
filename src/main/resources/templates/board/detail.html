@@ -188,7 +188,11 @@
                             </div>
                             <div th:each="c : ${post.comments}" class="board-comment-item">
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <div class="board-comment-author" th:text="${c.author}"></div>
+                                    <div class="board-comment-author">
+                                        <th:block th:with="aName=${#strings.contains(c.author, '학번') ? #strings.substringBefore(c.author, ' ') : (#strings.contains(c.author, '_') ? #strings.substringBefore(c.author, '_') : c.author)}, aYear=${#strings.contains(c.author, '학번') ? #strings.substringAfter(c.author, ' ') : (#strings.contains(c.author, '_') ? #strings.substringAfter(c.author, '_') + '학번' : null)}">
+                                            <span th:text="${aName}"></span><span th:if="${aYear != null}" class="year-badge" th:text="${aYear}"></span>
+                                        </th:block>
+                                    </div>
                                     <form th:if="${loginMemberId != null and loginMemberId == c.memberId}"
                                         th:action="@{/comment/{id}/delete(id=${c.id})}" method="post"
                                         onsubmit="return confirm('댓글을 삭제하시겠습니까?')">

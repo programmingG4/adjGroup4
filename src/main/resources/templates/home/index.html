@@ -89,10 +89,10 @@
                                    class="home-update-item">
                                     <div>
                                         <strong th:text="${room.name}">채팅방</strong>
-                                        <span th:if="${homeChatLastMessages[room.id] != null}" th:text="${homeChatLastMessages[room.id].content}">최근 메시지</span>
+                                        <span th:if="${homeChatLastMessages[room.id] != null}"
+                                              th:text="${#strings.contains(homeChatLastMessages[room.id].content, '[LINK]') ? #strings.substringBefore(homeChatLastMessages[room.id].content, '[LINK]') : homeChatLastMessages[room.id].content}">최근 메시지</span>
                                         <span th:if="${homeChatLastMessages[room.id] == null}">아직 메시지가 없습니다.</span>
                                     </div>
-                                    <em>입장</em>
                                 </a>
                             </div>
 
