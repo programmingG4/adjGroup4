@@ -7,6 +7,8 @@
     <title>CampusOn | 채팅게시판 상세</title>
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/subtab-theme.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <style>
         /* 익명 토글 */
         .anon-toggle-btn {
@@ -228,7 +230,7 @@
                                         
                                         <!-- 본인 아닐 때: 신고하기 -->
                                         <th:block th:if="${loginMemberId == null or loginMemberId != post.memberId}">
-                                            <button onclick="alert('신고가 접수되었습니다.')" class="dropdown-item" style="width:100%; background:none; border:none;
+                                            <button onclick="openReportModal('TALKBOARD', null, null)" class="dropdown-item" style="width:100%; background:none; border:none;
                                                                color:#e57373; white-space:nowrap; text-align:left;">
                                                 <span>🚨</span> 신고하기
                                             </button>
@@ -330,15 +332,22 @@
                             </div>
 
                             <div th:each="c : ${post.comments}" class="board-comment-item">
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                                     <div class="board-comment-author" th:text="${c.author}"></div>
-                                    <form th:if="${loginMemberId != null and loginMemberId == c.memberId}"
-                                        th:action="@{/talkboard/comment/{id}/delete(id=${c.id})}" method="post"
-                                        onsubmit="return confirm('댓글을 삭제하시겠습니까?')">
-                                        <input type="hidden" name="postId" th:value="${post.id}">
-                                        <button type="submit" class="board-mini-button"
-                                            style="font-size:11px; padding:3px 8px;">삭제</button>
-                                    </form>
+                                    <div style="display:flex; gap:6px; align-items:center;">
+                                        <form th:if="${loginMemberId != null and loginMemberId == c.memberId}"
+                                            th:action="@{/talkboard/comment/{id}/delete(id=${c.id})}" method="post"
+                                            onsubmit="return confirm('댓글을 삭제하시겠습니까?')">
+                                            <input type="hidden" name="postId" th:value="${post.id}">
+                                            <button type="submit" class="board-mini-button"
+                                                style="font-size:11px; padding:3px 8px;">삭제</button>
+                                        </form>
+                                        <button th:if="${loginMemberId != null and loginMemberId != c.memberId}"
+                                                th:onclick="|openReportModal('TALKCOMMENT', ${c.id}, ${post.id})|"
+                                                style="background:none; border:none; color:#e57373; font-size:12px; cursor:pointer; padding:2px 6px;">
+                                            🚨
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="board-comment-content" th:text="${c.content}"></div>
                                 <div class="board-comment-date"
@@ -380,6 +389,12 @@
         <!-- 인디케이터 -->
         <div id="modal-indicator" style="position:absolute; bottom:20px; color:white; font-size:13px;"></div>
     </div>
+
+    <!-- Thymeleaf 변수 주입 -->
+    <script th:inline="javascript">
+        const postId = /*[[${post.id}]]*/ null;
+        const loginMemberId = /*[[${loginMemberId}]]*/ null;
+    </script>
 
     <script>
         // 모달 슬라이더
@@ -445,17 +460,77 @@
             }
         }
 
-        const loginMemberId = /*[[${loginMemberId}]]*/ null;
+        // ── 신고 모달 ──────────────────────────────────────────
 
-        let liked = loginMemberId && likedMemberIds.includes(loginMemberId);
-
-        function updateLikeBtn() {
-            document.getElementById('like-icon').textContent = liked ? '❤️' : '🤍';
-            document.getElementById('like-btn').style.borderColor = liked ? '#e57373' : '#eadbc9';
-            document.getElementById('like-btn').style.color = liked ? '#e57373' : '#9f8773';
+        function openReportModal(type, targetId, extraId) {
+            document.getElementById('report-type').value = type;
+            document.getElementById('report-target-id').value = targetId || postId;
+            document.getElementById('report-extra-id').value = extraId || '';
+            document.getElementById('report-reason').value = '';
+            document.getElementById('reportModal').style.display = 'flex';
         }
-        updateLikeBtn();
+
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        function submitReport() {
+            const type = document.getElementById('report-type').value;
+            const targetId = document.getElementById('report-target-id').value;
+            const extraId = document.getElementById('report-extra-id').value;
+            const reason = document.getElementById('report-reason').value.trim();
+            if (!reason) { alert('신고 사유를 입력해주세요.'); return; }
+
+            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+            const csrfParam = '_csrf';
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            if (type === 'TALKBOARD') {
+                form.action = '/report/talkboard/' + targetId;
+            } else if (type === 'TALKCOMMENT') {
+                form.action = '/report/talkcomment/' + targetId;
+                const extra = document.createElement('input');
+                extra.type = 'hidden'; extra.name = 'postId'; extra.value = extraId;
+                form.appendChild(extra);
+            }
+            const r = document.createElement('input');
+            r.type = 'hidden'; r.name = 'reason'; r.value = reason;
+            form.appendChild(r);
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden'; csrf.name = csrfParam; csrf.value = csrfToken;
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
+
+    <!-- 신고 모달 -->
+    <div id="reportModal" onclick="if(event.target===this)closeReportModal()"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+                z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:18px; padding:28px 28px 22px; width:340px;
+                    box-shadow:0 8px 40px rgba(0,0,0,0.18);" onclick="event.stopPropagation()">
+            <h3 style="margin:0 0 6px; font-size:16px; color:#444;">🚨 신고하기</h3>
+            <p style="margin:0 0 16px; font-size:13px; color:#9f8773;">신고 사유를 입력해주세요. 관리자가 검토 후 처리합니다.</p>
+            <input type="hidden" id="report-type">
+            <input type="hidden" id="report-target-id">
+            <input type="hidden" id="report-extra-id">
+            <textarea id="report-reason" rows="4"
+                      style="width:100%; padding:10px 12px; border:1.5px solid #eadbc9; border-radius:10px;
+                             font-size:13px; color:#444; background:#fffaf4; resize:none; box-sizing:border-box;"
+                      placeholder="신고 사유를 입력하세요 (예: 욕설, 허위정보 등)"></textarea>
+            <div style="display:flex; gap:8px; margin-top:14px; justify-content:flex-end;">
+                <button onclick="closeReportModal()"
+                        style="padding:8px 18px; border-radius:10px; border:1px solid #eadbc9;
+                               background:#fff; color:#9f8773; font-size:13px; cursor:pointer;">취소</button>
+                <button onclick="submitReport()"
+                        style="padding:8px 18px; border-radius:10px; border:none;
+                               background:linear-gradient(180deg,#d99a70,#cb8458); color:#fff;
+                               font-size:13px; font-weight:700; cursor:pointer;">신고 제출</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
