@@ -162,11 +162,17 @@ public class BoardController {
 
         boolean voteEnded = post.getVoteEndTime() != null && post.getVoteEndTime().isBefore(LocalDateTime.now());
 
+        String fromCat = category != null ? category : post.getCategory();
+        String backUrl = "/board?category=" + java.net.URLEncoder.encode(
+                fromCat != null ? fromCat : "익명 게시판",
+                java.nio.charset.StandardCharsets.UTF_8);
+
         model.addAttribute("post", post);
         model.addAttribute("totalVotes", totalVotes);
-
         model.addAttribute("loginMemberId", loginMemberId);
-        model.addAttribute("fromCategory", category != null ? category : post.getCategory());
+        model.addAttribute("fromCategory", fromCat);
+        model.addAttribute("backUrl", backUrl);
+        model.addAttribute("backLabel", "← " + (fromCat != null ? fromCat : "게시판") + "으로 돌아가기");
         model.addAttribute("member", loginMember);
         model.addAttribute("voteEnded", voteEnded);
 

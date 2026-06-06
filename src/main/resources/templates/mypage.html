@@ -23,7 +23,14 @@
               <h2 class="subtab-title">내 정보와 계정 상태</h2>
               <p class="subtab-desc">메인과 비슷한 톤을 유지하면서도, 로그인 사용자 정보를 더 안정적으로 볼 수 있도록 마이페이지 전용 화면을 분리했습니다.</p>
             </div>
-            <a href="/mypage/settings" class="subtab-chip">계정 관리 →</a>
+            <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+              <a th:if="${member != null and member.admin}" href="/admin"
+                 class="subtab-chip"
+                 style="background:linear-gradient(180deg,#d99a70,#cb8458); color:#fff; border-color:#cb8458;">
+                관리자 페이지 →
+              </a>
+              <a href="/mypage/settings" class="subtab-chip">계정 관리 →</a>
+            </div>
           </div>
 
           <div class="my-theme-profile-grid">

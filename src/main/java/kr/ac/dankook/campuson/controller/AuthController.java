@@ -59,6 +59,8 @@ public class AuthController {
             model.addAttribute("errorMsg", "존재하지 않는 학번입니다.");
         } else if ("wrongpw".equals(error)) {
             model.addAttribute("errorMsg", "비밀번호가 올바르지 않습니다.");
+        } else if ("blocked".equals(error)) {
+            model.addAttribute("errorMsg", "관리자에 의해 차단된 계정입니다. 문의하세요.");
         }
         if (logout != null) {
             model.addAttribute("logoutMsg", "로그아웃 되었습니다.");

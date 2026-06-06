@@ -4,6 +4,7 @@ import kr.ac.dankook.campuson.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -46,6 +47,7 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/register", "/login", "/css/**", "/js/**", "/images/**", "/ws/**", "/uploads/**", "/error").permitAll()
+                .requestMatchers("/admin", "/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -56,6 +58,8 @@ public class SecurityConfig {
                     String errorMsg;
                     if (exception instanceof UsernameNotFoundException) {
                         errorMsg = "notfound";
+                    } else if (exception instanceof LockedException) {
+                        errorMsg = "blocked";
                     } else {
                         errorMsg = "wrongpw";
                     }

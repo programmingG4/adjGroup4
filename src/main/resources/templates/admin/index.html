@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOn | 관리자</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <style>
+        .admin-tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0e4d7;
+        }
+        .admin-tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            color: #9f8773;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: 0.2s;
+        }
+        .admin-tab.active { color: #cb8458; border-bottom-color: #cb8458; }
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .admin-table th {
+            background: #f6eadb;
+            color: #8f6d4c;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 700;
+            border-bottom: 1px solid #eadbc9;
+            white-space: nowrap;
+        }
+        .admin-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f5ece3;
+            vertical-align: middle;
+            color: #444;
+            white-space: nowrap;
+        }
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: #fffaf4; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-blocked   { background: #ffe0e0; color: #e57373; }
+        .badge-suspended { background: #fff3cd; color: #e6a800; }
+        .badge-admin     { background: #fff3e0; color: #cb8458; }
+        .badge-normal    { background: #e8f5e9; color: #66bb6a; }
+        .badge-pending   { background: #f5f5f5; color: #999; }
+        .badge-resolved  { background: #e8f5e9; color: #66bb6a; }
+        .badge-new       { background: #fce4ec; color: #e57373; }
+
+        .admin-btn {
+            padding: 5px 11px;
+            border-radius: 8px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+        .admin-btn-block       { background: #ffe0e0; color: #e57373; }
+        .admin-btn-unblock     { background: #e8f5e9; color: #66bb6a; }
+        .admin-btn-delete      { background: #f5f5f5; color: #999; }
+        .admin-btn-resolve     { background: #e8f5e9; color: #66bb6a; }
+        .admin-btn-del-content { background: #ffe0e0; color: #e57373; }
+        .admin-btn-view        { background: #f0e4d7; color: #8f6d4c; }
+        .admin-btn-suspend     { background: #fff3cd; color: #b8860b; }
+
+        .admin-btn-group { display: flex; flex-wrap: wrap; gap: 4px; }
+
+        .target-link { color: #cb8458; text-decoration: none; font-weight: 600; }
+        .target-link:hover { text-decoration: underline; }
+
+        .admin-stats {
+            display: flex;
+            gap: 14px;
+            margin: 20px 0 28px;
+            flex-wrap: wrap;
+        }
+        .admin-stat-card {
+            flex: 1;
+            min-width: 110px;
+            background: #fffaf4;
+            border: 1px solid #f0e4d7;
+            border-radius: 14px;
+            padding: 16px 20px;
+            text-align: center;
+        }
+        .admin-stat-num   { font-size: 26px; font-weight: 800; color: #cb8458; }
+        .admin-stat-label { font-size: 12px; color: #9f8773; margin-top: 4px; }
+
+        /* 내용 보기 모달 */
+        .content-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .content-modal.open { display: flex; }
+        .content-modal-box {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px;
+            width: 480px;
+            max-width: 92vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+        }
+
+        /* 기간 정지 드롭다운 - position:fixed로 클리핑 방지 */
+        .suspend-wrapper { position: relative; display: inline-block; }
+        .suspend-menu {
+            display: none;
+            position: fixed;
+            background: #fff;
+            border: 1px solid #f0e4d7;
+            border-radius: 10px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+            z-index: 9999;
+            min-width: 130px;
+            overflow: hidden;
+        }
+        .suspend-menu form button {
+            width: 100%;
+            padding: 9px 14px;
+            background: none;
+            border: none;
+            text-align: left;
+            font-size: 13px;
+            color: #555;
+            cursor: pointer;
+        }
+        .suspend-menu form button:hover { background: #fffaf4; }
+
+        .report-filter-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .report-filter-btn {
+            padding: 5px 16px;
+            border-radius: 20px;
+            border: 1.5px solid #eadbc9;
+            background: #fff;
+            color: #9f8773;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .report-filter-btn.active {
+            background: #cb8458;
+            color: #fff;
+            border-color: #cb8458;
+        }
+
+        .resolve-tooltip { position: relative; display: inline-block; }
+        .resolve-tooltip .tip {
+            display: none;
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            font-size: 11px;
+            padding: 5px 9px;
+            border-radius: 6px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        .resolve-tooltip:hover .tip { display: block; }
+    </style>
+</head>
+<body>
+<div class="subtab-shell">
+    <div class="subtab-wrap">
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+        <div class="subtab-layout">
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('mypage', '')}"></aside>
+
+            <section class="subtab-content" style="display:flex; flex-direction:column; min-height:calc(100vh - 80px);">
+                <section class="subtab-section" style="flex:1; display:flex; flex-direction:column;">
+                    <p class="subtab-eyebrow">ADMIN</p>
+                    <h2 class="subtab-title">관리자 페이지</h2>
+
+                    <!-- 통계 카드 -->
+                    <div class="admin-stats">
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-num" th:text="${#lists.size(members)}">0</div>
+                            <div class="admin-stat-label">전체 회원</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-num" th:text="${#lists.size(members.?[blocked])}">0</div>
+                            <div class="admin-stat-label">차단된 계정</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-num" th:text="${#lists.size(reports)}">0</div>
+                            <div class="admin-stat-label">전체 신고</div>
+                        </div>
+                        <div class="admin-stat-card">
+                            <div class="admin-stat-num" th:text="${#lists.size(reports.?[!resolved])}">0</div>
+                            <div class="admin-stat-label">미처리 신고</div>
+                        </div>
+                    </div>
+
+                    <!-- 탭 -->
+                    <div class="admin-tab-bar">
+                        <button class="admin-tab active" onclick="switchTab('reports', this)">신고 목록</button>
+                        <button class="admin-tab" onclick="switchTab('members', this)">회원 목록</button>
+                    </div>
+
+                    <!-- ─── 신고 목록 패널 (그룹 단위) ─── -->
+                    <div id="panel-reports" class="admin-panel active">
+                        <div class="report-filter-bar">
+                            <button class="report-filter-btn active" onclick="filterReports('pending', this)">미처리</button>
+                            <button class="report-filter-btn" onclick="filterReports('resolved', this)">처리됨</button>
+                        </div>
+                        <div th:if="${#lists.isEmpty(reportGroups)}"
+                             style="text-align:center; padding:40px; color:#9f8773;">
+                            접수된 신고가 없습니다.
+                        </div>
+                        <div th:unless="${#lists.isEmpty(reportGroups)}" style="overflow-x:auto; overflow-y:visible;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>신고 건수</th>
+                                        <th>유형</th>
+                                        <th>제목/내용</th>
+                                        <th>작성자</th>
+                                        <th>신고 사유</th>
+                                        <th>상태</th>
+                                        <th>처리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- group = List<Report>, 같은 대상에 대한 신고 묶음 -->
+                                    <th:block th:each="group, gi : ${reportGroups}">
+                                        <!-- 대표 행 (data-resolved: 모두 처리됐으면 true) -->
+                                        <tr style="background:#fffaf4;"
+                                            th:attr="data-resolved=${#lists.isEmpty(group.?[!resolved])}">
+                                            <!-- 신고 건수 -->
+                                            <td>
+                                                <span class="badge badge-new"
+                                                      th:text="${#lists.size(group)} + '건'"></span>
+                                            </td>
+                                            <!-- 유형 -->
+                                            <td>
+                                                <span th:if="${group[0].targetType == 'BOARD' or group[0].targetType == 'TALKBOARD'}">게시물</span>
+                                                <span th:if="${group[0].targetType == 'COMMENT' or group[0].targetType == 'TALKCOMMENT'}">댓글</span>
+                                            </td>
+                                            <!-- 제목/내용 -->
+                                            <td style="max-width:200px;">
+                                                <div th:if="${group[0].targetType == 'BOARD'}"
+                                                     style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">
+                                                    <a th:href="@{/board/{id}(id=${group[0].targetId})}"
+                                                       th:text="${group[0].targetSummary}"
+                                                       class="target-link" target="_blank"></a>
+                                                </div>
+                                                <div th:if="${group[0].targetType == 'TALKBOARD'}"
+                                                     style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">
+                                                    <a th:href="@{/talkboard/{id}(id=${group[0].targetId})}"
+                                                       th:text="${group[0].targetSummary}"
+                                                       class="target-link" target="_blank"></a>
+                                                </div>
+                                                <div th:if="${group[0].targetType == 'COMMENT' or group[0].targetType == 'TALKCOMMENT'}"
+                                                     style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px; font-size:12px; color:#666;"
+                                                     th:text="${group[0].targetSummary}"></div>
+                                                <button class="admin-btn admin-btn-view view-content-btn"
+                                                        style="margin-top:4px;"
+                                                        th:attr="data-summary=${group[0].targetSummary},
+                                                                 data-content=${group[0].targetContent},
+                                                                 data-author=${group[0].authorName},
+                                                                 data-authorid=${group[0].authorMemberId},
+                                                                 data-targettype=${group[0].targetType},
+                                                                 data-category=${group[0].targetCategory}">
+                                                    내용 보기
+                                                </button>
+                                            </td>
+                                            <!-- 작성자 -->
+                                            <td style="max-width:120px; overflow:hidden; text-overflow:ellipsis;">
+                                                <span th:text="${group[0].authorName}"></span>
+                                                <span th:if="${group[0].authorMemberId != null}"
+                                                      style="font-size:11px; color:#bbb;"
+                                                      th:text="'(ID ' + ${group[0].authorMemberId} + ')'"></span>
+                                                <span th:if="${group[0].authorMemberId == null}"
+                                                      style="font-size:11px; color:#bbb;">(익명)</span>
+                                            </td>
+                                            <!-- 신고 사유 (여러 건이면 토글) -->
+                                            <td style="max-width:140px;">
+                                                <div th:if="${#lists.size(group) == 1}"
+                                                     style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px;"
+                                                     th:text="${group[0].reason}" th:title="${group[0].reason}"></div>
+                                                <div th:if="${#lists.size(group) > 1}">
+                                                    <button type="button"
+                                                            th:onclick="|toggleReasons('reasons-' + ${gi.index})|"
+                                                            style="background:none; border:none; color:#cb8458; font-size:12px; cursor:pointer; padding:0; font-weight:600;">
+                                                        사유 <span th:text="${#lists.size(group)}"></span>건 보기 ▾
+                                                    </button>
+                                                    <div th:id="'reasons-' + ${gi.index}" style="display:none; margin-top:6px;">
+                                                        <div th:each="r, ri : ${group}"
+                                                             style="font-size:12px; color:#555; padding:4px 0; border-bottom:1px solid #f0e4d7;">
+                                                            <span style="color:#9f8773;" th:text="${ri.index + 1} + '. '"></span>
+                                                            <span th:text="${r.reporterName}" style="font-weight:600;"></span>:
+                                                            <span th:text="${r.reason}"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <!-- 상태: 하나라도 미처리면 미처리 -->
+                                            <td>
+                                                <span th:if="${#lists.isEmpty(group.?[!resolved])}" class="badge badge-resolved">처리됨</span>
+                                                <span th:unless="${#lists.isEmpty(group.?[!resolved])}" class="badge badge-new">미처리</span>
+                                            </td>
+                                            <!-- 그룹 단위 처리 -->
+                                            <td>
+                                                <div th:unless="${#lists.isEmpty(group.?[!resolved])}" class="admin-btn-group">
+                                                    <div class="resolve-tooltip">
+                                                        <form th:action="@{/admin/report/resolve-group}" method="post" style="display:inline;">
+                                                            <input type="hidden" name="targetType" th:value="${group[0].targetType}">
+                                                            <input type="hidden" name="targetId" th:value="${group[0].targetId}">
+                                                            <button type="submit" class="admin-btn admin-btn-resolve">해결</button>
+                                                        </form>
+                                                        <span class="tip">글/댓글은 유지하고 신고만 처리됨으로 표시합니다.</span>
+                                                    </div>
+                                                    <form th:action="@{/admin/report/delete-content-group}" method="post" style="display:inline;"
+                                                          onsubmit="return confirm('신고된 콘텐츠를 삭제하시겠습니까?')">
+                                                        <input type="hidden" name="targetType" th:value="${group[0].targetType}">
+                                                        <input type="hidden" name="targetId" th:value="${group[0].targetId}">
+                                                        <button type="submit" class="admin-btn admin-btn-del-content">삭제</button>
+                                                    </form>
+                                                    <!-- 작성자 제재 -->
+                                                    <button th:if="${group[0].authorMemberId != null}"
+                                                            type="button" class="admin-btn admin-btn-suspend"
+                                                            th:attr="data-member-id=${group[0].authorMemberId}"
+                                                            onclick="toggleSuspend(this)">제재 ▾</button>
+                                                    <span th:if="${group[0].authorMemberId == null}"
+                                                          style="font-size:11px; color:#ccc;">익명</span>
+                                                </div>
+                                                <!-- 해결만 한 경우: 되돌리기 가능 -->
+                                                <form th:if="${#lists.isEmpty(group.?[!resolved]) and #lists.isEmpty(group.?[contentDeleted])}"
+                                                      th:action="@{/admin/report/unresolve-group}" method="post" style="display:inline;">
+                                                    <input type="hidden" name="targetType" th:value="${group[0].targetType}">
+                                                    <input type="hidden" name="targetId" th:value="${group[0].targetId}">
+                                                    <button type="submit" class="admin-btn" style="background:#f5f5f5; color:#999;">되돌리기</button>
+                                                </form>
+                                                <!-- 삭제처리한 경우: 복구 불가 -->
+                                                <span th:if="${#lists.isEmpty(group.?[!resolved]) and !#lists.isEmpty(group.?[contentDeleted])}"
+                                                      style="color:#ccc; font-size:12px;">-</span>
+                                            </td>
+                                        </tr>
+                                    </th:block>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ─── 회원 관리 패널 ─── -->
+                    <div id="panel-members" class="admin-panel">
+                        <div style="overflow-x:auto; overflow-y:visible;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>이름</th>
+                                        <th>학번</th>
+                                        <th>학년</th>
+                                        <th>상태</th>
+                                        <th>권한</th>
+                                        <th>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="m : ${members}">
+                                        <td th:text="${m.name}"></td>
+                                        <td th:text="${m.studentId}"></td>
+                                        <td th:text="${m.grade > 0 ? m.grade + '학년' : '-'}"></td>
+                                        <td>
+                                            <!-- 관리자는 항상 정상 표시 -->
+                                            <span th:if="${m.admin}" class="badge badge-normal">정상</span>
+                                            <!-- 일반 회원 상태 -->
+                                            <th:block th:unless="${m.admin}">
+                                                <span th:if="${m.blocked}" class="badge badge-blocked">영구 차단</span>
+                                                <span th:if="${!m.blocked and m.blockedUntil != null}"
+                                                      class="badge badge-suspended"
+                                                      th:text="'정지 ~' + ${#temporals.format(m.blockedUntil, 'M/d')}"></span>
+                                                <span th:if="${!m.blocked and m.blockedUntil == null}"
+                                                      class="badge badge-normal">정상</span>
+                                            </th:block>
+                                        </td>
+                                        <td>
+                                            <span th:if="${m.admin}" class="badge badge-admin">관리자</span>
+                                            <span th:unless="${m.admin}" class="badge badge-pending">일반</span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${m.admin}" style="color:#ccc; font-size:12px;">-</span>
+                                            <th:block th:unless="${m.admin}">
+                                                <!-- 영구 차단 상태면 해제 버튼 표시 -->
+                                                <form th:if="${m.blocked}"
+                                                      th:action="@{/admin/member/{id}/block(id=${m.id})}"
+                                                      method="post" style="display:inline;"
+                                                      onsubmit="return confirm('차단을 해제하시겠습니까?')">
+                                                    <input type="hidden" name="redirectTab" value="members">
+                                                    <button type="submit" class="admin-btn admin-btn-unblock">차단 해제</button>
+                                                </form>
+                                                <!-- 정지 중이면 해제 버튼 -->
+                                                <form th:if="${!m.blocked and m.blockedUntil != null}"
+                                                      th:action="@{/admin/member/{id}/unsuspend(id=${m.id})}"
+                                                      method="post" style="display:inline;"
+                                                      onsubmit="return confirm('정지를 해제하시겠습니까?')">
+                                                    <button type="submit" class="admin-btn admin-btn-unblock">정지 해제</button>
+                                                </form>
+                                                <!-- 정상이면 빈칸 -->
+                                                <span th:if="${!m.blocked and m.blockedUntil == null}"
+                                                      style="color:#ccc; font-size:12px;">-</span>
+                                            </th:block>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/app-layout :: chatNotifications}"></div>
+
+<!-- body 레벨 플로팅 제재 메뉴 (position:fixed 기준점 문제 방지) -->
+<div id="floating-suspend-menu" class="suspend-menu"
+     style="display:none; position:fixed; z-index:9999;">
+</div>
+
+<!-- 내용 보기 모달 -->
+<div id="contentModal" class="content-modal" onclick="if(event.target===this)closeContentModal()">
+    <div class="content-modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="margin:0; font-size:16px; color:#444;">신고된 내용 확인</h3>
+            <button onclick="closeContentModal()"
+                    style="background:none; border:none; font-size:22px; cursor:pointer; color:#999;">✕</button>
+        </div>
+        <div style="margin-bottom:10px; padding:8px 14px; background:#f0e4d7; border-radius:10px; font-size:12px; color:#8f6d4c; font-weight:700;">
+            <span id="modal-source"></span>
+        </div>
+        <div style="margin-bottom:12px; padding:10px 14px; background:#f6eadb; border-radius:10px; font-size:13px; color:#8f6d4c;">
+            <strong>작성자: </strong><span id="modal-author"></span>
+        </div>
+        <div id="modal-summary"
+             style="font-size:13px; font-weight:700; color:#555; margin-bottom:8px;"></div>
+        <div id="modal-content"
+             style="white-space:pre-wrap; font-size:13px; color:#444; line-height:1.7;
+                    padding:14px; background:#fffaf4; border-radius:10px; border:1px solid #f0e4d7;">
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterReports(type, btn) {
+        document.querySelectorAll('.report-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.querySelectorAll('#panel-reports tbody tr').forEach(row => {
+            const isResolved = row.dataset.resolved === 'true';
+            row.style.display = (type === 'pending' ? !isResolved : isResolved) ? '' : 'none';
+        });
+    }
+
+    // 페이지 로드 시 URL 파라미터로 탭 결정, 기본은 신고 목록(미처리)
+    document.addEventListener('DOMContentLoaded', function() {
+        const tab = new URLSearchParams(window.location.search).get('tab');
+        if (tab === 'members') {
+            const tabBtns = document.querySelectorAll('.admin-tab');
+            switchTab('members', tabBtns[1]);
+        } else {
+            filterReports('pending', document.querySelector('.report-filter-btn'));
+        }
+    });
+
+    function toggleReasons(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function switchTab(name, btn) {
+        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // 내용 보기 버튼: data 속성에서 읽기
+    document.querySelectorAll('.view-content-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const summary    = this.dataset.summary    || '-';
+            const content    = this.dataset.content    || '(내용 없음)';
+            const author     = this.dataset.author     || '-';
+            const authorId   = this.dataset.authorid;
+            const targetType = this.dataset.targettype || '';
+            const category   = this.dataset.category  || '';
+
+            // 출처 게시판 표시
+            let sourceText = '';
+            if (targetType === 'BOARD') {
+                if (category === '중고거래 게시판') sourceText = '중고거래 게시판 게시물';
+                else if (category === '📢 모집중')  sourceText = '모집중 게시판 게시물';
+                else                                sourceText = '익명 게시판 게시물';
+            } else if (targetType === 'TALKBOARD')  sourceText = '채팅게시판 게시물';
+            else if (targetType === 'COMMENT')       sourceText = '익명게시판 댓글';
+            else if (targetType === 'TALKCOMMENT')   sourceText = '채팅게시판 댓글';
+
+            document.getElementById('modal-source').textContent = sourceText;
+            document.getElementById('modal-summary').textContent = summary;
+            document.getElementById('modal-content').textContent = content;
+            document.getElementById('modal-author').textContent =
+                author + (authorId && authorId !== 'null' ? '  (회원 ID: ' + authorId + ')' : '  (익명)');
+            document.getElementById('contentModal').classList.add('open');
+        });
+    });
+
+    function closeContentModal() {
+        document.getElementById('contentModal').classList.remove('open');
+    }
+
+    function toggleSuspend(btn) {
+        const floatingMenu = document.getElementById('floating-suspend-menu');
+
+        // 같은 버튼 재클릭 시 닫기
+        if (floatingMenu._openBtn === btn && floatingMenu.style.display === 'block') {
+            floatingMenu.style.display = 'none';
+            floatingMenu._openBtn = null;
+            return;
+        }
+
+        const memberId = btn.dataset.memberId;
+        const csrf = document.querySelector('meta[name="_csrf"]')?.content || '';
+
+        floatingMenu.innerHTML = `
+            <form action="/admin/member/${memberId}/suspend" method="post">
+                <input type="hidden" name="days" value="1">
+                <input type="hidden" name="_csrf" value="${csrf}">
+                <button type="submit">1일 정지</button>
+            </form>
+            <form action="/admin/member/${memberId}/suspend" method="post">
+                <input type="hidden" name="days" value="3">
+                <input type="hidden" name="_csrf" value="${csrf}">
+                <button type="submit">3일 정지</button>
+            </form>
+            <form action="/admin/member/${memberId}/suspend" method="post">
+                <input type="hidden" name="days" value="10">
+                <input type="hidden" name="_csrf" value="${csrf}">
+                <button type="submit">10일 정지</button>
+            </form>
+            <form action="/admin/member/${memberId}/suspend" method="post">
+                <input type="hidden" name="days" value="30">
+                <input type="hidden" name="_csrf" value="${csrf}">
+                <button type="submit">1개월 정지</button>
+            </form>
+            <div style="height:1px;background:#f0e4d7;margin:2px 0;"></div>
+            <form action="/admin/member/${memberId}/block" method="post"
+                  onsubmit="return confirm('영구 차단하시겠습니까?')">
+                <input type="hidden" name="_csrf" value="${csrf}">
+                <button type="submit" style="color:#e57373;">영구 차단</button>
+            </form>`;
+
+        // 실제 높이 측정 후 위치 결정
+        floatingMenu.style.visibility = 'hidden';
+        floatingMenu.style.display = 'block';
+        const menuH = floatingMenu.offsetHeight;
+        const rect = btn.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+
+        floatingMenu.style.left = rect.left + 'px';
+        floatingMenu.style.top = (spaceBelow < menuH + 8)
+            ? Math.max(8, rect.top - menuH - 4) + 'px'
+            : (rect.bottom + 4) + 'px';
+        floatingMenu.style.visibility = 'visible';
+        floatingMenu._openBtn = btn;
+    }
+
+    window.addEventListener('click', function(e) {
+        const floatingMenu = document.getElementById('floating-suspend-menu');
+        if (!e.target.closest('.admin-btn-suspend') && !floatingMenu.contains(e.target)) {
+            floatingMenu.style.display = 'none';
+            floatingMenu._openBtn = null;
+        }
+    });
+</script>
+</body>
+</html>
