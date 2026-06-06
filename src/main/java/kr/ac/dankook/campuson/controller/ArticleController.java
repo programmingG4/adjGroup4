@@ -75,9 +75,10 @@ public class ArticleController {
     @GetMapping("/articles/page")
     public ResponseEntity<ArticleFetchResult> articlePage(
             @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "all") String category,
             @RequestParam(defaultValue = "false") boolean refresh
     ) {
-        ArticleFetchResult result = articleCrawlerService.fetchArticlePage(page, refresh);
+        ArticleFetchResult result = articleCrawlerService.fetchArticlePage(page, category, refresh);
         return ResponseEntity.ok(result);
     }
 

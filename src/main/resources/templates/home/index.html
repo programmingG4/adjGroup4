@@ -30,12 +30,16 @@
                                    th:classappend="${link.styleClass()}"
                                    th:title="${link.title()}">
                                     <div class="home-news-slide-thumb home-quick-thumb">
-                                        <img class="home-quick-thumb-image"
+                                        <img th:unless="${link.key() == 'bloter'}"
+                                             class="home-quick-thumb-image"
                                              th:src="@{/home/link-thumbnail(target=${link.key()})}"
                                              th:alt="|${link.title()} 썸네일|"
                                              loading="lazy"
                                              onload="this.closest('.home-quick-thumb').classList.add('has-image');"
                                              onerror="this.closest('.home-quick-thumb').classList.add('is-fallback'); this.remove();">
+                                        <div th:if="${link.key() == 'bloter'}" class="home-quick-logo-card" aria-hidden="true">
+                                            <img src="/images/bloter-logo.png" alt="BLOTER" class="home-quick-bloter-logo">
+                                        </div>
                                         <div class="home-quick-overlay-title">
                                             <p class="home-kicker">CAMPUSON LINKS</p>
                                             <h2 class="home-stream-title">추천 바로가기</h2>

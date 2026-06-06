@@ -48,15 +48,6 @@
                                 <div class="calendar-day-number" th:text="${day.dayOfMonth}">1</div>
 
                                 <div class="calendar-events">
-                                    <a th:each="event : ${schedules}"
-                                       th:if="${!event.startDate().isAfter(day) and !event.endDate().isBefore(day)}"
-                                       th:href="${event.sourceUrl()}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="calendar-event academic-event"
-                                       th:title="${event.title()}"
-                                       th:text="${event.title()}">수강신청</a>
-
                                     <div th:each="memo : ${memos}"
                                          th:if="${memo.memoDate().equals(day)}"
                                          class="calendar-event memo-event"
@@ -68,6 +59,51 @@
                 </section>
 
                 <aside class="calendar-side-card">
+                    <section class="calendar-schedule-list-panel">
+                        <p class="subtab-eyebrow">DKU SCHEDULE</p>
+                        <h3 th:text="${yearMonth.year + '년 ' + yearMonth.monthValue + '월 학사일정'}">이번 달 학사일정</h3>
+                        <div class="calendar-schedule-list" th:if="${monthlySchedules != null and !monthlySchedules.isEmpty()}">
+                            <a class="calendar-schedule-item"
+                               th:each="event : ${monthlySchedules}"
+                               th:href="${event.sourceUrl()}"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                <strong th:text="${event.startDate().equals(event.endDate()) ? #temporals.format(event.startDate(), 'yyyy.MM.dd') : #temporals.format(event.startDate(), 'yyyy.MM.dd') + ' ~ ' + #temporals.format(event.endDate(), 'yyyy.MM.dd')}">2026.06.01</strong>
+                                <span th:text="${event.title()}">2026학년도 학사일정</span>
+                            </a>
+                        </div>
+                        <div class="calendar-empty" th:if="${monthlySchedules == null or monthlySchedules.isEmpty()}">이번 달에 표시할 학사일정이 없습니다.</div>
+
+                        <div class="calendar-schedule-popup-wrap" th:if="${monthlySchedules != null and !monthlySchedules.isEmpty()}">
+                            <input type="checkbox" id="schedulePopupToggle" class="schedule-popup-check" aria-hidden="true">
+                            <label for="schedulePopupToggle" class="schedule-popup-trigger">전체 일정 펼치기</label>
+
+                            <div class="calendar-schedule-popup" role="dialog" aria-modal="true" aria-labelledby="schedulePopupTitle">
+                                <label for="schedulePopupToggle" class="schedule-popup-backdrop" aria-label="학사일정 팝업 닫기"></label>
+                                <section class="schedule-popup-dialog">
+                                    <div class="schedule-popup-head">
+                                        <div>
+                                            <p class="subtab-eyebrow">DKU SCHEDULE</p>
+                                            <h3 id="schedulePopupTitle" th:text="${yearMonth.year + '년 ' + yearMonth.monthValue + '월 전체 학사일정'}">전체 학사일정</h3>
+                                        </div>
+                                        <label for="schedulePopupToggle" class="schedule-popup-close" aria-label="닫기">×</label>
+                                    </div>
+
+                                    <div class="schedule-popup-list">
+                                        <a class="schedule-popup-item"
+                                           th:each="event : ${monthlySchedules}"
+                                           th:href="${event.sourceUrl()}"
+                                           target="_blank"
+                                           rel="noopener noreferrer">
+                                            <strong th:text="${event.startDate().equals(event.endDate()) ? #temporals.format(event.startDate(), 'yyyy.MM.dd') : #temporals.format(event.startDate(), 'yyyy.MM.dd') + ' ~ ' + #temporals.format(event.endDate(), 'yyyy.MM.dd')}">2026.06.01</strong>
+                                            <span th:text="${event.title()}">2026학년도 학사일정</span>
+                                        </a>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </section>
+
                     <section class="calendar-memo-panel">
                         <p class="subtab-eyebrow">MY MEMO</p>
                         <h3>개인 메모 추가</h3>
@@ -108,7 +144,6 @@
                         <div class="calendar-empty" th:if="${memos == null or memos.isEmpty()}">이번 달에 저장한 메모가 없습니다.</div>
                     </section>
 
-                    <a href="https://www.dankook.ac.kr/web/kor/-2014-" target="_blank" rel="noopener noreferrer" class="calendar-source-link">단국대학교 학사일정 원문 보기</a>
                 </aside>
             </main>
         </div>

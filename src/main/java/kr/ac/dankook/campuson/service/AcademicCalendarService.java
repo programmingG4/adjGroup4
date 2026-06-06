@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -23,52 +24,85 @@ import java.util.regex.Pattern;
 @Service
 public class AcademicCalendarService {
 
-    private static final String DANKOOK_CALENDAR_URL = "https://www.dankook.ac.kr/web/kor/-2014-";
-    private static final int REQUEST_TIMEOUT_MS = 4500;
+    private static final String DANKOOK_CALENDAR_BASE_URL = "https://www.dankook.ac.kr/web/kor/-2014-";
+    private static final String DANKOOK_CALENDAR_LIST_URL_TEMPLATE = "https://www.dankook.ac.kr/web/kor/-2014-?p_p_id=dku_calendar_CalendarEvent&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_dku_calendar_CalendarEvent_action=view&_dku_calendar_CalendarEvent_tab=list&_dku_calendar_CalendarEvent_selYear=%d";
+    private static final String DANKOOK_BOOTCAMP_CALENDAR_URL_TEMPLATE = "https://bootcamp.dankook.ac.kr/education/courseList.php?list=list&year=%d";
+    private static final int REQUEST_TIMEOUT_MS = 7000;
     private static final long CACHE_TTL_SECONDS = 60 * 60 * 6;
 
     private static final Pattern FULL_RANGE_PATTERN = Pattern.compile("(\\d{4})[.\\-/](\\d{1,2})[.\\-/](\\d{1,2})\\s*(?:~|～|-|–|—|부터|∼)\\s*(?:(\\d{4})[.\\-/])?(\\d{1,2})[.\\-/](\\d{1,2})");
     private static final Pattern FULL_SINGLE_PATTERN = Pattern.compile("(\\d{4})[.\\-/](\\d{1,2})[.\\-/](\\d{1,2})");
-    private static final Pattern MONTH_RANGE_PATTERN = Pattern.compile("(\\d{1,2})[.\\-/](\\d{1,2})\\s*(?:~|～|-|–|—|부터|∼)\\s*(\\d{1,2})[.\\-/](\\d{1,2})");
+    private static final Pattern MONTH_RANGE_PATTERN = Pattern.compile("(?<!\\d)(\\d{1,2})[.\\-/](\\d{1,2})\\s*(?:~|～|-|–|—|부터|∼)\\s*(\\d{1,2})[.\\-/](\\d{1,2})(?!\\d)");
     private static final Pattern MONTH_SINGLE_PATTERN = Pattern.compile("(?<!\\d)(\\d{1,2})[.\\-/](\\d{1,2})(?!\\d)");
-    private static final Pattern JSON_OBJECT_PATTERN = Pattern.compile("\\{[^{}]{0,1800}\\}");
 
-    private CachedSchedules cachedSchedules;
+    private final Map<Integer, CachedSchedules> cachedSchedulesByYear = new HashMap<>();
 
     public List<AcademicScheduleEvent> findSchedulesForMonth(int year, int month) {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate start = yearMonth.atDay(1).minusDays(7);
         LocalDate end = yearMonth.atEndOfMonth().plusDays(7);
+        return findSchedulesForRange(year, start, end);
+    }
+
+    public List<AcademicScheduleEvent> findMonthlyScheduleList(int year, int month) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        return findSchedulesForRange(year, yearMonth.atDay(1), yearMonth.atEndOfMonth());
+    }
+
+    private List<AcademicScheduleEvent> findSchedulesForRange(int year, LocalDate start, LocalDate end) {
         return getAllSchedules(year).stream()
                 .filter(event -> !event.endDate().isBefore(start) && !event.startDate().isAfter(end))
                 .toList();
     }
 
-    private List<AcademicScheduleEvent> getAllSchedules(int fallbackYear) {
+    private List<AcademicScheduleEvent> getAllSchedules(int year) {
+        CachedSchedules cachedSchedules = cachedSchedulesByYear.get(year);
         if (cachedSchedules != null && !cachedSchedules.isExpired()) {
             return cachedSchedules.events();
         }
 
-        List<AcademicScheduleEvent> events;
+        List<AcademicScheduleEvent> events = List.of();
+        String bootcampListUrl = String.format(DANKOOK_BOOTCAMP_CALENDAR_URL_TEMPLATE, year);
+        String dankookListUrl = String.format(DANKOOK_CALENDAR_LIST_URL_TEMPLATE, year);
+
         try {
-            Document document = Jsoup.connect(DANKOOK_CALENDAR_URL)
-                    .userAgent("Mozilla/5.0 CampusON/1.0")
-                    .timeout(REQUEST_TIMEOUT_MS)
-                    .followRedirects(true)
-                    .get();
-            events = parseSchedules(document, fallbackYear);
+            Document document = fetchDocument(bootcampListUrl);
+            events = parseSchedules(document, year, bootcampListUrl);
         } catch (Exception ignored) {
             events = List.of();
         }
 
-        cachedSchedules = new CachedSchedules(events, Instant.now().plusSeconds(CACHE_TTL_SECONDS));
+        if (events.isEmpty()) {
+            try {
+                Document document = fetchDocument(dankookListUrl);
+                events = parseSchedules(document, year, dankookListUrl);
+            } catch (Exception ignored) {
+                events = List.of();
+            }
+        }
+
+        cachedSchedulesByYear.put(year, new CachedSchedules(events, Instant.now().plusSeconds(CACHE_TTL_SECONDS)));
         return events;
     }
 
-    private List<AcademicScheduleEvent> parseSchedules(Document document, int fallbackYear) {
+    private Document fetchDocument(String url) throws java.io.IOException {
+        return Jsoup.connect(url)
+                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 CampusON/1.0")
+                .referrer(DANKOOK_CALENDAR_BASE_URL)
+                .timeout(REQUEST_TIMEOUT_MS)
+                .followRedirects(true)
+                .get();
+    }
+
+    private List<AcademicScheduleEvent> parseSchedules(Document document, int fallbackYear, String sourceUrl) {
         Map<String, AcademicScheduleEvent> unique = new LinkedHashMap<>();
 
-        for (ScheduleSource source : collectScheduleSources(document)) {
+        List<ScheduleSource> sources = new ArrayList<>();
+        sources.addAll(collectWholeTextPairSources(document, sourceUrl));
+        sources.addAll(collectElementPairSources(document, sourceUrl));
+        sources.addAll(collectElementSources(document, sourceUrl));
+
+        for (ScheduleSource source : sources) {
             String text = normalize(source.text());
             if (!isUsableScheduleText(text)) {
                 continue;
@@ -80,7 +114,7 @@ public class AcademicCalendarService {
             }
 
             String title = cleanupTitle(text);
-            if (title.isBlank() || title.length() < 2 || isNoiseText(title)) {
+            if (!isPotentialScheduleTitle(title)) {
                 continue;
             }
 
@@ -91,7 +125,7 @@ public class AcademicCalendarService {
                     range.startDate(),
                     range.endDate(),
                     classify(title),
-                    source.sourceUrl().isBlank() ? DANKOOK_CALENDAR_URL : source.sourceUrl()
+                    source.sourceUrl().isBlank() ? sourceUrl : source.sourceUrl()
             );
             unique.putIfAbsent(event.id(), event);
         }
@@ -104,76 +138,107 @@ public class AcademicCalendarService {
                 .toList();
     }
 
-    private List<ScheduleSource> collectScheduleSources(Document document) {
+    private List<ScheduleSource> collectWholeTextPairSources(Document document, String sourceUrl) {
         List<ScheduleSource> sources = new ArrayList<>();
+        List<String> lines = document.wholeText().lines()
+                .map(this::normalize)
+                .filter(line -> !line.isBlank())
+                .toList();
 
-        for (Element candidate : document.select("table tr, li, .schedule, .calendar, .event, .bbs, .list, .cont, .content, [class*=calendar], [class*=schedule], [class*=event], [class*=fc-]")) {
-            String text = normalize(candidate.text());
-            if (!text.isBlank()) {
-                sources.add(new ScheduleSource(text, firstLinkOrDefault(candidate)));
+        for (int i = 0; i < lines.size() - 1; i++) {
+            String dateText = lines.get(i);
+            String titleText = lines.get(i + 1);
+            if (isDateOnlyText(dateText) && isPotentialScheduleTitle(titleText)) {
+                sources.add(new ScheduleSource(dateText + " " + titleText, sourceUrl));
+                i++;
             }
         }
-
-        String pageText = document.wholeText();
-        for (String line : pageText.split("\\R")) {
-            String text = normalize(line);
-            if (!text.isBlank()) {
-                sources.add(new ScheduleSource(text, DANKOOK_CALENDAR_URL));
-            }
-        }
-
-        for (Element script : document.select("script")) {
-            String scriptData = normalize(script.data());
-            if (scriptData.isBlank()) {
-                continue;
-            }
-            collectScriptObjects(scriptData, sources);
-            collectScriptFragments(scriptData, sources);
-        }
-
         return sources;
     }
 
-    private void collectScriptObjects(String scriptData, List<ScheduleSource> sources) {
-        Matcher matcher = JSON_OBJECT_PATTERN.matcher(scriptData);
-        while (matcher.find()) {
-            String objectText = normalizeJsonLikeText(matcher.group());
-            if (!objectText.isBlank()) {
-                sources.add(new ScheduleSource(objectText, DANKOOK_CALENDAR_URL));
-            }
-        }
-    }
+    private List<ScheduleSource> collectElementPairSources(Document document, String sourceUrl) {
+        List<ScheduleSource> sources = new ArrayList<>();
+        List<String> items = new ArrayList<>();
 
-    private void collectScriptFragments(String scriptData, List<ScheduleSource> sources) {
-        String prepared = scriptData
-                .replace("},{", "}\\n{")
-                .replace(";", ";\\n")
-                .replace(",", ", ");
-        for (String line : prepared.split("\\R")) {
-            String text = normalizeJsonLikeText(line);
+        for (Element candidate : document.select("li, tr, td, dd, dt, p, span, div")) {
+            String text = normalize(candidate.ownText().isBlank() ? candidate.text() : candidate.ownText());
             if (!text.isBlank()) {
-                sources.add(new ScheduleSource(text, DANKOOK_CALENDAR_URL));
+                items.add(text);
             }
         }
+
+        for (int i = 0; i < items.size() - 1; i++) {
+            String dateText = items.get(i);
+            String titleText = items.get(i + 1);
+            if (isDateOnlyText(dateText) && isPotentialScheduleTitle(titleText)) {
+                sources.add(new ScheduleSource(dateText + " " + titleText, sourceUrl));
+                i++;
+            }
+        }
+        return sources;
     }
 
-    private String normalizeJsonLikeText(String value) {
-        return normalize(value
-                .replaceAll("[{}\\[\\]\\\"]", " ")
-                .replaceAll("(?i)title|subject|summary|content|name|start|startDate|end|endDate|begin|finish|date", " ")
-                .replaceAll(":", " ")
-                .replaceAll("\\\\/", "/"));
+    private List<ScheduleSource> collectElementSources(Document document, String sourceUrl) {
+        List<ScheduleSource> sources = new ArrayList<>();
+
+        for (Element candidate : document.select("table tr, li, .schedule, .calendar, .event, .bbs, .list, .cont, .content, [class*=calendar], [class*=schedule], [class*=event]")) {
+            String text = normalize(candidate.text());
+            if (!text.isBlank()) {
+                sources.add(new ScheduleSource(text, firstLinkOrDefault(candidate, sourceUrl)));
+            }
+        }
+        return sources;
     }
 
-    private String firstLinkOrDefault(Element candidate) {
+    private String firstLinkOrDefault(Element candidate, String sourceUrl) {
         return Optional.ofNullable(candidate.selectFirst("a[href]"))
                 .map(link -> link.absUrl("href"))
                 .filter(value -> !value.isBlank())
-                .orElse(DANKOOK_CALENDAR_URL);
+                .orElse(sourceUrl);
+    }
+
+    private boolean isDateOnlyText(String text) {
+        String normalized = normalize(text);
+        return FULL_RANGE_PATTERN.matcher(normalized).matches()
+                || FULL_SINGLE_PATTERN.matcher(normalized).matches()
+                || MONTH_RANGE_PATTERN.matcher(normalized).matches()
+                || MONTH_SINGLE_PATTERN.matcher(normalized).matches();
+    }
+
+    private boolean isPotentialScheduleTitle(String text) {
+        String normalized = normalize(text);
+        return normalized.length() >= 2
+                && normalized.length() <= 180
+                && !isDateOnlyText(normalized)
+                && !isCalendarLabel(normalized)
+                && !isNoiseText(normalized)
+                && containsKoreanOrLetter(normalized);
+    }
+
+    private boolean containsKoreanOrLetter(String text) {
+        return text.matches(".*[가-힣A-Za-z].*");
+    }
+
+    private boolean isCalendarLabel(String text) {
+        String normalized = normalize(text);
+        return normalized.isBlank()
+                || normalized.matches("\\d{1,2}")
+                || normalized.matches("\\d{1,2}월")
+                || normalized.matches("[일월화수목금토]")
+                || normalized.equalsIgnoreCase("TODAY")
+                || normalized.equals("월간")
+                || normalized.equals("목록")
+                || normalized.equals("학기")
+                || normalized.equals("월")
+                || normalized.equals("일정")
+                || normalized.equals("학사내용")
+                || normalized.equals("calendar_month")
+                || normalized.equals("list")
+                || normalized.equals("grid_view");
     }
 
     private boolean isUsableScheduleText(String text) {
-        return text.length() >= 6 && text.length() <= 700 && containsDateLikeText(text) && !isNoiseText(text);
+        return text.length() >= 6 && text.length() <= 900 && containsDateLikeText(text) && !isNoiseText(text);
     }
 
     private boolean containsDateLikeText(String text) {
@@ -186,12 +251,32 @@ public class AcademicCalendarService {
                 || lower.contains("chevron")
                 || lower.contains("today")
                 || lower.contains("print")
+                || lower.contains("ssl")
+                || lower.contains("certificate")
+                || lower.contains("style")
+                || lower.contains("margin")
+                || lower.contains("function")
+                || lower.contains("script")
+                || lower.contains("javascript")
+                || lower.contains("swiper")
+                || lower.contains("console")
+                || lower.contains("var ")
+                || lower.contains("let ")
+                || lower.contains("const ")
+                || text.contains("유효기간")
+                || text.contains("유효...")
+                || text.contains("본문 바로가기")
+                || text.contains("메인메뉴")
+                || text.contains("공유하기")
+                || text.contains("개인정보처리방침")
+                || text.contains("이용약관")
+                || text.contains("이메일무단수집")
+                || text.contains("관리자로그인")
+                || text.contains("유관기관사이트")
                 || text.contains("콘텐츠 실명제")
                 || text.contains("담당부서")
                 || text.contains("최종수정일")
                 || text.contains("공통 퀵링크")
-                || text.contains("개인정보처리방침")
-                || text.contains("이메일 무단수집")
                 || text.contains("경기도 용인시")
                 || text.contains("충남 천안시")
                 || text.contains("학사일정 DKU 캘린더")
@@ -255,14 +340,14 @@ public class AcademicCalendarService {
         String title = text
                 .replaceAll("\\d{4}[.\\-/]\\d{1,2}[.\\-/]\\d{1,2}\\s*(?:~|～|-|–|—|부터|∼)\\s*(?:\\d{4}[.\\-/])?\\d{1,2}[.\\-/]\\d{1,2}", " ")
                 .replaceAll("\\d{4}[.\\-/]\\d{1,2}[.\\-/]\\d{1,2}", " ")
-                .replaceAll("\\d{1,2}[.\\-/]\\d{1,2}\\s*(?:~|～|-|–|—|부터|∼)\\s*\\d{1,2}[.\\-/]\\d{1,2}", " ")
+                .replaceAll("(?<!\\d)\\d{1,2}[.\\-/]\\d{1,2}\\s*(?:~|～|-|–|—|부터|∼)\\s*\\d{1,2}[.\\-/]\\d{1,2}(?!\\d)", " ")
                 .replaceAll("(?<!\\d)\\d{1,2}[.\\-/]\\d{1,2}(?!\\d)", " ")
                 .replaceAll("\\bSUN\\b|\\bMON\\b|\\bTUE\\b|\\bWED\\b|\\bTHU\\b|\\bFRI\\b|\\bSAT\\b", " ")
                 .replaceAll("일정|학사일정|캘린더|DKU", " ")
                 .replaceAll("\\s+", " ")
                 .trim();
-        if (title.length() > 80) {
-            return title.substring(0, 80).trim();
+        if (title.length() > 120) {
+            return title.substring(0, 120).trim();
         }
         return title;
     }
