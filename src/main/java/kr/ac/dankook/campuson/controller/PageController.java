@@ -96,6 +96,6 @@ public class PageController {
         memberService.deleteAccount(principal.getName());
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         new SecurityContextLogoutHandler().logout(request, response, auth);
-        return "redirect:/?withdrawn";
+        return "redirect:/login?withdrawn";
     }
 }

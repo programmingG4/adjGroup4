@@ -184,5 +184,16 @@
     });
 </script>
 
+
+<div id="withdraw-toast" style="display:none; position:fixed; bottom:32px; left:50%; transform:translateX(-50%);
+     background:#333; color:#fff; padding:12px 24px; border-radius:12px; font-size:14px;
+     z-index:9999; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+  회원탈퇴가 완료되었습니다.
+</div>
+<script th:if="${param.withdrawn != null}">
+  const toast = document.getElementById('withdraw-toast');
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 3000);
+</script>
 </body>
 </html>

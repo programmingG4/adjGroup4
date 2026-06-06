@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface CalendarMemoRepository extends JpaRepository<CalendarMemo, Long> {
     List<CalendarMemo> findByMemberStudentIdAndMemoDateBetweenOrderByMemoDateAscIdAsc(String studentId, LocalDate startDate, LocalDate endDate);
     Optional<CalendarMemo> findByIdAndMemberStudentId(Long id, String studentId);
+    void deleteByMemberStudentId(String studentId);
 }

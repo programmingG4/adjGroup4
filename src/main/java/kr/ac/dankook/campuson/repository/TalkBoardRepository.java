@@ -46,4 +46,6 @@ public interface TalkBoardRepository extends JpaRepository<TalkBoard, Long> {
     // 투표 종료됐지만 결과 알림 미전송 글 (voteItems 즉시 로딩)
     @Query("SELECT DISTINCT t FROM TalkBoard t JOIN FETCH t.voteItems WHERE t.voteEndTime IS NOT NULL AND t.voteEndTime < :now AND t.voteResultNotified = false")
     List<TalkBoard> findEndedVotesNotNotified(@Param("now") LocalDateTime now);
+
+    List<TalkBoard> findByMemberId(Long memberId);
 }

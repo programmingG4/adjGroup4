@@ -582,6 +582,10 @@
                         <!-- 검색 버튼 -->
                         <button class="chat-menu-btn" onclick="toggleSearch()" title="메시지 검색" style="margin-left:auto;">🔍</button>
 
+                        <!-- 새 글 작성 버튼 -->
+                        <a th:href="@{/talkboard/write(from='chat', roomId=${room.id}, roomKey=${room.roomKey})}"
+                           class="chat-menu-btn" title="새 글 작성">✏️</a>
+
                         <!-- 세줄 버튼: 전체/학년/그룹/1:1 채팅방 -->
                         <div class="chat-menu-wrap" th:if="${room.type.name() != 'TRADE'}" style="margin-left:0;">
                             <button class="chat-menu-btn" onclick="toggleChatMenu(event)">☰</button>

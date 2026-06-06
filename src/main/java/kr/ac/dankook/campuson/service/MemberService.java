@@ -3,7 +3,7 @@ package kr.ac.dankook.campuson.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.ac.dankook.campuson.domain.Member;
-import kr.ac.dankook.campuson.repository.MemberRepository;
+import kr.ac.dankook.campuson.repository.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,13 +23,32 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final BoardRepository boardRepository;
+    private final TalkBoardRepository talkBoardRepository;
+    private final CommentRepository commentRepository;
+    private final TalkCommentRepository talkCommentRepository;
+    private final CalendarMemoRepository calendarMemoRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatReadStatusRepository chatReadStatusRepository;
 
     @Value("${google.vision.api-key}")
     private String googleApiKey;
 
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
+                         BoardRepository boardRepository, TalkBoardRepository talkBoardRepository,
+                         CommentRepository commentRepository, TalkCommentRepository talkCommentRepository,
+                         CalendarMemoRepository calendarMemoRepository,
+                         ChatRoomMemberRepository chatRoomMemberRepository,
+                         ChatReadStatusRepository chatReadStatusRepository) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
+        this.boardRepository = boardRepository;
+        this.talkBoardRepository = talkBoardRepository;
+        this.commentRepository = commentRepository;
+        this.talkCommentRepository = talkCommentRepository;
+        this.calendarMemoRepository = calendarMemoRepository;
+        this.chatRoomMemberRepository = chatRoomMemberRepository;
+        this.chatReadStatusRepository = chatReadStatusRepository;
     }
 
     public void register(String name, String studentId, String password, int grade, MultipartFile image) throws IOException {
@@ -125,8 +144,26 @@ public class MemberService {
         memberRepository.save(member);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteAccount(String studentId) {
         Member member = memberRepository.findByStudentId(studentId);
+        Long memberId = member.getId();
+
+        // 다른 사람 글에 단 댓글 삭제
+        commentRepository.deleteByMemberId(memberId);
+        talkCommentRepository.deleteByMemberId(memberId);
+
+        // 본인 게시글 삭제 (cascade로 댓글/투표 함께 삭제됨)
+        boardRepository.deleteAll(boardRepository.findByMemberId(memberId));
+        talkBoardRepository.deleteAll(talkBoardRepository.findByMemberId(memberId));
+
+        // 달력 메모 삭제
+        calendarMemoRepository.deleteByMemberStudentId(studentId);
+
+        // 채팅 관련 삭제
+        chatRoomMemberRepository.deleteByStudentId(studentId);
+        chatReadStatusRepository.deleteByStudentId(studentId);
+
         memberRepository.delete(member);
     }
 

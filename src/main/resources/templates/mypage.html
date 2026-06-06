@@ -6,6 +6,35 @@
   <title>마이페이지</title>
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/subtab-theme.css" />
+  <style>
+    .mypage-action-panel {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .mypage-action-panel.open { display: block; }
+    .settings-form { display: flex; flex-direction: column; gap: 14px; max-width: 400px; }
+    .settings-input {
+      width: 100%; padding: 11px 16px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--bg);
+      color: var(--text); font-size: 14px; font-family: inherit;
+      outline: none; box-sizing: border-box; transition: border-color 0.2s;
+    }
+    .settings-input:focus { border-color: var(--subtab-accent); }
+    .settings-success {
+      padding: 10px 16px; border-radius: 10px;
+      background: rgba(100,180,120,0.12); color: #3a7d52;
+      font-size: 13px; font-weight: 600; margin-bottom: 12px;
+    }
+    .settings-error {
+      padding: 10px 16px; border-radius: 10px;
+      background: rgba(220,80,80,0.1); color: #c04040;
+      font-size: 13px; font-weight: 600; margin-bottom: 12px;
+    }
+  </style>
 </head>
 <body>
 <div class="subtab-shell">
@@ -21,7 +50,6 @@
             <div>
               <p class="subtab-eyebrow">MY</p>
               <h2 class="subtab-title">내 정보와 계정 상태</h2>
-              <p class="subtab-desc">메인과 비슷한 톤을 유지하면서도, 로그인 사용자 정보를 더 안정적으로 볼 수 있도록 마이페이지 전용 화면을 분리했습니다.</p>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
               <a th:if="${member != null and member.admin}" href="/admin"
@@ -29,7 +57,6 @@
                  style="background:linear-gradient(180deg,#d99a70,#cb8458); color:#fff; border-color:#cb8458;">
                 관리자 페이지 →
               </a>
-              <a href="/mypage/settings" class="subtab-chip">계정 관리 →</a>
             </div>
           </div>
 
@@ -55,24 +82,30 @@
               </div>
             </div>
           </div>
-        </section>
 
-        <section class="subtab-section">
-          <div class="subtab-grid-two">
-            <article class="subtab-soft-card">
-              <h3>활동 안내</h3>
-              <p>추후에는 내가 작성한 게시글, 댓글, 관심 기사, 채팅 참여 현황이 이 영역에 연결되도록 확장하기 좋게 구성했습니다.</p>
-            </article>
-            <article class="subtab-soft-card">
-              <h3>보안 및 설정</h3>
-              <p>비밀번호 변경, 프로필 설정, 알림 기본값 같은 항목을 이 영역에 자연스럽게 추가할 수 있도록 여백을 남겨두었습니다.</p>
-            </article>
+          <div class="subtab-cta-row" style="margin-top:20px;">
+            <button type="button" class="subtab-button primary" onclick="togglePanel('pw-panel', 'withdraw-panel')">비밀번호 변경</button>
+            <button type="button" class="subtab-button secondary" onclick="togglePanel('withdraw-panel', 'pw-panel')">회원탈퇴</button>
           </div>
-          <div class="subtab-cta-row">
-            <form th:action="@{/logout}" method="post">
-              <button type="submit" class="subtab-button primary" style="border:none; cursor:pointer;">로그아웃</button>
+
+          <div id="pw-panel" class="mypage-action-panel">
+            <div th:if="${successMsg}" class="settings-success" th:text="${successMsg}"></div>
+            <div th:if="${errorMsg}" class="settings-error" th:text="${errorMsg}"></div>
+            <form th:action="@{/mypage/password}" method="post" class="settings-form">
+              <input type="password" name="currentPassword" class="settings-input" placeholder="현재 비밀번호" required />
+              <input type="password" name="newPassword" class="settings-input" placeholder="새 비밀번호" required />
+              <input type="password" name="confirmPassword" class="settings-input" placeholder="새 비밀번호 확인" required />
+              <div>
+                <button type="submit" class="subtab-button primary" style="border:none; cursor:pointer;">변경하기</button>
+              </div>
             </form>
-            <a href="/home" class="subtab-button secondary">메인으로 돌아가기</a>
+          </div>
+
+          <div id="withdraw-panel" class="mypage-action-panel">
+            <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?</p>
+            <form th:action="@{/delete-account}" method="post">
+              <button type="submit" class="subtab-button primary" style="border:none; cursor:pointer;" onclick="return confirm('정말 탈퇴하시겠습니까?')">탈퇴하기</button>
+            </form>
           </div>
         </section>
       </section>
@@ -80,5 +113,19 @@
   </div>
 </div>
 <div th:replace="~{fragments/app-layout :: chatNotifications}"></div>
+<script>
+  function togglePanel(targetId, otherId) {
+    const target = document.getElementById(targetId);
+    const other = document.getElementById(otherId);
+    other.classList.remove('open');
+    target.classList.toggle('open');
+  }
+
+  // 서버에서 에러/성공 메시지 오면 비밀번호 패널 자동으로 열기
+  window.addEventListener('DOMContentLoaded', function () {
+    const hasFeedback = document.querySelector('#pw-panel .settings-success, #pw-panel .settings-error');
+    if (hasFeedback) document.getElementById('pw-panel').classList.add('open');
+  });
+</script>
 </body>
 </html>

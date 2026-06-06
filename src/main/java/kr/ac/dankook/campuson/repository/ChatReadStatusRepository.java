@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface ChatReadStatusRepository extends JpaRepository<ChatReadStatus, Long> {
     Optional<ChatReadStatus> findByStudentIdAndRoomId(String studentId, Long roomId);
+    void deleteByStudentId(String studentId);
 }

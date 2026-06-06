@@ -9,4 +9,5 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     List<Board> findByCategoryOrderByRegDateDesc(String category);
     List<Board> findAllByOrderByRegDateDesc(); // 전체 최신순
     List<Board> findTop5ByOrderByRegDateDesc(); // 메인 화면 최신 게시글
+    List<Board> findByMemberId(Long memberId);
 }
