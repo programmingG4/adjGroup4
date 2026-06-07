@@ -7,15 +7,55 @@
   <link rel="stylesheet" href="/css/main.css" />
   <link rel="stylesheet" href="/css/subtab-theme.css" />
   <style>
-    .mypage-action-panel {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      background: var(--surface);
+    .mypage-profile-card {
+      padding-bottom: 24px;
     }
-    .mypage-action-panel.open { display: block; }
+    .mypage-account-actions {
+      margin-top: 18px;
+    }
+    .mypage-action-buttons {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .mypage-main-action {
+      min-height: 53px;
+      padding: 0 22px;
+      border: none;
+      cursor: pointer;
+      font-size: 17px;
+      border-radius: 18px;
+    }
+    .mypage-action-panel {
+      display: block;
+      max-height: 0;
+      margin-top: 0;
+      padding: 0 20px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: var(--surface);
+      opacity: 0;
+      overflow: hidden;
+      transform: translateY(-8px);
+      transition:
+        max-height 0.34s ease,
+        opacity 0.24s ease,
+        transform 0.34s ease,
+        margin-top 0.34s ease,
+        padding-top 0.34s ease,
+        padding-bottom 0.34s ease,
+        border-color 0.34s ease;
+    }
+    .mypage-action-panel.open {
+      max-height: 420px;
+      margin-top: 18px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      border-color: var(--border);
+      opacity: 1;
+      transform: translateY(0);
+    }
     .settings-form { display: flex; flex-direction: column; gap: 14px; max-width: 400px; }
     .settings-input {
       width: 100%; padding: 11px 16px; border-radius: 12px;
@@ -45,7 +85,7 @@
       <aside th:replace="~{fragments/app-layout :: subtabSidebar('mypage', '')}"></aside>
 
       <section class="subtab-content">
-        <section class="subtab-section">
+        <section class="subtab-section mypage-profile-card">
           <div class="subtab-title-row">
             <div>
               <p class="subtab-eyebrow">MY</p>
@@ -83,9 +123,12 @@
             </div>
           </div>
 
-          <div class="subtab-cta-row" style="margin-top:20px;">
-            <button type="button" class="subtab-button primary" onclick="togglePanel('pw-panel', 'withdraw-panel')">비밀번호 변경</button>
-            <button type="button" class="subtab-button secondary" onclick="togglePanel('withdraw-panel', 'pw-panel')">회원탈퇴</button>
+        </section>
+
+        <div class="mypage-account-actions">
+          <div class="mypage-action-buttons">
+            <button type="button" class="subtab-button primary mypage-main-action" onclick="togglePanel('pw-panel', 'withdraw-panel')">비밀번호 변경</button>
+            <button type="button" class="subtab-button secondary mypage-main-action" onclick="togglePanel('withdraw-panel', 'pw-panel')">회원탈퇴</button>
           </div>
 
           <div id="pw-panel" class="mypage-action-panel">
@@ -102,12 +145,12 @@
           </div>
 
           <div id="withdraw-panel" class="mypage-action-panel">
-            <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?</p>
+            <p style="font-size:14px; color:var(--subtab-muted); margin-bottom:16px;">탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?</p>
             <form th:action="@{/delete-account}" method="post">
               <button type="submit" class="subtab-button primary" style="border:none; cursor:pointer;" onclick="return confirm('정말 탈퇴하시겠습니까?')">탈퇴하기</button>
             </form>
           </div>
-        </section>
+        </div>
       </section>
     </div>
   </div>
@@ -117,8 +160,15 @@
   function togglePanel(targetId, otherId) {
     const target = document.getElementById(targetId);
     const other = document.getElementById(otherId);
+
+    if (!target || !other) return;
+
+    const shouldOpen = !target.classList.contains('open');
     other.classList.remove('open');
-    target.classList.toggle('open');
+
+    window.requestAnimationFrame(function () {
+      target.classList.toggle('open', shouldOpen);
+    });
   }
 
   // 서버에서 에러/성공 메시지 오면 비밀번호 패널 자동으로 열기

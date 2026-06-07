@@ -33,7 +33,6 @@
         <p class="home-side-label">MY PAGE</p>
         <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '사용자 님'}">홍길동 님</h2>
         <p class="home-side-meta" th:text="${member != null ? (member.grade + '학년 · ' + member.studentId) : '로그인 정보 없음'}">소프트웨어학과 · 20231234</p>
-        <a th:href="@{/mypage}" class="home-side-link">마이페이지 바로가기</a>
     </div>
 
 
@@ -61,7 +60,6 @@
         <p class="home-side-label">MY PAGE</p>
         <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '사용자 님'}">홍길동 님</h2>
         <p class="home-side-meta" th:text="${member != null ? (member.grade + '학년 · ' + member.studentId) : '로그인 정보 없음'}">소프트웨어학과 · 20231234</p>
-        <a th:href="@{/mypage}" class="home-side-link">마이페이지 바로가기</a>
     </div>
     <nav class="home-shortcut-list article-shortcut-list" aria-label="바로가기">
         <a th:href="@{/chat}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'chat'} ? ' is-active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}"><span class="home-shortcut-icon">💬</span><span class="home-shortcut-copy"><strong>채팅</strong><small>대화와 팀 소통 확인</small></span></a>
@@ -78,10 +76,7 @@
             <p class="subtab-panel-eyebrow">MY PAGE</p>
             <h2 class="subtab-profile-name" th:text="${member != null ? member.name + ' 님' : '사용자 님'}">홍길동 님</h2>
             <p class="subtab-profile-meta" th:text="${member != null ? (member.grade + '학년 · ' + member.studentId) : '로그인 정보 없음'}">소프트웨어학과 · 20231234</p>
-            <!-- 기본: 마이페이지 바로가기 -->
-            <a th:if="${subAction != 'write' and subAction != 'back' and subAction != 'talkwrite'}" th:href="@{/mypage}" class="subtab-profile-link">마이페이지 바로가기</a>
             <!-- 익명게시판 목록: 글쓰기 -->
-            <a th:if="${subAction == 'write'}" href="/board/write" class="subtab-profile-link">새로운 글 작성하기</a>
             <!-- 채팅게시판 목록: 공지 작성하기 -->
             <a th:if="${subAction == 'talkwrite'}" th:href="@{/talkboard/write(roomId=${roomId},roomKey=${roomKey})}" class="subtab-profile-link">새로운 공지 작성하기</a>
             <!-- 상세 페이지: 목록으로 -->
