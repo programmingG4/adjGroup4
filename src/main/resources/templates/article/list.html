@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusON 기사</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+    <link rel="stylesheet" href="/css/article-page.css">
+</head>
+<body>
+<div class="subtab-shell article-shell-page">
+    <div class="subtab-wrap">
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+
+        <div class="subtab-layout article-hub-layout">
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('articles', '')}"></aside>
+
+            <section class="subtab-content article-hub-main">
+                <section class="subtab-section article-hub-intro">
+                    <div>
+                        <p class="article-kicker">ARTICLE</p>
+                        <h1 class="article-main-title">우리 대학교 소식</h1>
+                        <p class="article-main-desc">국내 IT 뉴스, 단국대학교 뉴스, SW중심대학사업단 소식, 부트캠프, 공모전 정보를 모아 보여줍니다.</p>
+                    </div>
+                </section>
+
+                <div class="article-alert-popup is-hidden"
+                     th:if="${fetchFailed}"
+                     th:attr="data-fetch-message=${fetchMessage}">
+                    <div class="article-alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="articleAlertTitle">
+                        <button class="article-alert-close" type="button" aria-label="불러오기 안내 닫기">×</button>
+                        <strong id="articleAlertTitle">불러오기 안내</strong>
+                        <p th:text="${fetchMessage}">네트워크 지연 또는 타임아웃으로 기사를 불러오는 데 실패했습니다.</p>
+                    </div>
+                </div>
+
+                <section class="article-list-shell">
+                    <div class="article-list-head">
+                        <div>
+                            <h2 class="article-list-title">소식 통합 카드</h2>
+                        </div>
+                        <p class="article-list-page-status" id="articlePageStatus">1 / 1</p>
+                    </div>
+
+                    <form class="article-filter-bar" id="articleSearchForm" role="search">
+                        <label class="article-filter-field article-search-field" for="articleSearchInput">
+                            <span>검색어</span>
+                            <input id="articleSearchInput" type="search" placeholder="검색어를 입력하세요">
+                        </label>
+
+                        <label class="article-filter-field" for="articleSearchType">
+                            <span>검색 범위</span>
+                            <select id="articleSearchType">
+                                <option value="title">제목</option>
+                                <option value="title-summary" selected>제목 + 내용</option>
+                                <option value="summary">내용</option>
+                            </select>
+                        </label>
+
+                        <label class="article-filter-field" for="articleCategorySelect">
+                            <span>카테고리</span>
+                            <select id="articleCategorySelect">
+                                <option value="all">전체</option>
+                                <option value="it">최신 IT정보</option>
+                                <option value="school">학교소식</option>
+                                <option value="contest">공모전</option>
+                                <option value="bootcamp">부트캠프/AI교육</option>
+                            </select>
+                        </label>
+
+                        <button class="article-search-button" type="submit">검색</button>
+                    </form>
+
+                    <div class="article-result-summary" id="articleResultSummary">전체 소식을 확인하는 중입니다.</div>
+
+                    <div class="article-list-rows" id="articleListRows"
+                         th:attr="data-initial-page=${currentPage},data-has-more=${hasMore}">
+                        <a class="article-row"
+                           th:each="article : ${articles}"
+                           th:attr="data-category=${article.categoryKey()},
+                                    data-category-label=${article.categoryLabel()},
+                                    data-source=${article.sourceName()},
+                                    data-title=${article.title()},
+                                    data-summary=${article.summary()},
+                                    data-tags=${article.tags()},
+                                    data-image=@{/articles/image(url=${article.thumbnailUrl()})},
+                                    data-raw-image=${article.thumbnailUrl()},
+                                    data-published=${article.publishedAt()},
+                                    data-deadline-dday=${article.deadlineDday()}"
+                           th:href="${article.articleUrl()}"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            <div class="article-row-thumb-wrap">
+                                <img class="article-row-thumb"
+                                     th:src="@{/articles/image(url=${article.thumbnailUrl()})}"
+                                     th:alt="${article.title()}">
+                            </div>
+                            <div class="article-row-content">
+                                <div class="article-row-meta">
+                                    <span class="article-row-badge" th:text="${article.categoryLabel()}">카테고리</span>
+                                    <span class="article-row-source" th:text="${article.sourceName()}">출처</span>
+                                    <span class="article-row-date" th:text="${article.publishedAt()}">날짜</span>
+                                    <span class="article-row-dday"
+                                          th:if="${article.deadlineDday() != null and !article.deadlineDday().isBlank()}"
+                                          th:text="${article.deadlineDday()}">D-0</span>
+                                </div>
+                                <h3 class="article-row-title" th:text="${article.title()}">기사 제목</h3>
+                                <p class="article-row-summary" th:text="${article.summary()}">기사 요약</p>
+                                <div class="article-row-tags" th:if="${article.tags() != null and !#lists.isEmpty(article.tags())}">
+                                    <span th:each="tag : ${article.tags()}" th:text="${tag}">#태그</span>
+                                </div>
+                            </div>
+                            <span class="article-row-arrow">→</span>
+                        </a>
+                    </div>
+
+                    <div class="article-empty-state" id="articleEmptyState">
+                        <strong>검색 결과가 없습니다.</strong>
+                        <p>검색어 또는 카테고리 조건을 다시 조정해 주세요.</p>
+                    </div>
+
+                    <nav class="article-pagination" aria-label="기사 페이지 이동">
+                        <button class="article-page-button" id="pagePrev" type="button">이전</button>
+                        <div class="article-page-numbers" id="pageNumbers"><span class="article-page-current">1</span></div>
+                        <button class="article-page-button" id="pageNext" type="button">다음</button>
+                    </nav>
+                </section>
+            </section>
+        </div>
+    </div>
+</div>
+
+<div class="article-loading-page article-inline-loading is-hidden" id="articleInlineLoading" aria-live="polite">
+    <div class="article-loading-card">
+        <div class="article-loading-spinner" aria-hidden="true"></div>
+        <p class="article-loading-kicker">ARTICLE LOADING</p>
+        <h1>페이지를 불러오고 있어요..</h1>
+        <div class="article-loading-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="articleInlineProgress">
+            <div class="article-loading-progress-bar" id="articleInlineLoadingBar"></div>
+        </div>
+        <div class="article-loading-percent" id="articleInlineLoadingPercent">0%</div>
+    </div>
+</div>
+
+<script src="/js/article-tabs.js"></script>
+<div th:replace="~{fragments/app-layout :: chatNotifications}"></div>
+</body>
+</html>

@@ -1,0 +1,181 @@
+package kr.ac.dankook.campuson.service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.ac.dankook.campuson.domain.Member;
+import kr.ac.dankook.campuson.repository.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.Base64;
+import java.util.UUID;
+
+@Service
+public class MemberService {
+
+    private final MemberRepository memberRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final BoardRepository boardRepository;
+    private final TalkBoardRepository talkBoardRepository;
+    private final CommentRepository commentRepository;
+    private final TalkCommentRepository talkCommentRepository;
+    private final CalendarMemoRepository calendarMemoRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatReadStatusRepository chatReadStatusRepository;
+
+    @Value("${google.vision.api-key}")
+    private String googleApiKey;
+
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder,
+                         BoardRepository boardRepository, TalkBoardRepository talkBoardRepository,
+                         CommentRepository commentRepository, TalkCommentRepository talkCommentRepository,
+                         CalendarMemoRepository calendarMemoRepository,
+                         ChatRoomMemberRepository chatRoomMemberRepository,
+                         ChatReadStatusRepository chatReadStatusRepository) {
+        this.memberRepository = memberRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.boardRepository = boardRepository;
+        this.talkBoardRepository = talkBoardRepository;
+        this.commentRepository = commentRepository;
+        this.talkCommentRepository = talkCommentRepository;
+        this.calendarMemoRepository = calendarMemoRepository;
+        this.chatRoomMemberRepository = chatRoomMemberRepository;
+        this.chatReadStatusRepository = chatReadStatusRepository;
+    }
+
+    public void register(String name, String studentId, String password, int grade, MultipartFile image) throws IOException {
+
+        if (memberRepository.existsByStudentId(studentId)) {
+            throw new IllegalArgumentException("이미 가입된 학번입니다.");
+        }
+
+        String detectedText = extractText(image);
+        System.out.println("OCR 인식 텍스트: " + detectedText);
+
+        if (!detectedText.contains("컴퓨터공학과")) {
+            throw new IllegalArgumentException("컴퓨터공학과 학생만 가입할 수 있습니다.");
+        }
+
+        if (!detectedText.contains(name)) {
+            throw new IllegalArgumentException("이름이 단국대 앱 캡쳐와 일치하지 않습니다.");
+        }
+
+        if (!detectedText.contains(studentId)) {
+            throw new IllegalArgumentException("학번이 단국대 앱 캡쳐와 일치하지 않습니다.");
+        }
+
+        String imagePath = saveImage(image);
+
+        Member member = new Member();
+        member.setName(name);
+        member.setStudentId(studentId);
+        member.setPassword(passwordEncoder.encode(password));
+        member.setGrade(grade);
+        member.setImagePath(imagePath);
+        member.setStatus(Member.MemberStatus.APPROVED);
+
+        memberRepository.save(member);
+    }
+
+    public void updatePassword(String studentId, String currentPassword, String newPassword) {
+        Member member = memberRepository.findByStudentId(studentId);
+        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+        member.setPassword(passwordEncoder.encode(newPassword));
+        memberRepository.save(member);
+    }
+
+    private String extractText(MultipartFile image) throws IOException {
+        String base64Image = Base64.getEncoder().encodeToString(image.getBytes());
+
+        String requestBody = String.format("""
+            {
+              "requests": [
+                {
+                  "image": { "content": "%s" },
+                  "features": [{ "type": "TEXT_DETECTION" }]
+                }
+              ]
+            }
+            """, base64Image);
+
+        String url = "https://vision.googleapis.com/v1/images:annotate?key=" + googleApiKey;
+
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("Google Vision 응답: " + response.body());
+            return parseOcrText(response.body());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return "";
+        }
+    }
+
+    private String parseOcrText(String responseBody) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(responseBody);
+        JsonNode textAnnotations = root.path("responses").path(0).path("textAnnotations");
+        if (textAnnotations.isEmpty()) return "";
+        return textAnnotations.path(0).path("description").asText();
+    }
+
+    public void changePassword(String studentId, String currentPassword, String newPassword) {
+        Member member = memberRepository.findByStudentId(studentId);
+        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 올바르지 않습니다.");
+        }
+        member.setPassword(passwordEncoder.encode(newPassword));
+        memberRepository.save(member);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteAccount(String studentId) {
+        Member member = memberRepository.findByStudentId(studentId);
+        Long memberId = member.getId();
+
+        // 다른 사람 글에 단 댓글 삭제
+        commentRepository.deleteByMemberId(memberId);
+        talkCommentRepository.deleteByMemberId(memberId);
+
+        // 본인 게시글 삭제 (cascade로 댓글/투표 함께 삭제됨)
+        boardRepository.deleteAll(boardRepository.findByMemberId(memberId));
+        talkBoardRepository.deleteAll(talkBoardRepository.findByMemberId(memberId));
+
+        // 달력 메모 삭제
+        calendarMemoRepository.deleteByMemberStudentId(studentId);
+
+        // 채팅 관련 삭제
+        chatRoomMemberRepository.deleteByStudentId(studentId);
+        chatReadStatusRepository.deleteByStudentId(studentId);
+
+        memberRepository.delete(member);
+    }
+
+    private String saveImage(MultipartFile image) throws IOException {
+        String uploadDir = System.getProperty("user.home") + "/uploads/";
+        File dir = new File(uploadDir);
+        if (!dir.exists()) dir.mkdirs();
+
+        String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+        File dest = new File(uploadDir + fileName);
+        image.transferTo(dest);
+
+        return uploadDir + fileName;
+    }
+}

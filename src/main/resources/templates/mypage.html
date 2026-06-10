@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>마이페이지</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/subtab-theme.css" />
+  <style>
+    .mypage-profile-card {
+      padding-bottom: 24px;
+    }
+    .mypage-account-actions {
+      margin-top: 18px;
+    }
+    .mypage-action-buttons {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .mypage-main-action {
+      min-height: 53px;
+      padding: 0 22px;
+      border: none;
+      cursor: pointer;
+      font-size: 17px;
+      border-radius: 18px;
+    }
+    .mypage-action-panel {
+      display: block;
+      max-height: 0;
+      margin-top: 0;
+      padding: 0 20px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      background: var(--surface);
+      opacity: 0;
+      overflow: hidden;
+      transform: translateY(-8px);
+      transition:
+        max-height 0.34s ease,
+        opacity 0.24s ease,
+        transform 0.34s ease,
+        margin-top 0.34s ease,
+        padding-top 0.34s ease,
+        padding-bottom 0.34s ease,
+        border-color 0.34s ease;
+    }
+    .mypage-action-panel.open {
+      max-height: 420px;
+      margin-top: 18px;
+      padding-top: 20px;
+      padding-bottom: 20px;
+      border-color: var(--border);
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .settings-form { display: flex; flex-direction: column; gap: 14px; max-width: 400px; }
+    .settings-input {
+      width: 100%; padding: 11px 16px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--bg);
+      color: var(--text); font-size: 14px; font-family: inherit;
+      outline: none; box-sizing: border-box; transition: border-color 0.2s;
+    }
+    .settings-input:focus { border-color: var(--subtab-accent); }
+    .settings-success {
+      padding: 10px 16px; border-radius: 10px;
+      background: rgba(100,180,120,0.12); color: #3a7d52;
+      font-size: 13px; font-weight: 600; margin-bottom: 12px;
+    }
+    .settings-error {
+      padding: 10px 16px; border-radius: 10px;
+      background: rgba(220,80,80,0.1); color: #c04040;
+      font-size: 13px; font-weight: 600; margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="subtab-shell">
+  <div class="subtab-wrap">
+    <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+
+    <div class="subtab-layout">
+      <aside th:replace="~{fragments/app-layout :: subtabSidebar('mypage', '')}"></aside>
+
+      <section class="subtab-content">
+        <section class="subtab-section mypage-profile-card">
+          <div class="subtab-title-row">
+            <div>
+              <p class="subtab-eyebrow">MY</p>
+              <h2 class="subtab-title">내 정보와 계정 상태</h2>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+              <a th:if="${member != null and member.admin}" href="/admin"
+                 class="subtab-chip"
+                 style="background:linear-gradient(180deg,#d99a70,#cb8458); color:#fff; border-color:#cb8458;">
+                관리자 페이지 →
+              </a>
+            </div>
+          </div>
+
+          <div class="my-theme-profile-grid">
+            <div class="my-theme-avatar" th:text="${member != null ? #strings.substring(member.name, 0, 1) : 'M'}">홍</div>
+            <div class="my-theme-info-table">
+              <div class="my-theme-info-row">
+                <span class="my-theme-info-label">이름</span>
+                <span class="my-theme-info-value" th:text="${member != null ? member.name : '사용자'}">홍길동</span>
+              </div>
+
+              <div class="my-theme-info-row">
+                <span class="my-theme-info-label">학번</span>
+                <span class="my-theme-info-value" th:text="${member != null ? member.studentId : '-'}">20231234</span>
+              </div>
+              <div class="my-theme-info-row">
+                <span class="my-theme-info-label">학년</span>
+                <span class="my-theme-info-value" th:text="${member != null and member.grade > 0 ? member.grade + '학년' : '미설정'}">-</span>
+              </div>
+              <div class="my-theme-info-row">
+                <span class="my-theme-info-label">상태</span>
+                <span class="my-theme-info-value">정상 로그인</span>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <div class="mypage-account-actions">
+          <div class="mypage-action-buttons">
+            <button type="button" class="subtab-button primary mypage-main-action" onclick="togglePanel('pw-panel', 'withdraw-panel')">비밀번호 변경</button>
+            <button type="button" class="subtab-button secondary mypage-main-action" onclick="togglePanel('withdraw-panel', 'pw-panel')">회원탈퇴</button>
+          </div>
+
+          <div id="pw-panel" class="mypage-action-panel">
+            <div th:if="${successMsg}" class="settings-success" th:text="${successMsg}"></div>
+            <div th:if="${errorMsg}" class="settings-error" th:text="${errorMsg}"></div>
+            <form th:action="@{/mypage/password}" method="post" class="settings-form">
+              <input type="password" name="currentPassword" class="settings-input" placeholder="현재 비밀번호" required />
+              <input type="password" name="newPassword" class="settings-input" placeholder="새 비밀번호" required />
+              <input type="password" name="confirmPassword" class="settings-input" placeholder="새 비밀번호 확인" required />
+              <div>
+                <button type="submit" class="subtab-button primary" style="border:none; cursor:pointer;">변경하기</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="withdraw-panel" class="mypage-action-panel">
+            <p style="font-size:14px; color:var(--subtab-muted); margin-bottom:16px;">탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?</p>
+            <form th:action="@{/delete-account}" method="post">
+              <button type="submit" class="subtab-button primary" style="border:none; cursor:pointer;" onclick="return confirm('정말 탈퇴하시겠습니까?')">탈퇴하기</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<div th:replace="~{fragments/app-layout :: chatNotifications}"></div>
+<script>
+  function togglePanel(targetId, otherId) {
+    const target = document.getElementById(targetId);
+    const other = document.getElementById(otherId);
+
+    if (!target || !other) return;
+
+    const shouldOpen = !target.classList.contains('open');
+    other.classList.remove('open');
+
+    window.requestAnimationFrame(function () {
+      target.classList.toggle('open', shouldOpen);
+    });
+  }
+
+  // 서버에서 에러/성공 메시지 오면 비밀번호 패널 자동으로 열기
+  window.addEventListener('DOMContentLoaded', function () {
+    const hasFeedback = document.querySelector('#pw-panel .settings-success, #pw-panel .settings-error');
+    if (hasFeedback) document.getElementById('pw-panel').classList.add('open');
+  });
+</script>
+</body>
+</html>

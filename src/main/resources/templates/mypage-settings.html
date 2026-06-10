@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>계정 관리</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/subtab-theme.css" />
+  <style>
+    .settings-form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 400px;
+    }
+    .settings-input {
+      width: 100%;
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .settings-input:focus {
+      border-color: var(--subtab-accent);
+    }
+    .settings-success {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: rgba(100, 180, 120, 0.12);
+      color: #3a7d52;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .settings-error {
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: rgba(220, 80, 80, 0.1);
+      color: #c04040;
+      font-size: 13px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div class="subtab-shell">
+  <div class="subtab-wrap">
+    <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+
+    <div class="subtab-layout">
+      <aside th:replace="~{fragments/app-layout :: subtabSidebar('mypage', '')}"></aside>
+
+      <section class="subtab-content">
+        <section class="subtab-section">
+          <div class="subtab-title-row">
+            <div>
+              <p class="subtab-eyebrow">SETTINGS</p>
+              <h2 class="subtab-title">계정 관리</h2>
+              <p class="subtab-desc">비밀번호를 변경할 수 있습니다.</p>
+            </div>
+          </div>
+
+          <div th:if="${successMsg}" class="settings-success" th:text="${successMsg}"></div>
+          <div th:if="${errorMsg}" class="settings-error" th:text="${errorMsg}"></div>
+
+          <form th:action="@{/mypage/password}" method="post" class="settings-form" style="margin-top: 20px;">
+            <input type="password" name="currentPassword" class="settings-input" placeholder="현재 비밀번호" required />
+            <input type="password" name="newPassword" class="settings-input" placeholder="새 비밀번호" required />
+            <input type="password" name="confirmPassword" class="settings-input" placeholder="새 비밀번호 확인" required />
+            <div>
+              <button type="submit" class="subtab-button primary" style="border: none; cursor: pointer;">비밀번호 변경</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>

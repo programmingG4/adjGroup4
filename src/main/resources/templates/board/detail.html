@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOn | 게시글 상세</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <style>
+        .board-detail-card {
+            position: relative;
+            padding: 30px;
+        }
+    
+        .dropdown-content a:hover {
+            background-color: #fffaf4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="subtab-shell">
+        <div class="subtab-wrap">
+            <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+
+            <div class="subtab-layout">
+                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', 'back')}"></aside>
+
+                <section class="subtab-content board-theme-list">
+                    <section class="subtab-section">
+                        <a th:href="${backUrl}"
+                           style="display:inline-flex; align-items:center; justify-content:center;
+                                  width:36px; height:36px; border-radius:12px;
+                                  background:rgba(242,231,217,0.92); color:#8f6d4c;
+                                  font-size:18px; text-decoration:none; margin-bottom:14px;">←</a>
+
+                        <article class="board-detail-card" style="position: relative;">
+                        
+                            <!-- 점세개 버튼 -->
+                            <div th:if="${loginMemberId != null}" style="position: absolute; top: 20px; right: 20px;">
+                            
+                                <div class="dropdown-wrapper" style="position: relative; display: inline-block;">
+                                    <button type="button" onclick="toggleDropdown(event)" style="background:none; border:none; font-size:20px; cursor:pointer;
+                                                       color:#9f8773; letter-spacing:2px;">⋮</button>
+                            
+                                    <div id="postDropdown" class="dropdown-content" style="display:none; position:absolute; right:0; top:30px; background:white;
+                                                    min-width:120px; width:max-content;
+                                                    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                                                    border-radius:12px; z-index:10;
+                                                    border:1px solid #f0e4d7; overflow:hidden;">
+                            
+                                        <!-- 본인 아닐 때: 채팅 버튼 -->
+                                        <th:block th:if="${loginMemberId == null or loginMemberId != post.memberId}">
+                                            <!-- 중고거래: 1:1 채팅 -->
+                                            <button th:if="${post.category == '중고거래 게시판'}" th:onclick="|location.href='/board/${post.id}/chat'|" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                           background:none; border:none; padding:10px 16px;
+                                                           color:#555; font-size:14px; cursor:pointer; text-align:left;
+                                                           white-space:nowrap; transition:background 0.2s;" onmouseover="this.style.background='#f8f4f0'"
+                                                onmouseout="this.style.background='none'">
+                                                <span>💬</span> 채팅 보내기
+                                            </button>
+                                            
+                                            <!-- 모집중: 단체 채팅방 참여 -->
+                                            <button th:if="${post.category == '📢 모집중'}" th:onclick="|location.href='/board/${post.id}/join'|" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                           background:none; border:none; padding:10px 16px;
+                                                           color:#555; font-size:14px; cursor:pointer; text-align:left;
+                                                           white-space:nowrap; transition:background 0.2s;" onmouseover="this.style.background='#f8f4f0'"
+                                                onmouseout="this.style.background='none'">
+                                                <span>👥</span> 채팅방 참여하기
+                                            </button>
+                                            <div style="height:1px; background:#f0e4d7; margin:2px 0;"></div>
+                                            <button onclick="openReportModal('BOARD', null, null)" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                               background:none; border:none; padding:10px 14px;
+                                                               color:#e57373; font-size:13px; cursor:pointer; text-align:left;"
+                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                <span>🚨</span> 신고하기
+                                            </button>
+                                        </th:block>
+                            
+                                        <!-- 본인일 때: 수정/삭제 -->
+                                        <th:block th:if="${loginMemberId != null and loginMemberId == post.memberId}">
+                                            <a th:href="@{/board/{id}/edit(id=${post.id})}" style="display:flex; align-items:center; gap:8px; padding:10px 16px;
+                                                          color:#555; text-decoration:none; font-size:14px;
+                                                          border-bottom:1px solid #f8f0e6; white-space:nowrap; transition:background 0.2s;"
+                                                onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                <span>✏️</span> 수정하기
+                                            </a>
+                                            <form th:action="@{/board/{id}/delete(id=${post.id})}" method="post"
+                                                onsubmit="return confirm('정말 삭제하시겠습니까?')" style="margin:0;">
+                                                <button type="submit" style="width:100%; display:flex; align-items:center; gap:8px;
+                                                                   background:none; border:none; padding:10px 16px;
+                                                                   color:#e57373; font-size:14px; cursor:pointer;
+                                                                   white-space:nowrap; transition:background 0.2s; text-align:left;"
+                                                    onmouseover="this.style.background='#f8f4f0'" onmouseout="this.style.background='none'">
+                                                    <span>🗑️</span> 삭제하기
+                                                </button>
+                                            </form>
+                                        </th:block>
+                                    </div>
+                                </div>
+                            </div>
+                                                    
+                            <h1 class="board-detail-title" th:text="${post.title}"></h1>
+                            <div class="board-detail-meta">
+                                <th:block th:with="aName=${#strings.contains(post.author, '학번') ? #strings.substringBefore(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringBefore(post.author, '_') : post.author)}, aYear=${#strings.contains(post.author, '학번') ? #strings.substringAfter(post.author, ' ') : (#strings.contains(post.author, '_') ? #strings.substringAfter(post.author, '_') + '학번' : null)}">
+                                    <span th:text="${aName}"></span><span th:if="${aYear != null}" class="year-badge" th:text="${aYear}"></span>
+                                </th:block>
+                                <span class="board-meta-divider">•</span>
+                                <span th:text="${#temporals.format(post.regDate, 'yyyy-MM-dd HH:mm')}"></span>
+                            </div>
+                            <div class="board-detail-content" th:text="${post.content}"></div>
+
+                            <!-- 이미지 -->
+                            <div th:if="${not #lists.isEmpty(post.imagePaths)}" style="margin-top:16px;">
+                                <div th:if="${#lists.size(post.imagePaths) == 1}" id="image-list">
+                                    <img th:src="${post.imagePaths[0]}" th:attr="data-index=0" onclick="openModal(0)"
+                                        alt="첨부 이미지" style="width:100%; border-radius:12px; border:1px solid #eadbc9;
+                                            cursor:pointer; display:block;">
+                                </div>
+                                <div th:if="${#lists.size(post.imagePaths) > 1}" id="image-list"
+                                    style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px;">
+                                    <img th:each="img, stat : ${post.imagePaths}" th:src="${img}"
+                                        th:attr="data-index=${stat.index}"
+                                        onclick="openModal(this.getAttribute('data-index'))" alt="첨부 이미지" style="width:100%; aspect-ratio:1; object-fit:cover;
+                                            border-radius:8px; border:1px solid #eadbc9;
+                                            cursor:pointer; display:block;">
+                                </div>
+                            </div>
+
+                            <!-- 투표 -->
+                            <section class="board-vote-section" th:if="${not #lists.isEmpty(post.voteItems)}">
+                                <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                    <h2 class="board-section-title" style="margin:0;">투표</h2>
+                                    <span th:if="${voteEnded}"
+                                          style="background:#e57373; color:white; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600;">종료</span>
+                                    <span th:if="${not voteEnded and post.voteEndTime != null}"
+                                          th:text="'~ ' + ${#temporals.format(post.voteEndTime, 'MM/dd HH:mm')} + ' 까지'"
+                                          style="font-size:12px; color:#9f8773;"></span>
+                                </div>
+                                <div th:each="item : ${post.voteItems}" class="board-vote-item">
+                                    <!-- 진행중: 클릭 가능 -->
+                                    <form th:if="${not voteEnded}" th:action="@{/vote/{id}(id=${item.id})}" method="post">
+                                        <input type="hidden" name="boardId" th:value="${post.id}">
+                                        <button type="submit" class="board-vote-button">
+                                            <div class="board-vote-track">
+                                                <div class="board-vote-fill"
+                                                    th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
+                                                </div>
+                                                <span class="board-vote-label" th:text="${item.itemText}"></span>
+                                                <span class="board-vote-count" th:text="${item.voteCount} + '표'"></span>
+                                            </div>
+                                        </button>
+                                    </form>
+                                    <!-- 종료: 결과만 표시 -->
+                                    <div th:if="${voteEnded}" class="board-vote-button"
+                                         style="cursor:default; pointer-events:none; opacity:0.75;">
+                                        <div class="board-vote-track">
+                                            <div class="board-vote-fill"
+                                                th:style="'width:' + ${totalVotes > 0 ? (item.voteCount * 100 / totalVotes) : 0} + '%'">
+                                            </div>
+                                            <span class="board-vote-label" th:text="${item.itemText}"></span>
+                                            <span class="board-vote-count" th:text="${item.voteCount} + '표'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- 좋아요 버튼 -->
+                            <div style="display:flex; justify-content:flex-end;
+                                        padding-top:16px; border-top:1px solid #f0f0f0; margin-top:16px;">
+                                <form th:action="@{/board/{id}/like(id=${post.id})}" method="post" style="margin:0;">
+                                    <button type="submit" style="display:flex; align-items:center; gap:6px;
+                                                   padding:8px 16px; border-radius:20px;
+                                                   border:1px solid #eadbc9; background:#fffaf4;
+                                                   color:#9f8773; font-size:14px; cursor:pointer; transition:0.2s;">
+                                        <span th:text="${post.likedMemberIds.contains(loginMemberId)} ? '❤️' : '🤍'">🤍</span>
+                                        <span th:text="${#lists.size(post.likedMemberIds)}">0</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    </section>
+
+                    <section class="subtab-section">
+                        <article class="board-detail-card">
+                            <div class="board-comment-head">
+                                <h2 class="board-section-title">댓글</h2>
+                                <span class="board-comment-count" th:text="${#lists.size(post.comments)} + '개'"></span>
+                            </div>
+                            <div th:each="c : ${post.comments}" class="board-comment-item">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    <div class="board-comment-author">
+                                        <th:block th:with="aName=${#strings.contains(c.author, '학번') ? #strings.substringBefore(c.author, ' ') : (#strings.contains(c.author, '_') ? #strings.substringBefore(c.author, '_') : c.author)}, aYear=${#strings.contains(c.author, '학번') ? #strings.substringAfter(c.author, ' ') : (#strings.contains(c.author, '_') ? #strings.substringAfter(c.author, '_') + '학번' : null)}">
+                                            <span th:text="${aName}"></span><span th:if="${aYear != null}" class="year-badge" th:text="${aYear}"></span>
+                                        </th:block>
+                                    </div>
+                                    <div style="display:flex; gap:6px; align-items:center;">
+                                        <form th:if="${loginMemberId != null and loginMemberId == c.memberId}"
+                                            th:action="@{/comment/{id}/delete(id=${c.id})}" method="post"
+                                            onsubmit="return confirm('댓글을 삭제하시겠습니까?')">
+                                            <input type="hidden" name="boardId" th:value="${post.id}">
+                                            <button type="submit" class="board-mini-button"
+                                                style="font-size:11px; padding:3px 8px;">삭제</button>
+                                        </form>
+                                        <button th:if="${loginMemberId != null and loginMemberId != c.memberId}"
+                                                th:onclick="|openReportModal('COMMENT', ${c.id}, ${post.id})|"
+                                                style="background:none; border:none; color:#e57373; font-size:12px; cursor:pointer; padding:2px 6px;">
+                                            🚨
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="board-comment-content" th:text="${c.content}"></div>
+                                <div class="board-comment-date"
+                                    th:text="${#temporals.format(c.regDate, 'MM/dd HH:mm')}"></div>
+                            </div>
+                            <form th:action="@{/board/{id}/comment(id=${post.id})}" method="post"
+                                class="board-comment-form">
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                                    <label class="anon-toggle-btn" id="comment-anon-label"
+                                        style="display:inline-flex; align-items:center; gap:6px;
+                                              padding:8px 16px; border:1.5px solid #eadbc9; border-radius:20px;
+                                              background:#fffaf4; color:#9f8773; font-size:14px; cursor:pointer; transition:0.2s;">
+                                        <input type="checkbox" id="comment-anon-check"
+                                            onchange="toggleCommentAuthor(this.checked)" style="display:none;">
+                                        익명
+                                    </label>
+                                    <input type="text" name="author" id="comment-author-input"
+                                        th:value="${loginMemberName}" th:data-name="${loginMemberName}"
+                                        class="board-input" readonly
+                                        style="flex:1; background:#f0f0f0; cursor:not-allowed;">
+                                </div>
+                                <textarea name="content" rows="4" class="board-textarea" placeholder="댓글을 입력하세요"
+                                    required></textarea>
+                                <button type="submit" class="btn-primary board-submit-button">댓글 등록</button>
+                            </form>
+                        </article>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- 이미지 모달 -->
+    <div id="imgModal" onclick="closeModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9);
+            z-index:1000; align-items:center; justify-content:center;">
+        <span onclick="closeModal()"
+            style="position:absolute; top:20px; right:28px; color:white; font-size:32px; cursor:pointer;">✕</span>
+        <button onclick="event.stopPropagation(); modalSlide(-1)" style="position:absolute; left:20px; top:50%; transform:translateY(-50%);
+                   background:rgba(255,255,255,0.2); color:white; border:none;
+                   border-radius:50%; width:44px; height:44px; font-size:24px; cursor:pointer; z-index:10;">‹</button>
+        <img id="modalImg" src="" alt="확대 이미지" onclick="event.stopPropagation()"
+            style="max-width:90vw; max-height:85vh; border-radius:12px;">
+        <button onclick="event.stopPropagation(); modalSlide(1)" style="position:absolute; right:20px; top:50%; transform:translateY(-50%);
+                   background:rgba(255,255,255,0.2); color:white; border:none;
+                   border-radius:50%; width:44px; height:44px; font-size:24px; cursor:pointer; z-index:10;">›</button>
+        <div id="modal-indicator" style="position:absolute; bottom:20px; color:white; font-size:13px;"></div>
+    </div>
+
+    <script th:inline="javascript">
+        const loginMemberName = /*[[${loginMemberName}]]*/ '';
+
+        let modalIndex = 0;
+        const modalImages = Array.from(document.querySelectorAll('#image-list img'));
+
+        function openModal(idx) {
+            modalIndex = parseInt(idx);
+            updateModal();
+            document.getElementById('imgModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('imgModal').style.display = 'none';
+        }
+        function modalSlide(dir) {
+            if (modalImages.length === 0) return;
+            modalIndex = (modalIndex + dir + modalImages.length) % modalImages.length;
+            updateModal();
+        }
+        function updateModal() {
+            document.getElementById('modalImg').src = modalImages[modalIndex].src;
+            const indicator = document.getElementById('modal-indicator');
+            indicator.textContent = modalImages.length > 1 ? `${modalIndex + 1} / ${modalImages.length}` : '';
+        }
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('imgModal').style.display === 'flex') {
+                if (e.key === 'ArrowLeft') modalSlide(-1);
+                if (e.key === 'ArrowRight') modalSlide(1);
+                if (e.key === 'Escape') closeModal();
+            }
+        });
+
+        function toggleDropdown(event) {
+            event.stopPropagation(); // 클릭 이벤트 전파 방지
+            const menu = document.getElementById('postDropdown');
+            menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        }
+        // 메뉴 바깥 클릭 시 닫기
+        window.onclick = function(event) {
+            const menu = document.getElementById('postDropdown');
+            if (menu && menu.style.display === 'block') {
+                if (!event.target.closest('.dropdown-wrapper') && !event.target.matches('button')) {
+                    menu.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleCommentAuthor(checked) {
+            const input = document.getElementById('comment-author-input');
+            const label = document.getElementById('comment-anon-label');
+            input.value = checked ? '익명' : input.dataset.name;
+            label.style.background = checked ? 'linear-gradient(180deg, #d99a70, #cb8458)' : '#fffaf4';
+            label.style.color = checked ? 'white' : '#9f8773';
+            label.style.borderColor = checked ? '#cb8458' : '#eadbc9';
+        }
+
+        const loginMemberId = /*[[${loginMemberId}]]*/ null;
+
+        // ── 신고 모달 ──────────────────────────────────────────
+        const postId = /*[[${post.id}]]*/ null;
+
+        function openReportModal(type, targetId, extraId) {
+            document.getElementById('report-type').value = type;
+            document.getElementById('report-target-id').value = targetId || postId;
+            document.getElementById('report-extra-id').value = extraId || '';
+            document.getElementById('report-reason').value = '';
+            document.getElementById('reportModal').style.display = 'flex';
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+
+        function submitReport() {
+            const type = document.getElementById('report-type').value;
+            const targetId = document.getElementById('report-target-id').value;
+            const extraId = document.getElementById('report-extra-id').value;
+            const reason = document.getElementById('report-reason').value.trim();
+            if (!reason) { alert('신고 사유를 입력해주세요.'); return; }
+
+            const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+            const csrfParam = '_csrf';
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            if (type === 'BOARD') {
+                form.action = '/report/board/' + targetId;
+            } else if (type === 'COMMENT') {
+                form.action = '/report/comment/' + targetId;
+                const extra = document.createElement('input');
+                extra.type = 'hidden'; extra.name = 'boardId'; extra.value = extraId;
+                form.appendChild(extra);
+            }
+            const r = document.createElement('input');
+            r.type = 'hidden'; r.name = 'reason'; r.value = reason;
+            form.appendChild(r);
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden'; csrf.name = csrfParam; csrf.value = csrfToken;
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+    <!-- 신고 모달 -->
+    <div id="reportModal" onclick="if(event.target===this)closeReportModal()"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+                z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:18px; padding:28px 28px 22px; width:340px;
+                    box-shadow:0 8px 40px rgba(0,0,0,0.18);" onclick="event.stopPropagation()">
+            <h3 style="margin:0 0 6px; font-size:16px; color:#444;">🚨 신고하기</h3>
+            <p style="margin:0 0 16px; font-size:13px; color:#9f8773;">신고 사유를 입력해주세요. 관리자가 검토 후 처리합니다.</p>
+            <input type="hidden" id="report-type">
+            <input type="hidden" id="report-target-id">
+            <input type="hidden" id="report-extra-id">
+            <textarea id="report-reason" rows="4"
+                      style="width:100%; padding:10px 12px; border:1.5px solid #eadbc9; border-radius:10px;
+                             font-size:13px; color:#444; background:#fffaf4; resize:none; box-sizing:border-box;"
+                      placeholder="신고 사유를 입력하세요 (예: 욕설, 허위정보 등)"></textarea>
+            <div style="display:flex; gap:8px; margin-top:14px; justify-content:flex-end;">
+                <button onclick="closeReportModal()"
+                        style="padding:8px 18px; border-radius:10px; border:1px solid #eadbc9;
+                               background:#fff; color:#9f8773; font-size:13px; cursor:pointer;">취소</button>
+                <button onclick="submitReport()"
+                        style="padding:8px 18px; border-radius:10px; border:none;
+                               background:linear-gradient(180deg,#d99a70,#cb8458); color:#fff;
+                               font-size:13px; font-weight:700; cursor:pointer;">신고 제출</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

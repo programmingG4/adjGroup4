@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="page-shell">
+    <main class="app-frame sub-frame">
+        <section class="subpage-section">
+            <h1 class="subpage-title">MY</h1>
+            <p class="subpage-desc">마이페이지가 연결된 상태입니다.</p>
+            <div class="placeholder large">추가 예정</div>
+        </section>
+
+        <nav class="bottom-nav">
+            <a href="/home" class="nav-item" th:classappend="${activeMenu == 'home'} ? ' active' : ''">메인</a>
+            <a href="/chat" class="nav-item" th:classappend="${activeMenu == 'chat'} ? ' active' : ''">채팅</a>
+            <a href="/articles" class="nav-item" th:classappend="${activeMenu == 'articles'} ? ' active' : ''">기사</a>
+            <a href="/mypage" class="nav-item" th:classappend="${activeMenu == 'mypage'} ? ' active' : ''">MY</a>
+        </nav>
+    </main>
+</div>
+</body>
+</html>

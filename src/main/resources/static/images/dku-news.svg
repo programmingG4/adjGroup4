@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="DKU NEWS">
+  <rect width="800" height="450" rx="44" fill="#ffffff"/>
+  <rect x="18" y="18" width="764" height="414" rx="34" fill="none" stroke="#e9eef7" stroke-width="4"/>
+  <text x="400" y="208" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="900" letter-spacing="8" fill="#0054a6">DKU</text>
+  <text x="400" y="304" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="900" letter-spacing="10" fill="#0054a6">NEWS</text>
+</svg>

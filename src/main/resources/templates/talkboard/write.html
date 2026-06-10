@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOn | 채팅게시판 글쓰기</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+    <style>
+        .board-options-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-top: 1px solid #eadbc9;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .board-option-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 14px;
+            border: 1.5px solid #eadbc9;
+            border-radius: 20px;
+            background: #fffaf4;
+            color: #9f8773;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .board-option-btn:hover {
+            background: #f6eadb;
+            color: #b26f49;
+            border-color: #cb8458;
+        }
+
+        .board-option-btn.active {
+            background: linear-gradient(180deg, #d99a70, #cb8458);
+            color: white;
+            border-color: #cb8458;
+        }
+
+        .file-list {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #9f8773;
+        }
+
+        .file-list-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .board-write-merged-head {
+            margin-bottom: 24px;
+        }
+
+        .board-write-back-small {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 74px;
+            min-height: 34px;
+            margin-bottom: 14px;
+            padding: 0 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .board-write-merged-head .board-eyebrow {
+            margin-top: 0;
+        }
+
+        .board-write-merged-head .subpage-title {
+            margin-bottom: 0;
+        }
+
+        .board-drop-zone {
+            border: 2px dashed #eadbc9;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            color: #9f8773;
+            cursor: default;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fffaf4;
+            font-size: 13px;
+            margin-top: 8px;
+            user-select: none;
+        }
+
+        .board-drop-zone.drag-over {
+            border-color: #cb8458;
+            background: #f6eadb;
+            color: #b26f49;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="subtab-shell">
+        <div class="subtab-wrap">
+            <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+            <div class="subtab-layout">
+                <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', '')}"></aside>
+
+                <section class="subtab-content board-theme-list">
+                    <section class="subtab-section">
+                        <section class="board-write-card">
+                            <div class="board-write-merged-head">
+                                <p class="board-eyebrow">TALK BOARD WRITE</p>
+                                <h1 class="subpage-title">새 글 작성</h1>
+                            </div>
+
+                            <a th:href="${backUrl}" class="btn-secondary board-write-back">목록으로</a>
+                        </section>
+                    </section>
+                    <section class="subtab-section">
+                        <section class="board-write-card">
+                            <form th:action="@{/talkboard/save}" method="post" enctype="multipart/form-data"
+                                class="board-write-form">
+                                <input type="hidden" name="from" th:value="${from}">
+                                <input type="hidden" name="roomId" th:value="${roomId}">
+                                <input type="hidden" name="roomKey" th:value="${roomKey}">
+
+                                <!-- 작성자: 로그인 이름 자동 -->
+                                <div class="board-form-group">
+                                    <label class="board-label">작성자</label>
+                                    <input type="text" name="author" class="board-input" th:value="${loginMemberName}"
+                                        readonly style="background:#f0f0f0; cursor:not-allowed;">
+                                </div>
+
+                                <!-- 제목 -->
+                                <div class="board-form-group">
+                                    <label class="board-label">제목</label>
+                                    <input type="text" name="title" class="board-input" placeholder="제목을 입력하세요"
+                                        required>
+                                </div>
+
+                                <!-- 본문 -->
+                                <div class="board-form-group">
+                                    <textarea name="content" rows="8" class="board-textarea" placeholder="내용을 입력하세요"
+                                        required></textarea>
+                                </div>
+
+                                <!-- 하단 옵션 바 -->
+                                <div class="board-options-bar">
+                                    <label class="board-option-btn" for="image-input">📷 사진</label>
+                                    <input type="file" id="image-input" name="images" accept="image/*"
+                                        onchange="previewImages(this)" hidden multiple>
+
+                                    <label class="board-option-btn" for="video-input">🎬 동영상</label>
+                                    <input type="file" id="video-input" name="videos" accept="video/*"
+                                        onchange="previewVideos(this)" hidden multiple>
+
+                                    <label class="board-option-btn" for="file-input">📎 파일</label>
+                                    <input type="file" id="file-input" name="files" onchange="previewFiles(this)" hidden
+                                        multiple>
+
+                                    <button type="button" class="board-option-btn" id="vote-toggle-btn"
+                                        onclick="toggleVoteSection()">
+                                        📊 투표 만들기
+                                    </button>
+
+                                    <!-- 오른쪽 끝 상단 고정 -->
+                                    <label class="board-option-btn" for="pinned-check" id="pin-label" style="margin-left:auto; cursor:pointer;">
+                                        📌 상단 고정
+                                    </label>
+                                    <input type="checkbox" name="pinned" id="pinned-check" value="true" hidden onchange="togglePinStyle(this.checked)">
+                                </div>
+
+                                <!-- 드래그앤드롭 존 -->
+                                <div id="main-drop-zone" class="board-drop-zone"
+                                     ondragover="onDragOver(event)"
+                                     ondragleave="onDragLeave(event)"
+                                     ondrop="onDrop(event)">
+                                    📁 파일을 끌어다 놓으세요 (이미지 / 동영상 / 파일 자동 분류)
+                                </div>
+
+                                <!-- 이미지 미리보기 -->
+                                <div id="image-preview" style="display:none;
+                                 display:grid; grid-template-columns:repeat(auto-fill, minmax(100px,1fr));
+                                 gap:8px; margin-top:8px;"></div>
+
+                                <!-- 동영상 미리보기 -->
+                                <div id="video-preview" style="display:none; margin-top:8px;"></div>
+
+                                <!-- 파일 목록 -->
+                                <div id="file-preview" class="file-list" style="display:none;"></div>
+
+                                <!-- 투표 항목 -->
+                                <div class="board-form-group" id="vote-section" style="display:none; margin-top:12px;">
+                                    <label class="board-label">투표 항목</label>
+                                    <div id="vote-items" class="board-vote-editor">
+                                        <div class="board-vote-edit-row">
+                                            <input type="text" name="voteOption" class="board-input" placeholder="항목 1">
+                                            <button type="button" class="board-mini-button"
+                                                onclick="removeVote(this)">✕</button>
+                                        </div>
+                                        <div class="board-vote-edit-row">
+                                            <input type="text" name="voteOption" class="board-input" placeholder="항목 2">
+                                            <button type="button" class="board-mini-button"
+                                                onclick="removeVote(this)">✕</button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="board-add-button" onclick="addVoteItem()">+ 항목 추가</button>
+                                    <div style="margin-top:10px;">
+                                        <label class="board-label" style="font-size:13px;">투표 종료 시간 (선택)</label>
+                                        <input type="datetime-local" name="voteDeadline" class="board-input"
+                                               style="max-width:240px;">
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="submit-btn" class="btn-primary board-submit-button" style="margin-top:16px;"
+                                    onclick="showLoading()">작성 완료</button>
+                                <div id="loading-msg" style="display:none; text-align:center; margin-top:12px;
+                                     color:#9f8773; font-size:14px;">
+                                    ⏳ 업로드 중입니다. 잠시만 기다려주세요...
+                                </div>
+                            </form>
+                        </section>
+                    </section>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleVoteSection() {
+            const section = document.getElementById('vote-section');
+            const btn = document.getElementById('vote-toggle-btn');
+            const isVisible = section.style.display !== 'none';
+            section.style.display = isVisible ? 'none' : 'block';
+            btn.classList.toggle('active', !isVisible);
+        }
+
+        function addVoteItem() {
+            const container = document.getElementById('vote-items');
+            const count = container.children.length + 1;
+            const row = document.createElement('div');
+            row.className = 'board-vote-edit-row';
+            row.innerHTML = `<input type="text" name="voteOption" class="board-input" placeholder="항목 ${count}">
+                         <button type="button" class="board-mini-button" onclick="removeVote(this)">✕</button>`;
+            container.appendChild(row);
+        }
+
+        function removeVote(btn) {
+            const rows = document.querySelectorAll('.board-vote-edit-row');
+            if (rows.length > 2) btn.parentElement.remove();
+        }
+
+        // 이미지 미리보기
+        function previewImages(input) {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
+            if (input.files && input.files.length > 0) {
+                preview.style.display = 'grid';
+                Array.from(input.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.cssText = 'width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; border:1px solid #eadbc9;';
+                        preview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // 동영상 미리보기
+        function previewVideos(input) {
+            const preview = document.getElementById('video-preview');
+            preview.innerHTML = '';
+            if (input.files && input.files.length > 0) {
+                preview.style.display = 'block';
+                Array.from(input.files).forEach(file => {
+                    const video = document.createElement('video');
+                    video.src = URL.createObjectURL(file);
+                    video.controls = true;
+                    video.style.cssText = 'width:100%; border-radius:8px; margin-bottom:8px; border:1px solid #eadbc9;';
+                    preview.appendChild(video);
+                });
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // 파일 목록
+        function previewFiles(input) {
+            const preview = document.getElementById('file-preview');
+            preview.innerHTML = '';
+            if (input.files && input.files.length > 0) {
+                preview.style.display = 'block';
+                Array.from(input.files).forEach(file => {
+                    const item = document.createElement('div');
+                    item.className = 'file-list-item';
+                    item.innerHTML = `<span>📎</span><span>${file.name}</span>
+                                  <span style="color:#bbb;">(${(file.size / 1024).toFixed(1)}KB)</span>`;
+                    preview.appendChild(item);
+                });
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // 드래그앤드롭
+        function onDragOver(event) {
+            event.preventDefault();
+            document.getElementById('main-drop-zone').classList.add('drag-over');
+        }
+
+        function onDragLeave(event) {
+            document.getElementById('main-drop-zone').classList.remove('drag-over');
+        }
+
+        function onDrop(event) {
+            event.preventDefault();
+            document.getElementById('main-drop-zone').classList.remove('drag-over');
+            const files = Array.from(event.dataTransfer.files);
+            const images = files.filter(f => f.type.startsWith('image/'));
+            const videos = files.filter(f => f.type.startsWith('video/'));
+            const others = files.filter(f => !f.type.startsWith('image/') && !f.type.startsWith('video/'));
+
+            if (images.length > 0) mergeAndPreview('image-input', images, previewImages);
+            if (videos.length > 0) mergeAndPreview('video-input', videos, previewVideos);
+            if (others.length > 0) mergeAndPreview('file-input', others, previewFiles);
+        }
+
+        function mergeAndPreview(inputId, newFiles, previewFn) {
+            const input = document.getElementById(inputId);
+            const dt = new DataTransfer();
+            Array.from(input.files || []).forEach(f => dt.items.add(f));
+            newFiles.forEach(f => dt.items.add(f));
+            input.files = dt.files;
+            previewFn(input);
+        }
+
+        function showLoading() {
+            setTimeout(() => {
+                document.getElementById('submit-btn').disabled = true;
+                document.getElementById('submit-btn').textContent = '업로드 중...';
+                document.getElementById('loading-msg').style.display = 'block';
+            }, 100);
+        }
+
+        function togglePinStyle(checked) {
+            const label = document.getElementById('pin-label');
+            label.style.background = checked 
+                ? 'linear-gradient(180deg, #d99a70, #cb8458)' : '';
+            label.style.color = checked ? 'white' : '';
+            label.style.borderColor = checked ? '#cb8458' : '';
+        }
+    </script>
+</body>
+
+</html>

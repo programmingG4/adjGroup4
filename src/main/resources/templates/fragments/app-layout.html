@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<body>
+
+<section th:fragment="campusHero" class="hero-section home-soft-hero home-centered-hero">
+    <div class="hero-center hero-center-lined">
+        <a th:href="@{/home}" class="hero-logo hero-logo-link" aria-label="CampusON 메인으로 이동">
+            <span class="hero-logo-campus">CAMPUS</span><span class="hero-logo-on">ON</span>
+        </a>
+        <p class="hero-subtext">학생을 위한 소통과 정보의 시작점</p>
+        <div class="hero-divider" aria-hidden="true"></div>
+    </div>
+</section>
+
+<header th:fragment="articleHero" class="article-hub-header hero-center hero-center-lined">
+    <a th:href="@{/home}" class="hero-logo hero-logo-link" aria-label="CampusON 메인으로 이동">
+        <span class="hero-logo-campus">CAMPUS</span><span class="hero-logo-on">ON</span>
+    </a>
+    <p class="hero-subtext">학생을 위한 소통과 정보의 시작점</p>
+    <div class="hero-divider" aria-hidden="true"></div>
+</header>
+
+<header th:fragment="subtabHeader" class="subtab-header">
+    <a th:href="@{/home}" class="subtab-logo-link" aria-label="CampusON 메인으로 이동">
+        <h1 class="subtab-logo">CAMPUSON</h1>
+    </a>
+    <p class="subtab-tagline">학생을 위한 소통과 정보의 시작점</p>
+    <div class="subtab-divider"></div>
+</header>
+
+<aside th:fragment="homeSidebar(active)" class="home-side-panel">
+    <div class="home-profile-brief">
+        <p class="home-side-label">MY PAGE</p>
+        <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '사용자 님'}">홍길동 님</h2>
+        <p class="home-side-meta" th:text="${member != null ? (member.grade + '학년 · ' + member.studentId) : '로그인 정보 없음'}">소프트웨어학과 · 20231234</p>
+    </div>
+
+
+    <nav class="home-shortcut-list" aria-label="바로가기">
+        <a th:href="@{/chat}" class="home-shortcut-item" th:classappend="${active == 'chat'} ? ' is-active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}">
+            <span class="home-shortcut-icon">💬</span><span class="home-shortcut-copy"><strong>채팅</strong><small>대화와 팀 소통 확인</small></span>
+        </a>
+        <a th:href="@{/articles}" class="home-shortcut-item" th:classappend="${active == 'articles'} ? ' is-active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}">
+            <span class="home-shortcut-icon">📰</span><span class="home-shortcut-copy"><strong>기사</strong><small>최신 기사와 헤드라인</small></span>
+        </a>
+        <a th:href="@{/calendar}" class="home-shortcut-item" th:classappend="${active == 'calendar'} ? ' is-active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}">
+            <span class="home-shortcut-icon">📅</span><span class="home-shortcut-copy"><strong>일정</strong><small>학사 일정과 내 메모</small></span>
+        </a>
+        <a th:href="@{/board}" class="home-shortcut-item" th:classappend="${active == 'board'} ? ' is-active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}">
+            <span class="home-shortcut-icon">📌</span><span class="home-shortcut-copy"><strong>게시판</strong><small>익명 소통과 거래 공간</small></span>
+        </a>
+        <a th:href="@{/mypage}" class="home-shortcut-item" th:classappend="${active == 'mypage'} ? ' is-active' : ''" th:attr="aria-current=${active == 'mypage' ? 'page' : null}">
+            <span class="home-shortcut-icon">👤</span><span class="home-shortcut-copy"><strong>MY</strong><small>내 정보와 활동 관리</small></span>
+        </a>
+    </nav>
+</aside>
+
+<aside th:fragment="articleSidebar(active)" class="article-shared-side-panel">
+    <div class="home-profile-brief article-profile-brief">
+        <p class="home-side-label">MY PAGE</p>
+        <h2 class="home-side-name" th:text="${member != null ? member.name + ' 님' : '사용자 님'}">홍길동 님</h2>
+        <p class="home-side-meta" th:text="${member != null ? (member.grade + '학년 · ' + member.studentId) : '로그인 정보 없음'}">소프트웨어학과 · 20231234</p>
+    </div>
+    <nav class="home-shortcut-list article-shortcut-list" aria-label="바로가기">
+        <a th:href="@{/chat}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'chat'} ? ' is-active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}"><span class="home-shortcut-icon">💬</span><span class="home-shortcut-copy"><strong>채팅</strong><small>대화와 팀 소통 확인</small></span></a>
+        <a th:href="@{/articles}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'articles'} ? ' is-active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}"><span class="home-shortcut-icon">📰</span><span class="home-shortcut-copy"><strong>기사</strong><small>최신 기사와 헤드라인</small></span></a>
+        <a th:href="@{/calendar}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'calendar'} ? ' is-active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}"><span class="home-shortcut-icon">📅</span><span class="home-shortcut-copy"><strong>일정</strong><small>학사 일정과 내 메모</small></span></a>
+        <a th:href="@{/board}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'board'} ? ' is-active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}"><span class="home-shortcut-icon">📌</span><span class="home-shortcut-copy"><strong>게시판</strong><small>익명 소통과 거래 공간</small></span></a>
+        <a th:href="@{/mypage}" class="home-shortcut-item article-shortcut-item" th:classappend="${active == 'mypage'} ? ' is-active' : ''" th:attr="aria-current=${active == 'mypage' ? 'page' : null}"><span class="home-shortcut-icon">👤</span><span class="home-shortcut-copy"><strong>MY</strong><small>내 정보와 활동 관리</small></span></a>
+    </nav>
+</aside>
+
+<aside th:fragment="subtabSidebar(active, subAction)" class="subtab-sidebar">
+    <div class="subtab-sidebar-group">
+        <section class="subtab-panel">
+            <p class="subtab-panel-eyebrow">MY PAGE</p>
+            <h2 class="subtab-profile-name" th:text="${member != null ? member.name + ' 님' : '사용자 님'}">홍길동 님</h2>
+            <p class="subtab-profile-meta" th:text="${member != null ? (member.grade + '학년 · ' + member.studentId) : '로그인 정보 없음'}">소프트웨어학과 · 20231234</p>
+            <!-- 익명게시판 목록: 글쓰기 -->
+            <!-- 채팅게시판 목록: 공지 작성하기 -->
+            <a th:if="${subAction == 'talkwrite'}" th:href="@{/talkboard/write(roomId=${roomId},roomKey=${roomKey})}" class="subtab-profile-link">새로운 공지 작성하기</a>
+            <!-- 상세 페이지: 목록으로 -->
+            <a th:if="${subAction == 'back'}" th:href="${backUrl != null ? backUrl : 'javascript:history.back()'}" class="subtab-profile-link">← 목록으로 돌아가기</a>
+        </section>
+        <nav class="subtab-shortcuts" aria-label="공통 사이드바 메뉴">
+            <a th:href="@{/chat}" class="subtab-shortcut" th:classappend="${active == 'chat'} ? ' active' : ''" th:attr="aria-current=${active == 'chat' ? 'page' : null}"><span class="subtab-shortcut-icon">💬</span><span><strong class="subtab-shortcut-title">채팅</strong></span></a>
+            <a th:href="@{/articles}" class="subtab-shortcut" th:classappend="${active == 'articles'} ? ' active' : ''" th:attr="aria-current=${active == 'articles' ? 'page' : null}"><span class="subtab-shortcut-icon">📰</span><span><strong class="subtab-shortcut-title">기사</strong></span></a>
+            <a th:href="@{/calendar}" class="subtab-shortcut" th:classappend="${active == 'calendar'} ? ' active' : ''" th:attr="aria-current=${active == 'calendar' ? 'page' : null}"><span class="subtab-shortcut-icon">📅</span><span><strong class="subtab-shortcut-title">일정</strong></span></a>
+            <a th:href="@{/board}" class="subtab-shortcut" th:classappend="${active == 'board'} ? ' active' : ''" th:attr="aria-current=${active == 'board' ? 'page' : null}"><span class="subtab-shortcut-icon">📌</span><span><strong class="subtab-shortcut-title">게시판</strong></span></a>
+            <a th:href="@{/mypage}" class="subtab-shortcut" th:classappend="${active == 'mypage'} ? ' active' : ''" th:attr="aria-current=${active == 'mypage' ? 'page' : null}"><span class="subtab-shortcut-icon">👤</span><span><strong class="subtab-shortcut-title">마이페이지</strong></span></a>
+            <a th:if="${active != 'home'}" th:href="@{/home}" class="subtab-shortcut" th:classappend="${active == 'home'} ? ' active' : ''" th:attr="aria-current=${active == 'home' ? 'page' : null}"><span class="subtab-shortcut-icon">⌂</span><span><strong class="subtab-shortcut-title">메인</strong></span></a>
+        </nav>
+        <form th:action="@{/logout}" method="post" style="margin-top:12px;">
+            <button type="submit"
+                    style="width:100%; padding:14px 0; border-radius:12px; border:none;
+                           background:#cb8458; color:#fff; font-size:13px; font-weight:700;
+                           cursor:pointer; transition:opacity 0.15s;"
+                    onmouseenter="this.style.opacity='0.85'" onmouseleave="this.style.opacity='1'">
+                로그아웃
+            </button>
+        </form>
+    </div>
+</aside>
+
+
+<div th:fragment="chatNotifications" th:if="${member != null}">
+    <style>
+        #chat-notif-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .chat-notif-toast {
+            background: #fff8f2;
+            border: 1px solid rgba(189,123,77,0.25);
+            border-left: 4px solid #bd7b4d;
+            border-radius: 12px;
+            padding: 12px 16px;
+            min-width: 260px;
+            max-width: 320px;
+            box-shadow: 0 4px 18px rgba(100,60,20,0.13);
+            cursor: pointer;
+            pointer-events: all;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        .chat-notif-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .chat-notif-room {
+            font-size: 12px;
+            font-weight: 700;
+            color: #bd7b4d;
+            margin-bottom: 3px;
+        }
+        .chat-notif-msg {
+            font-size: 13px;
+            color: #5a3d28;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+    <div id="chat-notif-container"></div>
+    <input type="hidden" id="notif-grade" th:value="${member.grade}">
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:inline="javascript">
+        (function () {
+            const grade = parseInt(document.getElementById('notif-grade').value) || 0;
+            const socket = new SockJS('/ws');
+            const stomp = Stomp.over(socket);
+            stomp.debug = null;
+
+            stomp.connect({}, function () {
+                stomp.subscribe('/topic/notifications/global', onNotif);
+                if (grade > 0) {
+                    stomp.subscribe('/topic/notifications/grade/' + grade, onNotif);
+                }
+                stomp.subscribe('/user/queue/notifications', onNotif);
+            });
+
+            function onNotif(frame) {
+                const n = JSON.parse(frame.body);
+                showToast(n);
+            }
+
+            function showToast(n) {
+                const container = document.getElementById('chat-notif-container');
+                const toast = document.createElement('div');
+                toast.className = 'chat-notif-toast';
+                const msgLine = n.isPrivate
+                    ? n.content
+                    : n.senderName + ': ' + n.content;
+                toast.innerHTML =
+                    '<div class="chat-notif-room">💬 ' + n.roomName + '</div>' +
+                    '<div class="chat-notif-msg">' + msgLine + '</div>';
+                toast.addEventListener('click', function () {
+                    window.location.href = '/chat/' + n.roomId;
+                });
+                container.appendChild(toast);
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () { toast.classList.add('show'); });
+                });
+                setTimeout(function () {
+                    toast.classList.remove('show');
+                    setTimeout(function () { toast.remove(); }, 300);
+                }, 5000);
+            }
+        })();
+    </script>
+</div>
+
+</body>
+</html>

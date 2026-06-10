@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusOn | 채팅게시판 수정</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/subtab-theme.css">
+</head>
+<body>
+<div class="subtab-shell">
+    <div class="subtab-wrap">
+        <header th:replace="~{fragments/app-layout :: subtabHeader}"></header>
+        <div class="subtab-layout">
+            <aside th:replace="~{fragments/app-layout :: subtabSidebar('board', '')}"></aside>
+
+            <section class="subtab-content board-theme-list">
+                <section class="subtab-section">
+                    <section class="board-write-card">
+                        <form th:action="@{/talkboard/{id}/edit(id=${post.id})}" method="post" class="board-write-form">
+                            <div class="board-form-group">
+                                <label class="board-label">제목</label>
+                                <input type="text" name="title" class="board-input"
+                                       th:value="${post.title}" required>
+                            </div>
+                            <div class="board-form-group">
+                                <label class="board-label">본문</label>
+                                <textarea name="content" rows="8" class="board-textarea"
+                                          th:text="${post.content}" required></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary board-submit-button">수정 완료</button>
+                        </form>
+                    </section>
+                </section>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+</html>
