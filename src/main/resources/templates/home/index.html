@@ -22,15 +22,15 @@
                         <div class="home-news-slider home-quick-slider" data-home-news-slider>
                             <div class="home-news-slider-track" data-home-news-track>
                                 <a th:each="link, iterStat : ${homeQuickLinks}"
-                                   th:if="${iterStat.index < 5}"
                                    th:href="${link.url()}"
                                    target="_blank"
                                    rel="noopener noreferrer"
                                    class="home-news-slide home-quick-slide"
                                    th:classappend="${link.styleClass()}"
                                    th:title="${link.title()}">
-                                    <div class="home-news-slide-thumb home-quick-thumb">
-                                        <img th:unless="${link.key() == 'bloter'}"
+                                    <div class="home-news-slide-thumb home-quick-thumb"
+                                         th:classappend="${link.key() == 'swcu'} ? ' is-fallback'">
+                                        <img th:unless="${link.key() == 'bloter' || link.key() == 'swcu'}"
                                              class="home-quick-thumb-image"
                                              th:src="@{/home/link-thumbnail(target=${link.key()})}"
                                              th:alt="|${link.title()} 썸네일|"
@@ -54,7 +54,6 @@
                             </div>
                             <div class="home-news-slider-dots" data-home-news-dots aria-label="바로가기 슬라이드 선택">
                                 <button th:each="link, iterStat : ${homeQuickLinks}"
-                                        th:if="${iterStat.index < 5}"
                                         type="button"
                                         class="home-news-slider-dot"
                                         th:classappend="${iterStat.index == 0} ? ' is-active'"

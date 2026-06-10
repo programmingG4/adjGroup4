@@ -101,6 +101,15 @@ public class HomeController {
                         "home-quick-portal"
                 ),
                 new HomeQuickLink(
+                        "swcu",
+                        "단국대 SW중심사업단",
+                        "SW중심대학사업단 공지·교육·행사 바로가기",
+                        "https://swcu.dankook.ac.kr/web/swcup",
+                        "https://swcu.dankook.ac.kr/web/swcup",
+                        "SWCU",
+                        "home-quick-swcu"
+                ),
+                new HomeQuickLink(
                         "dev-event",
                         "Dev Event",
                         "개발자 행사·해커톤·컨퍼런스 모아보기",

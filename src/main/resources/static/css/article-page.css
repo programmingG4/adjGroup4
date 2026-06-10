@@ -211,6 +211,20 @@
     color: var(--point-deep);
 }
 
+
+.article-row-dday {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: rgba(203, 132, 88, 0.12);
+    border: 1px solid rgba(203, 132, 88, 0.26);
+    color: #9a633d;
+    font-size: 0.78rem;
+    font-weight: 900;
+}
+
 .article-row-title {
     margin: 0;
     color: var(--text);
