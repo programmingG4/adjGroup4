@@ -155,7 +155,7 @@ http://localhost:8080
 src
  ┣ main
  ┃ ┣ java
- ┃ ┃ ┗ com.example.campuson
+ ┃ ┃ ┗ kr.ac.dankook.campuson
  ┃ ┣ resources
  ┃ ┃ ┣ static
  ┃ ┃ ┣ templates
