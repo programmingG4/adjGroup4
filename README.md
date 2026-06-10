@@ -182,7 +182,7 @@ src
 
 | 이름 | 학번 | 이메일 |
 |---|---|---|
-| 김현정 | 322***** | example1@email.com |
+| 김현정 | 32221326 | sammy030301@gmail.com |
 | 박경빈 | 32221620 | dark_mc@naver.com |
 | 장다혜 | 322***** | example3@email.com |
 
