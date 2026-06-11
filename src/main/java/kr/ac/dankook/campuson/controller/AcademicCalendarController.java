@@ -46,7 +46,6 @@ public class AcademicCalendarController {
         LocalDate calendarEnd = calendarStart.plusDays(41);
 
         Member member = memberRepository.findByStudentId(principal.getName());
-        List<AcademicScheduleEvent> calendarSchedules = academicCalendarService.findSchedulesForMonth(targetYear, targetMonth);
         List<AcademicScheduleEvent> monthlySchedules = academicCalendarService.findMonthlyScheduleList(targetYear, targetMonth);
         List<CalendarMemoDto> memos = calendarMemoService.findMemos(principal.getName(), calendarStart, calendarEnd);
 
@@ -57,7 +56,6 @@ public class AcademicCalendarController {
         model.addAttribute("prevMonth", yearMonth.minusMonths(1));
         model.addAttribute("nextMonth", yearMonth.plusMonths(1));
         model.addAttribute("calendarWeeks", buildCalendarWeeks(calendarStart));
-        model.addAttribute("calendarSchedules", calendarSchedules);
         model.addAttribute("monthlySchedules", monthlySchedules);
         model.addAttribute("memos", memos);
         model.addAttribute("selectedDate", today);

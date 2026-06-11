@@ -61,28 +61,33 @@ public class AcademicCalendarService {
             return cachedSchedules.events();
         }
 
-        List<AcademicScheduleEvent> events = List.of();
+        Map<String, AcademicScheduleEvent> merged = new LinkedHashMap<>();
         String bootcampListUrl = String.format(DANKOOK_BOOTCAMP_CALENDAR_URL_TEMPLATE, year);
         String dankookListUrl = String.format(DANKOOK_CALENDAR_LIST_URL_TEMPLATE, year);
 
-        try {
-            Document document = fetchDocument(bootcampListUrl);
-            events = parseSchedules(document, year, bootcampListUrl);
-        } catch (Exception ignored) {
-            events = List.of();
-        }
+        mergeFetchedSchedules(merged, bootcampListUrl, year);
+        mergeFetchedSchedules(merged, dankookListUrl, year);
 
-        if (events.isEmpty()) {
-            try {
-                Document document = fetchDocument(dankookListUrl);
-                events = parseSchedules(document, year, dankookListUrl);
-            } catch (Exception ignored) {
-                events = List.of();
+        if (merged.isEmpty()) {
+            for (AcademicScheduleEvent event : fallbackSchedulesForYear(year)) {
+                merged.putIfAbsent(event.id(), event);
             }
         }
 
+        List<AcademicScheduleEvent> events = sortSchedules(merged.values().stream().toList());
         cachedSchedulesByYear.put(year, new CachedSchedules(events, Instant.now().plusSeconds(CACHE_TTL_SECONDS)));
         return events;
+    }
+
+    private void mergeFetchedSchedules(Map<String, AcademicScheduleEvent> merged, String url, int year) {
+        try {
+            Document document = fetchDocument(url);
+            for (AcademicScheduleEvent event : parseSchedules(document, year, url)) {
+                merged.putIfAbsent(event.id(), event);
+            }
+        } catch (Exception ignored) {
+            // 외부 학사일정 페이지가 일시적으로 응답하지 않아도 화면이 비지 않도록 fallback을 사용한다.
+        }
     }
 
     private Document fetchDocument(String url) throws java.io.IOException {
@@ -130,7 +135,11 @@ public class AcademicCalendarService {
             unique.putIfAbsent(event.id(), event);
         }
 
-        return unique.values().stream()
+        return sortSchedules(unique.values().stream().toList());
+    }
+
+    private List<AcademicScheduleEvent> sortSchedules(List<AcademicScheduleEvent> events) {
+        return events.stream()
                 .sorted((left, right) -> {
                     int byDate = left.startDate().compareTo(right.startDate());
                     return byDate != 0 ? byDate : left.title().compareTo(right.title());
@@ -370,6 +379,120 @@ public class AcademicCalendarService {
             return "학기";
         }
         return "학사";
+    }
+
+    private List<AcademicScheduleEvent> fallbackSchedulesForYear(int year) {
+        if (year != 2026) {
+            return List.of();
+        }
+
+        String sourceUrl = String.format(DANKOOK_BOOTCAMP_CALENDAR_URL_TEMPLATE, year);
+        return List.of(
+                fallbackEvent("2025학년도 2학기 기말고사 성적 입력 및 제출 기간", "2025-12-16", "2026-01-05", sourceUrl),
+                fallbackEvent("2026학년도 1학기 Web 휴학원서제출", "2025-12-23", "2026-02-28", sourceUrl),
+                fallbackEvent("2025학년도 2학기 기말고사 성적확인 및 공시기간", "2025-12-30", "2026-01-04", sourceUrl),
+                fallbackEvent("2026학년도 시무식", "2026-01-02", "2026-01-02", sourceUrl),
+                fallbackEvent("2026학년도 1학기 복학, 재입학 신청기간", "2026-01-02", "2026-01-08", sourceUrl),
+                fallbackEvent("2026학년도 1학기 전부(과)원서 제출", "2026-01-02", "2026-01-08", sourceUrl),
+                fallbackEvent("2026학년도 1학기 교류수강 전공신청", "2026-01-26", "2026-01-28", sourceUrl),
+                fallbackEvent("2025학년도 2학기 학사학위취득유예신청", "2026-01-27", "2026-01-29", sourceUrl),
+                fallbackEvent("2026학년도 1학기 1차 수강신청(천안캠퍼스)", "2026-02-02", "2026-02-02", sourceUrl),
+                fallbackEvent("2026학년도 1학기 1차 수강신청(죽전캠퍼스)", "2026-02-03", "2026-02-03", sourceUrl),
+                fallbackEvent("2026학년도 1학기 캠퍼스교류 수강신청(전체)", "2026-02-04", "2026-02-04", sourceUrl),
+                fallbackEvent("2026학년도 1학기 2차 수강신청(천안캠퍼스)", "2026-02-05", "2026-02-05", sourceUrl),
+                fallbackEvent("2026학년도 1학기 2차 수강신청(죽전캠퍼스)", "2026-02-06", "2026-02-06", sourceUrl),
+                fallbackEvent("2026학년도 1학기 1차 폐강 공고(전체)", "2026-02-19", "2026-02-19", sourceUrl),
+                fallbackEvent("2026학년도 1학기 등록기간", "2026-02-19", "2026-02-24", sourceUrl),
+                fallbackEvent("2026학년도 1학기 1차 폐강 대상자 수강신청(전체)", "2026-02-20", "2026-02-20", sourceUrl),
+                fallbackEvent("2026학년도 1학기 편입생 수강지도(전체)", "2026-02-23", "2026-02-23", sourceUrl),
+                fallbackEvent("정년퇴임식", "2026-02-23", "2026-02-23", sourceUrl),
+                fallbackEvent("2026학년도 입학식(전체)", "2026-02-24", "2026-02-24", sourceUrl),
+                fallbackEvent("2026학년도 1학기 신입생/편입생 수강신청(전체)", "2026-02-25", "2026-02-25", sourceUrl),
+                fallbackEvent("2026학년도 1학기 전체 교원 연수", "2026-02-25", "2026-02-25", sourceUrl),
+                fallbackEvent("2026년 봄 학위수여식(전체)", "2026-02-26", "2026-02-26", sourceUrl),
+                fallbackEvent("2026학년도 1학기 시간제 등록 및 수강신청", "2026-02-26", "2026-02-26", sourceUrl),
+                fallbackEvent("2026학년도 1학기 2차 폐강 공고(전체)", "2026-02-27", "2026-02-27", sourceUrl),
+                fallbackEvent("2026학년도 1학기 개강", "2026-03-03", "2026-03-03", sourceUrl),
+                fallbackEvent("2026학년도 1학기 공통교양 영어교과목 면제 신청기간", "2026-03-04", "2026-03-11", sourceUrl),
+                fallbackEvent("2026학년도 1학기 수강정정 신청기간(전체)", "2026-03-06", "2026-03-09", sourceUrl),
+                fallbackEvent("2026학년도 1학기 응급처치 및 심폐소생술 접수", "2026-03-09", "2026-03-13", sourceUrl),
+                fallbackEvent("2026학년도 학교현장실습 신청기간(사범대, 비사범계)", "2026-03-10", "2026-03-13", sourceUrl),
+                fallbackEvent("2026학년도 1학기 수강철회 기간", "2026-03-13", "2026-03-16", sourceUrl),
+                fallbackEvent("2026학년도 비사범계 교직이수 신청기간", "2026-03-16", "2026-03-19", sourceUrl),
+                fallbackEvent("2026학년도 1학기 조기졸업 신청기간", "2026-03-23", "2026-03-25", sourceUrl),
+                fallbackEvent("2026학년도 1학기 중간 강의평가", "2026-03-31", "2026-04-25", sourceUrl),
+                fallbackEvent("2026학년도 1학기 다전공 신청기간", "2026-04-13", "2026-04-16", sourceUrl),
+                fallbackEvent("2026학년도 1학기 중간고사", "2026-04-14", "2026-04-20", sourceUrl),
+                fallbackEvent("2026학년도 1학기 중간 성적입력기간", "2026-04-14", "2026-04-25", sourceUrl),
+                fallbackEvent("2026학년도 1학기 중간 성적확인 및 공시기간", "2026-04-26", "2026-05-02", sourceUrl),
+                fallbackEvent("단국축제(죽전)", "2026-05-12", "2026-05-14", sourceUrl),
+                fallbackEvent("대동제(천안)", "2026-05-12", "2026-05-14", sourceUrl),
+                fallbackEvent("2026학년도 1학기 기말 강의평가", "2026-05-26", "2026-06-24", sourceUrl),
+                fallbackEvent("2026학년도 2학기 교내(성적)장학금 신청기간", "2026-06-01", "2026-06-30", sourceUrl),
+                fallbackEvent("2026년 가을 학위수여(2026.8졸) 무시험검정원서 신청기간", "2026-06-08", "2026-06-12", sourceUrl),
+                fallbackEvent("2026학년도 1학기 기말고사", "2026-06-11", "2026-06-18", sourceUrl),
+                fallbackEvent("2026학년도 1학기 기말 성적입력기간", "2026-06-11", "2026-06-24", sourceUrl),
+                fallbackEvent("2026학년도 1학기 종강", "2026-06-15", "2026-06-15", sourceUrl),
+                fallbackEvent("2026학년도 1학기 공휴일 지정순연일", "2026-06-16", "2026-06-18", sourceUrl),
+                fallbackEvent("직원연수회", "2026-06-19", "2026-06-19", sourceUrl),
+                fallbackEvent("2026학년도 2학기 Web 휴학원서제출", "2026-06-19", "2026-08-31", sourceUrl),
+                fallbackEvent("2026학년도 계절(하계)학기 수업일수 1-4일", "2026-06-22", "2026-06-25", sourceUrl),
+                fallbackEvent("2026학년도 1학기 기말고사 성적 확인 및 공시기간", "2026-06-25", "2026-06-29", sourceUrl),
+                fallbackEvent("2026학년도 2학기 복학, 재입학 신청기간", "2026-07-01", "2026-07-07", sourceUrl),
+                fallbackEvent("2026학년도 2학기 전부(과)원서 제출", "2026-07-02", "2026-07-08", sourceUrl),
+                fallbackEvent("2026학년도 1학기 학사학위취득유예신청", "2026-07-21", "2026-07-23", sourceUrl),
+                fallbackEvent("2026학년도 2학기 교류수강 전공신청", "2026-08-04", "2026-08-06", sourceUrl),
+                fallbackEvent("2026학년도 2학기 1차 수강신청(죽전캠퍼스)", "2026-08-10", "2026-08-10", sourceUrl),
+                fallbackEvent("2026학년도 2학기 1차 수강신청(천안캠퍼스)", "2026-08-11", "2026-08-11", sourceUrl),
+                fallbackEvent("2026학년도 2학기 캠퍼스교류 수강신청(전체)", "2026-08-12", "2026-08-12", sourceUrl),
+                fallbackEvent("2026학년도 2학기 2차 수강신청(죽전캠퍼스)", "2026-08-13", "2026-08-13", sourceUrl),
+                fallbackEvent("2026학년도 2학기 2차 수강신청(천안캠퍼스)", "2026-08-14", "2026-08-14", sourceUrl),
+                fallbackEvent("2026학년도 2학기 전체 교원 연수", "2026-08-19", "2026-08-19", sourceUrl),
+                fallbackEvent("2026년 가을 학위수여식(단과대학, 각 대학원)", "2026-08-20", "2026-08-20", sourceUrl),
+                fallbackEvent("2026학년도 2학기 등록기간", "2026-08-24", "2026-08-27", sourceUrl),
+                fallbackEvent("2026학년도 2학기 폐강 공고(전체)", "2026-08-25", "2026-08-25", sourceUrl),
+                fallbackEvent("2026학년도 2학기 폐강 대상자 수강신청(전체)", "2026-08-26", "2026-08-26", sourceUrl),
+                fallbackEvent("정년퇴임식", "2026-08-26", "2026-08-26", sourceUrl),
+                fallbackEvent("2026학년도 2학기 시간제 등록 및 수강신청", "2026-08-27", "2026-08-27", sourceUrl),
+                fallbackEvent("2026학년도 2학기 개강", "2026-09-01", "2026-09-01", sourceUrl),
+                fallbackEvent("2026학년도 2학기 졸업인증 공인영어 신청서 제출기간", "2026-09-01", "2026-12-14", sourceUrl),
+                fallbackEvent("2026학년도 2학기 사회봉사활동 신청서 제출기간", "2026-09-01", "2026-12-14", sourceUrl),
+                fallbackEvent("2026학년도 2학기 수강정정 신청기간(전체)", "2026-09-04", "2026-09-07", sourceUrl),
+                fallbackEvent("2026학년도 2학기 공통교양 영어교과목 면제 신청기간", "2026-09-04", "2026-09-11", sourceUrl),
+                fallbackEvent("2026학년도 2학기 응급처치 및 심폐소생술 접수", "2026-09-07", "2026-09-11", sourceUrl),
+                fallbackEvent("2026학년도 교원자격 복수(연계)전공 신청기간", "2026-09-07", "2026-09-11", sourceUrl),
+                fallbackEvent("2026학년도 2학기 수강철회 기간", "2026-09-11", "2026-09-14", sourceUrl),
+                fallbackEvent("2026학년도 2학기 조기졸업신청", "2026-09-21", "2026-09-23", sourceUrl),
+                fallbackEvent("2026학년도 2학기 중간 강의평가", "2026-09-29", "2026-11-03", sourceUrl),
+                fallbackEvent("2026학년도 2학기 학기개시일로부터 30일(5/6 반환)", "2026-09-30", "2026-09-30", sourceUrl),
+                fallbackEvent("단국체전(죽전)", "2026-09-30", "2026-09-30", sourceUrl),
+                fallbackEvent("안서체전(천안)", "2026-09-30", "2026-09-30", sourceUrl),
+                fallbackEvent("2026학년도 2학기 중간고사", "2026-10-13", "2026-10-30", sourceUrl),
+                fallbackEvent("2026학년도 2학기 중간성적 입력기간", "2026-10-13", "2026-11-03", sourceUrl),
+                fallbackEvent("2026학년도 2학기 중간성적확인 및 공시기간", "2026-11-04", "2026-11-09", sourceUrl),
+                fallbackEvent("2027학년도 1학기 교내(성적)장학금 신청기간", "2026-12-01", "2026-12-31", sourceUrl),
+                fallbackEvent("2027년 봄 학위수여(2027.2졸) 무시험검정원서 신청기간", "2026-12-07", "2026-12-11", sourceUrl),
+                fallbackEvent("2026학년도 2학기 기말고사", "2026-12-09", "2026-12-21", sourceUrl),
+                fallbackEvent("2026학년도 2학기 기말고사 성적 입력 및 제출 기간", "2026-12-09", "2027-01-04", sourceUrl),
+                fallbackEvent("2026학년도 2학기 종강", "2026-12-14", "2026-12-14", sourceUrl),
+                fallbackEvent("2026학년도 2학기 공휴일 지정순연일", "2026-12-15", "2026-12-21", sourceUrl),
+                fallbackEvent("2027학년도 1학기 Web 휴학원서제출", "2026-12-22", "2027-02-28", sourceUrl),
+                fallbackEvent("2026학년도 계절(동계)학기 수업일수 1-4일", "2026-12-23", "2026-12-29", sourceUrl),
+                fallbackEvent("2026학년도 2학기 기말고사 성적확인 및 공시기간", "2026-12-29", "2027-01-03", sourceUrl)
+        );
+    }
+
+    private AcademicScheduleEvent fallbackEvent(String title, String startDate, String endDate, String sourceUrl) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        return new AcademicScheduleEvent(
+                stableId(title, start, end),
+                title,
+                start,
+                end,
+                classify(title),
+                sourceUrl
+        );
     }
 
     private int parseInt(String value) {

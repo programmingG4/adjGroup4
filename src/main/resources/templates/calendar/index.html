@@ -47,19 +47,9 @@
                                 <div class="calendar-day-number" th:text="${day.dayOfMonth}">1</div>
 
                                 <div class="calendar-events">
-                                    <a th:each="event : ${calendarSchedules}"
-                                       th:if="${!event.startDate().isAfter(day) and !event.endDate().isBefore(day)}"
-                                       class="calendar-event academic-event"
-                                       th:href="${event.sourceUrl()}"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       th:title="${event.title()}"
-                                       th:text="${event.title()}">학교 일정</a>
-
                                     <div th:each="memo : ${memos}"
                                          th:if="${memo.memoDate().equals(day)}"
                                          class="calendar-event memo-event"
-                                         th:title="${memo.content()}"
                                          th:text="${memo.content()}">개인 메모</div>
                                 </div>
                             </article>
