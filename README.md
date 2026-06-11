@@ -66,10 +66,10 @@ git clone https://github.com/programmingG4/adjGroup4.git
 cd adjGroup4
 ```
 
-### 4-3. dev 브랜치 이동
+### 4-3. main 브랜치 이동
 
 ```bash
-git checkout dev
+git checkout main
 ```
 
 ### 4-4. MySQL 데이터베이스 생성
