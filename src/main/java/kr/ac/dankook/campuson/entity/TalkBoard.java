@@ -10,6 +10,9 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(indexes = {
+        @Index(name = "idx_talk_board_room_category", columnList = "room_key, category")
+})
 public class TalkBoard {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

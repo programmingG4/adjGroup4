@@ -11,6 +11,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(indexes = {
+        @Index(name = "idx_chat_message_room_sent", columnList = "room_id, sent_at")
+})
 public class ChatMessage {
 
     @Id
