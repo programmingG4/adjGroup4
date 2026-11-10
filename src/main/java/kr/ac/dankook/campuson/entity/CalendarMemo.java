@@ -13,7 +13,9 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "calendar_memo")
+@Table(name = "calendar_memo", indexes = {
+        @Index(name = "idx_calendar_memo_member_date", columnList = "member_id, memo_date")
+})
 public class CalendarMemo {
 
     @Id

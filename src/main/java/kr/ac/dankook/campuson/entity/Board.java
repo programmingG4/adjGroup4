@@ -10,7 +10,9 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Table(name = "board")
+@Table(name = "board", indexes = {
+        @Index(name = "idx_board_category_reg_date", columnList = "category, reg_date")
+})
 public class Board {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
