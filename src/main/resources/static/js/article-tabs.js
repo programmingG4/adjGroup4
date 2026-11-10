@@ -62,6 +62,28 @@ document.addEventListener("DOMContentLoaded", () => {
         return textOf(value).toLowerCase();
     }
 
+
+    function cleanCrowllyTitle(article) {
+        const rawTitle = textOf(article && article.title);
+        const source = normalize(article && article.sourceName);
+        const url = normalize(article && article.articleUrl);
+        if (!rawTitle || (!source.includes("crowlly") && !url.includes("crowlly.xyz"))) {
+            return rawTitle;
+        }
+
+        const separator = String.raw`[|｜:：\-–—−·•/\\]`;
+        let title = rawTitle.replace(/[\u200B-\u200D\uFEFF]/g, " ").trim();
+        for (let i = 0; i < 6; i += 1) {
+            title = title
+                .replace(new RegExp(String.raw`^\s*(?:공모전\s*${separator}+\s*)?(?:crowlly|크롤리|crowlly\.xyz)\s*${separator}+\s*`, "iu"), "")
+                .replace(new RegExp(String.raw`^\s*(?:공모전\s+)?(?:crowlly|크롤리|crowlly\.xyz)\s+`, "iu"), "")
+                .replace(new RegExp(String.raw`\s*${separator}+\s*(?:공모전\s*${separator}+\s*)?(?:crowlly|크롤리|crowlly\.xyz)\s*$`, "iu"), "")
+                .replace(/\s+(?:crowlly|크롤리|crowlly\.xyz)\s*$/iu, "")
+                .trim();
+        }
+        return title || rawTitle;
+    }
+
     function normalizeTags(value) {
         if (Array.isArray(value)) {
             return value.map(textOf).filter(Boolean).join(",");
@@ -90,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
             thumbnailUrl: row.dataset.rawImage || row.dataset.image || "",
             summary: row.dataset.summary || "",
             publishedAt: row.dataset.published || "",
+            deadlineDday: row.dataset.deadlineDday || "",
             tags: normalizeTags(row.dataset.tags || "")
         };
     }
@@ -127,6 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function createArticleRow(article) {
+        const displayTitle = cleanCrowllyTitle(article);
         const link = document.createElement("a");
         link.className = "article-row";
         link.href = article.articleUrl || "#";
@@ -135,12 +159,18 @@ document.addEventListener("DOMContentLoaded", () => {
         link.dataset.category = article.categoryKey || "";
         link.dataset.categoryLabel = article.categoryLabel || "";
         link.dataset.source = article.sourceName || "";
-        link.dataset.title = article.title || "";
+        link.dataset.title = displayTitle || "";
         link.dataset.summary = article.summary || "";
         link.dataset.tags = normalizeTags(article.tags || "");
         link.dataset.rawImage = article.thumbnailUrl || "";
         link.dataset.image = proxiedImageUrl(article.thumbnailUrl || "");
         link.dataset.published = article.publishedAt || "";
+        link.dataset.deadlineDday = article.deadlineDday || "";
+
+        const deadlineDday = textOf(article.deadlineDday || "");
+        const deadlineHtml = deadlineDday
+            ? `<span class="article-row-dday">${escapeHtml(deadlineDday)}</span>`
+            : "";
 
         const tagHtml = normalizeTags(article.tags)
             .split(",")
@@ -151,15 +181,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         link.innerHTML = `
             <div class="article-row-thumb-wrap">
-                <img class="article-row-thumb" src="${escapeHtml(proxiedImageUrl(article.thumbnailUrl || ""))}" alt="${escapeHtml(article.title || "기사 썸네일")}">
+                <img class="article-row-thumb" src="${escapeHtml(proxiedImageUrl(article.thumbnailUrl || ""))}" alt="${escapeHtml(displayTitle || "기사 썸네일")}">
             </div>
             <div class="article-row-content">
                 <div class="article-row-meta">
                     <span class="article-row-badge">${escapeHtml(article.categoryLabel || "카테고리")}</span>
                     <span class="article-row-source">${escapeHtml(article.sourceName || "출처")}</span>
                     <span class="article-row-date">${escapeHtml(article.publishedAt || "")}</span>
+                    ${deadlineHtml}
                 </div>
-                <h3 class="article-row-title">${escapeHtml(article.title || "제목 없음")}</h3>
+                <h3 class="article-row-title">${escapeHtml(displayTitle || "제목 없음")}</h3>
                 <p class="article-row-summary">${escapeHtml(article.summary || "본문 요약은 원본 게시글에서 확인할 수 있습니다.")}</p>
                 <div class="article-row-tags">${tagHtml}</div>
             </div>

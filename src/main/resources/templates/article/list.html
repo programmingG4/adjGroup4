@@ -86,7 +86,8 @@
                                     data-tags=${article.tags()},
                                     data-image=@{/articles/image(url=${article.thumbnailUrl()})},
                                     data-raw-image=${article.thumbnailUrl()},
-                                    data-published=${article.publishedAt()}"
+                                    data-published=${article.publishedAt()},
+                                    data-deadline-dday=${article.deadlineDday()}"
                            th:href="${article.articleUrl()}"
                            target="_blank"
                            rel="noopener noreferrer">
@@ -100,6 +101,9 @@
                                     <span class="article-row-badge" th:text="${article.categoryLabel()}">카테고리</span>
                                     <span class="article-row-source" th:text="${article.sourceName()}">출처</span>
                                     <span class="article-row-date" th:text="${article.publishedAt()}">날짜</span>
+                                    <span class="article-row-dday"
+                                          th:if="${article.deadlineDday() != null and !article.deadlineDday().isBlank()}"
+                                          th:text="${article.deadlineDday()}">D-0</span>
                                 </div>
                                 <h3 class="article-row-title" th:text="${article.title()}">기사 제목</h3>
                                 <p class="article-row-summary" th:text="${article.summary()}">기사 요약</p>

@@ -3124,6 +3124,11 @@ body {
     background-image: linear-gradient(135deg, #0f4c81 0%, #6fa8dc 48%, #f4c27a 100%);
 }
 
+.home-quick-swcu .home-quick-thumb,
+.home-quick-swcu .home-quick-thumb.is-fallback {
+    background-image: linear-gradient(135deg, #102f5f 0%, #2f80c7 48%, #75d2f6 100%);
+}
+
 .home-quick-dev .home-quick-thumb,
 .home-quick-dev .home-quick-thumb.is-fallback {
     background-image: linear-gradient(135deg, #171430 0%, #6d5dfc 50%, #f39b6d 100%);
